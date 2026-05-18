@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "Activity": {
+      "title": "Marketing Activity",
+      "description": "A marketing or PMDF activity planned or in progress.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Name of the activity" },
+        "time": { "type": "string", "description": "Scheduled time" },
+        "location": { "type": "string", "description": "Event location" },
+        "type": { "type": "string", "enum": ["Marketing", "PMDF"], "description": "Activity category" },
+        "host": { "type": "string", "description": "Organizing entity" },
+        "status": { "type": "string", "enum": ["Planning", "In Progress", "Completed"], "description": "Current status" },
+        "budget": { "type": "number", "description": "Allocated budget amount" },
+        "desc": { "type": "string", "description": "Detailed description" },
+        "wechatEnabled": { "type": "boolean", "description": "Whether WeChat integration is active" },
+        "channelPartner": { "type": "string", "description": "Assigned channel partner for PMDF" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string", "description": "UID of the creator" }
+      },
+      "required": ["name", "type", "budget", "status"]
+    },
+    "Attendee": {
+      "title": "Event Attendee",
+      "description": "A participant in a specific activity.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string", "enum": ["已报名", "已签到"] },
+        "engagement": { "type": "string" },
+        "time": { "type": "string", "description": "Check-in time" },
+        "followUpStatus": { "type": "string", "enum": ["New", "Contacted", "Qualified", "Opportunity"] },
+        "score": { "type": "number" },
+        "notes": { "type": "string" },
+        "uid": { "type": "string", "description": "User's UID if logged in via WeChat" }
+      },
+      "required": ["name", "company", "status"]
+    },
+    "Budget": {
+      "title": "Budget Overview",
+      "description": "Quarterly budget allocation and tracking.",
+      "type": "object",
+      "properties": {
+        "quarter": { "type": "string", "description": "e.g., Q3 2024" },
+        "marketingTotal": { "type": "number" },
+        "marketingAllocated": { "type": "number" },
+        "pmdfTotal": { "type": "number" },
+        "pmdfAllocated": { "type": "number" }
+      },
+      "required": ["quarter"]
+    }
+  },
+  "firestore": {
+    "/activities": {
+      "schema": "Activity",
+      "description": "Root collection for all marketing activities."
+    },
+    "/activities/{activityId}/attendees": {
+      "schema": "Attendee",
+      "description": "Subcollection of attendees for a specific activity."
+    },
+    "/budgets": {
+      "schema": "Budget",
+      "description": "Budget tracking per quarter."
+    },
+    "/settings": {
+      "schema": "GlobalConfig",
+      "description": "Global application configuration."
+    },
+    "/_system_": {
+      "schema": "object",
+      "description": "System health and connection checks."
+    }
+  }
+}

@@ -1,0 +1,129 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: activities
+// Fields:
+//   - name: string (required)
+//   - time: string
+//   - location: string
+//   - type: string (required, enum: ["Marketing", "PMDF"])
+//   - host: string
+//   - status: string (required, enum: ["Planning", "In Progress", "Completed"])
+//   - budget: number (required)
+//   - desc: string
+//   - wechatEnabled: bool
+//   - channelPartner: string
+//   - createdAt: timestamp
+//   - createdBy: string (uid)
+//
+// Collection: activities/{activityId}/attendees
+// Fields:
+//   - name: string (required)
+//   - company: string (required)
+//   - role: string
+//   - status: string (required, enum: ["已报名", "已签到"])
+//   - engagement: string
+//   - time: string
+//   - followUpStatus: string (enum: ["New", "Contacted", "Qualified", "Opportunity"])
+//   - score: number
+//   - notes: string
+//   - uid: string
+//
+// Collection: budgets
+// Fields:
+//   - quarter: string (required)
+//   - marketingTotal: number
+//   - marketingAllocated: number
+//   - pmdfTotal: number
+//   - pmdfAllocated: number
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "zhaohf1989@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidActivity(data) {
+      return hasRequiredFields(['name', 'type', 'budget', 'status']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.type in ['Marketing', 'PMDF'] &&
+             data.status in ['Planning', 'In Progress', 'Completed'] &&
+             data.budget is number && data.budget >= 0;
+    }
+
+    function isValidAttendee(data) {
+      return hasRequiredFields(['name', 'company', 'status']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 50 &&
+             data.company is string && data.company.size() > 0 && data.company.size() < 100 &&
+             data.status in ['已报名', '已签到'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidActivity(request.resource.data);
+      allow update: if isAuthenticated() && isValidActivity(request.resource.data);
+      allow delete: if isAdmin();
+
+      match /attendees/{attendeeId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isValidAttendee(request.resource.data);
+        allow update: if isAuthenticated() && isValidAttendee(request.resource.data);
+        allow delete: if isAdmin();
+      }
+    }
+
+    match /budgets/{budgetId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /_system_/{docId} {
+      allow read: if true;
+    }
+  }
+}
