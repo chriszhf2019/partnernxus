@@ -1,11 +1,13 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 type Language = 'zh' | 'en';
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  formatDate: (date: string | Date) => string;
+  formatNumber: (num: number) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -13,14 +15,17 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const translations: Record<Language, Record<string, string>> = {
   zh: {
     // Sidebar
-    'nav.ecosystem': '生态概览',
-    'nav.partners': '合作伙伴清单',
-    'nav.deals': '商机报备',
-    'nav.marketing': '营销与激励',
+    'nav.dashboard': '工作台',
+    'nav.partners': '合作伙伴',
+    'nav.deals': '商机管理',
+    'nav.marketing': '营销赋能',
+    'nav.incentives': '激励政策',
+    'nav.enablement': '赋能培训',
+    'nav.analytics': '数据分析',
     'nav.settings': '设置',
     
     // Dashboard
-    'dashboard.title': '生态系统驾驶舱',
+    'dashboard.title': '工作台',
     'dashboard.subtitle': '实时监控伙伴表现、商机漏斗与赋能进度。',
     'dashboard.activePartners': '活跃合作伙伴',
     'dashboard.pipelineValue': '商机池总额',
@@ -34,8 +39,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'partners.add': '新增合作伙伴',
     
     // Deal Registration
-    'deals.title': '商机报备管理',
-    'deals.subtitle': '实时监控报备状态、审批流与全生命周期追踪。',
+    'deals.title': '商机管理',
+    'deals.subtitle': '报备、审批、全生命周期追踪。',
     'deals.yearNew': '今年新增',
     'deals.quarterNew': '本季新增',
     'deals.monthNew': '本月新增',
@@ -62,7 +67,76 @@ export const translations: Record<Language, Record<string, string>> = {
     'deals.submit': '提交报备',
     'deals.success': '报备提交成功！',
     'deals.successDesc': '您的商机报备已进入审批流程，我们将在 24 小时内完成初审。',
-    
+    'deals.export': '导出',
+    'deals.search': '搜索项目、客户或合作伙伴...',
+    'deals.results': '个结果',
+    'deals.noResults': '没有找到商机',
+    'deals.noResultsDesc': '尝试调整搜索条件或筛选器',
+    'deals.colProject': '项目信息',
+    'deals.colPartner': '合作伙伴',
+    'deals.colSales': '销售',
+    'deals.colAmount': '金额 / 周期',
+    'deals.colStatus': '状态',
+    'deals.colPriority': '优先级',
+    'deals.colActions': '操作',
+    'deals.priority': '优先',
+    'deals.filterRegion': '区域',
+    'deals.filterProduct': '产品',
+    'deals.filterPartnerType': '伙伴类型',
+    'deals.statusPending': '待审批',
+    'deals.statusApproved': '已批复',
+    'deals.statusRejected': '已拒绝',
+    'deals.statusConverted': '已转化',
+    'deals.statusClosedWon': '已赢单',
+    'deals.statusClosedLost': '已丢单',
+    'deals.pipelineTotal': 'Pipeline 总额',
+    'deals.approvalRate': '审批通过率',
+    'deals.closeRate': '结单率',
+    'deals.pendingCount': '待审批',
+    'deals.pendingSub': '需处理',
+    'deals.breakdownByType': '按伙伴类型',
+    'deals.breakdownByTier': '按伙伴等级 · 按区域',
+    'deals.breakdownByProduct': '按产品/方案',
+    'deals.funnelTitle': '报备→结单 转化漏斗',
+    'deals.funnelRegistered': '报备',
+    'deals.funnelApproved': '批复通过',
+    'deals.funnelConverted': '转化商机',
+    'deals.funnelWon': '赢单',
+    'deals.funnelConvertRate': '转化',
+    'deals.funnelLost': '流失',
+    'deals.sourceTitle': '转化来源分析',
+    'deals.sourcePartner': '伙伴自主报备',
+    'deals.sourceManager': '渠道经理指派',
+    'deals.sourceMDF': 'MDF 活动转化',
+    'deals.cycleTitle': '报备周期分析',
+    'deals.cycleRegToApp': '报备→批复',
+    'deals.cycleAppToConv': '批复→转化',
+    'deals.cycleConvToWon': '转化→赢单',
+    'deals.cycleFull': '全周期',
+    'deals.cycleTarget': '目标',
+    'deals.bottleneck': '瓶颈识别',
+    'deals.lifecycle': '生命周期',
+    'deals.manageActions': '管理操作',
+    'deals.approve': '批复通过',
+    'deals.reject': '拒绝报备',
+    'deals.convert': '转化为商机',
+    'deals.editInfo': '修改报备信息',
+    'deals.conflictCheck': '冲突检测',
+    'deals.conflictYes': '检测到该客户已有存量商机报备，请仔细核对报备规则。',
+    'deals.conflictNo': '未检测到存量商机冲突。',
+
+    // Incentives
+    'incentives.title': '激励政策管理',
+    'incentives.subtitle': '返点、积分、排名——驱动合作伙伴业绩增长。',
+
+    // Enablement
+    'enablement.title': '赋能培训中心',
+    'enablement.subtitle': '认证管理、课程体系与合作伙伴能力建设。',
+
+    // Analytics
+    'analytics.title': '数据分析',
+    'analytics.subtitle': '业绩报表、渠道健康度与数据洞察。',
+
     // Dashboard Charts
     'charts.revenueTrend': '业绩达成趋势',
     'charts.partnerDistribution': '合作伙伴等级分布',
@@ -89,8 +163,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'graph.playbook': '规模化策略执行',
     'graph.execute': '确认并执行 Playbook',
     
-    'marketing.title': '联合营销与激励管理',
-    'marketing.subtitle': '通过战略协同驱动增长。',
+    'marketing.title': '营销赋能',
+    'marketing.subtitle': 'MDF 基金、联合活动与市场资源管理。',
     'marketing.mdfTab': 'MDF 市场基金',
     'marketing.incentiveTab': '联合激励计划',
     'marketing.essence': '营销本质',
@@ -106,7 +180,47 @@ export const translations: Record<Language, Record<string, string>> = {
     'marketing.roi': '投入产出比',
     'marketing.toolkit': '营销工具包',
     'marketing.bestPractices': '最佳实践',
-    
+
+    // Channel Dashboard
+    'channels.title': '营销渠道仪表盘',
+    'channels.subtitle': '多渠道表现与支出分析',
+    'channels.search': '搜索渠道...',
+    'channels.dateRange': '日期范围',
+    'channels.export': '导出',
+    'channels.totalSpend': '总支出',
+    'channels.roi': '投资回报率',
+    'channels.conversions': '转化数',
+    'channels.activeChannels': '活跃渠道',
+    'channels.chartTitle': '多渠道表现趋势',
+    'channels.chartSubtitle': '按月收入与支出',
+    'channels.revenue': '收入',
+    'channels.spend': '支出',
+    'channels.tableTitle': '表现最佳渠道',
+    'channels.viewAll': '查看全部',
+    'channels.colChannel': '渠道',
+    'channels.colSpend': '支出',
+    'channels.colCtr': '点击率',
+    'channels.colConversions': '转化',
+    'channels.colRoi': '回报率',
+    'channels.colStatus': '状态',
+    'channels.colActions': '操作',
+    'channels.status.active': '运行中',
+    'channels.status.paused': '已暂停',
+    'channels.status.optimizing': '优化中',
+    'channels.filter.thisMonth': '本月',
+    'channels.filter.lastMonth': '上月',
+    'channels.filter.thisQuarter': '本季度',
+    'channels.filter.thisYear': '今年',
+    'channels.distribution': '渠道支出分布',
+    'channels.action1': '新建广告系列',
+    'channels.action1Desc': '创建并启动',
+    'channels.action2': '受众洞察',
+    'channels.action2Desc': '分析目标人群',
+    'channels.action3': '渠道对比',
+    'channels.action3Desc': '并排分析',
+    'channels.action4': '全球覆盖',
+    'channels.action4Desc': '42个市场',
+
     // Common
     'common.back': '返回',
     'common.save': '保存',
@@ -158,13 +272,100 @@ export const translations: Record<Language, Record<string, string>> = {
     // Footer
     'footer.secure': 'Secure Enterprise Connection',
     'footer.assistance': 'Need assistance?',
+
+    // Settings
+    'settings.title': 'System Settings',
+    'settings.subtitle': 'Manage your profile, organization, and security preferences.',
+    'settings.profile': 'Profile',
+    'settings.organization': 'Organization',
+    'settings.global': 'Global Settings',
+    'settings.notifications': 'Notifications',
+    'settings.security': 'Security',
+    'settings.system': 'System',
+    'settings.save': 'Save Changes',
+    'settings.saved': 'Settings Saved',
+    'settings.dangerZone': 'Danger Zone',
+    'settings.dangerDesc': 'Delete your account or deactivate the organization. This action is irreversible.',
+    'settings.deactivate': 'Deactivate Account',
+    'settings.language': 'Language & Region',
+    'settings.theme': 'Interface Theme',
+    'settings.2fa': 'Two-Factor Authentication (2FA)',
+    'settings.2faDesc': 'Add an extra layer of security to your account.',
+    'settings.enable2fa': 'Enable Now',
+    'settings.apiTokens': 'API Access Tokens',
+
+    // Pipeline Board
+    'pipeline.openPipeline': 'Open Pipeline This Quarter',
+    'pipeline.newThisMonth': 'New This Month',
+    'pipeline.sourceBreakdown': 'Source Breakdown',
+    'pipeline.selfReg': 'Partner Self-Registered',
+    'pipeline.vendorAssigned': 'Vendor Assigned',
+    'pipeline.viewSourceDetail': 'View Source Details',
+    'pipeline.funnelVelocity': 'Sales Funnel Velocity',
+    'pipeline.viewFullFunnel': 'View Full Funnel',
+    'pipeline.revenueAchievement': 'Revenue Achievement Rate',
+    'pipeline.wonAmount': 'Won',
+    'pipeline.targetAmount': 'Target',
+    'pipeline.winRate': 'Channel Win Rate',
+    'pipeline.avgCycle': 'Avg Deal Cycle',
+    'pipeline.days': 'days',
+
+    // KPI Card
+    'kpi.activeBreakdown': 'Active Breakdown (by Priority)',
+    'kpi.orderPartners': 'Ordering Partners',
+    'kpi.reportPartners': 'Reporting Partners',
+    'kpi.otherParticipants': 'Other Participants',
+    'kpi.currentQTarget': 'Current Q Expected Close',
+    'kpi.nextQReserve': 'Next Q Reserve Count',
+    'kpi.items': 'items',
+    'kpi.newInQ': 'New In Q',
+    'kpi.historical': 'Historical',
+    'kpi.avgConversionCycle': 'Avg Conversion Cycle',
+    'kpi.annualTarget': 'Annual Revenue Target Locked',
+
+    // Q Ops Control Tower
+    'ops.contribution': 'Contribution Overview',
+    'ops.contributionSub': 'Contribution Alignment',
+    'ops.tierContribution': 'Tier Contribution Ratio',
+    'ops.corePartnerRate': 'Core Partner Achievement Rate (Q/Q)',
+    'ops.enterPerfBoard': 'Enter Performance Board',
+    'ops.dealHealth': 'Deal Registration Health',
+    'ops.dealHealthSub': 'Registration Health',
+    'ops.grossPipeline': 'Gross Pipeline',
+    'ops.viewRegList': 'View Registration List',
+    'ops.marketingEfficiency': 'Marketing Efficiency',
+    'ops.marketingEfficiencySub': 'Marketing Yield & ROI',
+    'ops.activitiesThisQ': 'Activities This Quarter',
+    'ops.completed': 'Completed',
+    'ops.remaining': 'Remaining',
+    'ops.pipelineOutput': 'Pipeline Output',
+    'ops.leadConversion': 'Lead Conversion',
+    'ops.viewMarketingROI': 'View Marketing ROI',
+    'ops.incentiveRate': 'Incentive Achievement',
+    'ops.incentiveRateSub': 'Incentive Mastery',
+    'ops.active': 'Active',
+    'ops.viewIncentiveDetail': 'View Incentive Details',
+
+    // Strategic Goal Board
+    'goal.diagnosis': 'Diagnosis Report',
+    'goal.flowDiagnosis': 'Quarterly Revenue Flow Diagnosis',
+    'goal.aiUpdating': 'AI Real-time Updating',
+    'goal.conclusion': 'Conclusion',
+    'goal.q3Rate': 'Q3 Achievement Rate',
+    'goal.ytd': 'YTD Progress',
+    'goal.gap': 'GAP',
+    'goal.drillRegion': 'Drill Down by Region',
+    'goal.viewEnablement': 'View Enablement Plan',
   },
   en: {
     // Sidebar
-    'nav.ecosystem': 'Ecosystem',
-    'nav.partners': 'Partner List',
-    'nav.deals': 'Deal Registration',
-    'nav.marketing': 'Marketing & Incentives',
+    'nav.dashboard': 'Dashboard',
+    'nav.partners': 'Partners',
+    'nav.deals': 'Deals',
+    'nav.marketing': 'Marketing',
+    'nav.incentives': 'Incentives',
+    'nav.enablement': 'Enablement',
+    'nav.analytics': 'Analytics',
     'nav.settings': 'Settings',
     
     // Dashboard
@@ -182,8 +383,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'partners.add': 'Add Partner',
     
     // Deal Registration
-    'deals.title': 'Deal Registration',
-    'deals.subtitle': 'Real-time monitoring of status, approval flow, and lifecycle tracking.',
+    'deals.title': 'Deals',
+    'deals.subtitle': 'Registration, approval, and full lifecycle tracking.',
     'deals.yearNew': 'Year New',
     'deals.quarterNew': 'Quarter New',
     'deals.monthNew': 'Month New',
@@ -210,7 +411,76 @@ export const translations: Record<Language, Record<string, string>> = {
     'deals.submit': 'Submit Registration',
     'deals.success': 'Registration Submitted!',
     'deals.successDesc': 'Your deal registration has entered the approval flow. We will complete the review within 24 hours.',
-    
+    'deals.export': 'Export',
+    'deals.search': 'Search projects, customers or partners...',
+    'deals.results': 'results',
+    'deals.noResults': 'No deals found',
+    'deals.noResultsDesc': 'Try adjusting your search or filters',
+    'deals.colProject': 'Project Info',
+    'deals.colPartner': 'Partner',
+    'deals.colSales': 'Sales',
+    'deals.colAmount': 'Amount / Cycle',
+    'deals.colStatus': 'Status',
+    'deals.colPriority': 'Priority',
+    'deals.colActions': 'Actions',
+    'deals.priority': 'Priority',
+    'deals.filterRegion': 'Region',
+    'deals.filterProduct': 'Product',
+    'deals.filterPartnerType': 'Partner Type',
+    'deals.statusPending': 'Pending',
+    'deals.statusApproved': 'Approved',
+    'deals.statusRejected': 'Rejected',
+    'deals.statusConverted': 'Converted',
+    'deals.statusClosedWon': 'Closed Won',
+    'deals.statusClosedLost': 'Closed Lost',
+    'deals.pipelineTotal': 'Pipeline Total',
+    'deals.approvalRate': 'Approval Rate',
+    'deals.closeRate': 'Close Rate',
+    'deals.pendingCount': 'Pending',
+    'deals.pendingSub': 'to process',
+    'deals.breakdownByType': 'By Partner Type',
+    'deals.breakdownByTier': 'By Tier · By Region',
+    'deals.breakdownByProduct': 'By Product/Solution',
+    'deals.funnelTitle': 'Registration → Close Funnel',
+    'deals.funnelRegistered': 'Registered',
+    'deals.funnelApproved': 'Approved',
+    'deals.funnelConverted': 'Converted',
+    'deals.funnelWon': 'Won',
+    'deals.funnelConvertRate': 'conv',
+    'deals.funnelLost': 'lost',
+    'deals.sourceTitle': 'Source Attribution',
+    'deals.sourcePartner': 'Partner Self-Registered',
+    'deals.sourceManager': 'Manager Assigned',
+    'deals.sourceMDF': 'MDF Campaign',
+    'deals.cycleTitle': 'Cycle Time Analysis',
+    'deals.cycleRegToApp': 'Reg→Approve',
+    'deals.cycleAppToConv': 'Approve→Convert',
+    'deals.cycleConvToWon': 'Convert→Won',
+    'deals.cycleFull': 'Full Cycle',
+    'deals.cycleTarget': 'Target',
+    'deals.bottleneck': 'Bottleneck',
+    'deals.lifecycle': 'Lifecycle',
+    'deals.manageActions': 'Actions',
+    'deals.approve': 'Approve',
+    'deals.reject': 'Reject',
+    'deals.convert': 'Convert to Opportunity',
+    'deals.editInfo': 'Edit Registration',
+    'deals.conflictCheck': 'Conflict Check',
+    'deals.conflictYes': 'Existing deal registration detected for this customer. Please verify registration rules.',
+    'deals.conflictNo': 'No conflict detected.',
+
+    // Incentives
+    'incentives.title': 'Incentive Programs',
+    'incentives.subtitle': 'Rebates, points, and rankings to drive partner performance.',
+
+    // Enablement
+    'enablement.title': 'Enablement & Training',
+    'enablement.subtitle': 'Certification management, course system, and partner capability building.',
+
+    // Analytics
+    'analytics.title': 'Analytics',
+    'analytics.subtitle': 'Performance reports, channel health, and data insights.',
+
     // Dashboard Charts
     'charts.revenueTrend': 'Revenue Achievement Trend',
     'charts.partnerDistribution': 'Partner Tier Distribution',
@@ -238,8 +508,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'graph.execute': 'Confirm & Execute Playbook',
     
     // Marketing
-    'marketing.title': 'Marketing & Incentives',
-    'marketing.subtitle': 'Drive growth through strategic collaboration.',
+    'marketing.title': 'Marketing',
+    'marketing.subtitle': 'MDF funds, joint campaigns, and market resources.',
     'marketing.mdfTab': 'MDF Funds',
     'marketing.incentiveTab': 'Incentive Programs',
     'marketing.essence': 'Marketing Essence',
@@ -255,7 +525,47 @@ export const translations: Record<Language, Record<string, string>> = {
     'marketing.roi': 'ROI Analysis',
     'marketing.toolkit': 'Marketing Toolkit',
     'marketing.bestPractices': 'Best Practices',
-    
+
+    // Channel Dashboard
+    'channels.title': 'Marketing Channel Dashboard',
+    'channels.subtitle': 'Multi-channel performance & spend analytics',
+    'channels.search': 'Search channels...',
+    'channels.dateRange': 'Date Range',
+    'channels.export': 'Export',
+    'channels.totalSpend': 'Total Spend',
+    'channels.roi': 'ROI',
+    'channels.conversions': 'Conversions',
+    'channels.activeChannels': 'Active Channels',
+    'channels.chartTitle': 'Multi-channel Performance Trend',
+    'channels.chartSubtitle': 'Monthly revenue & spend',
+    'channels.revenue': 'Revenue',
+    'channels.spend': 'Spend',
+    'channels.tableTitle': 'Top Performing Channels',
+    'channels.viewAll': 'View All',
+    'channels.colChannel': 'Channel',
+    'channels.colSpend': 'Spend',
+    'channels.colCtr': 'CTR',
+    'channels.colConversions': 'Conversions',
+    'channels.colRoi': 'ROI',
+    'channels.colStatus': 'Status',
+    'channels.colActions': 'Actions',
+    'channels.status.active': 'Active',
+    'channels.status.paused': 'Paused',
+    'channels.status.optimizing': 'Optimizing',
+    'channels.filter.thisMonth': 'This Month',
+    'channels.filter.lastMonth': 'Last Month',
+    'channels.filter.thisQuarter': 'This Quarter',
+    'channels.filter.thisYear': 'This Year',
+    'channels.distribution': 'Spend Distribution',
+    'channels.action1': 'New Campaign',
+    'channels.action1Desc': 'Create & launch',
+    'channels.action2': 'Audience Insights',
+    'channels.action2Desc': 'Analyze segments',
+    'channels.action3': 'Channel Comparison',
+    'channels.action3Desc': 'Side-by-side view',
+    'channels.action4': 'Global Reach',
+    'channels.action4Desc': '42 markets',
+
     // Common
     'common.back': 'Back',
     'common.save': 'Save',
@@ -307,18 +617,126 @@ export const translations: Record<Language, Record<string, string>> = {
     // Footer
     'footer.secure': 'Secure Enterprise Connection',
     'footer.assistance': 'Need assistance?',
+
+    // Settings
+    'settings.title': 'System Settings',
+    'settings.subtitle': 'Manage your profile, organization, and security preferences.',
+    'settings.profile': 'Profile',
+    'settings.organization': 'Organization',
+    'settings.global': 'Global Settings',
+    'settings.notifications': 'Notifications',
+    'settings.security': 'Security',
+    'settings.system': 'System',
+    'settings.save': 'Save Changes',
+    'settings.saved': 'Settings Saved',
+    'settings.dangerZone': 'Danger Zone',
+    'settings.dangerDesc': 'Delete your account or deactivate the organization. This action is irreversible.',
+    'settings.deactivate': 'Deactivate Account',
+    'settings.language': 'Language & Region',
+    'settings.theme': 'Interface Theme',
+    'settings.2fa': 'Two-Factor Authentication (2FA)',
+    'settings.2faDesc': 'Add an extra layer of security to your account.',
+    'settings.enable2fa': 'Enable Now',
+    'settings.apiTokens': 'API Access Tokens',
+
+    // Pipeline Board
+    'pipeline.openPipeline': 'Open Pipeline This Quarter',
+    'pipeline.newThisMonth': 'New This Month',
+    'pipeline.sourceBreakdown': 'Source Breakdown',
+    'pipeline.selfReg': 'Partner Self-Registered',
+    'pipeline.vendorAssigned': 'Vendor Assigned',
+    'pipeline.viewSourceDetail': 'View Source Details',
+    'pipeline.funnelVelocity': 'Sales Funnel Velocity',
+    'pipeline.viewFullFunnel': 'View Full Funnel',
+    'pipeline.revenueAchievement': 'Revenue Achievement Rate',
+    'pipeline.wonAmount': 'Won',
+    'pipeline.targetAmount': 'Target',
+    'pipeline.winRate': 'Channel Win Rate',
+    'pipeline.avgCycle': 'Avg Deal Cycle',
+    'pipeline.days': 'days',
+
+    // KPI Card
+    'kpi.activeBreakdown': 'Active Breakdown (by Priority)',
+    'kpi.orderPartners': 'Ordering Partners',
+    'kpi.reportPartners': 'Reporting Partners',
+    'kpi.otherParticipants': 'Other Participants',
+    'kpi.currentQTarget': 'Current Q Expected Close',
+    'kpi.nextQReserve': 'Next Q Reserve Count',
+    'kpi.items': 'items',
+    'kpi.newInQ': 'New In Q',
+    'kpi.historical': 'Historical',
+    'kpi.avgConversionCycle': 'Avg Conversion Cycle',
+    'kpi.annualTarget': 'Annual Revenue Target Locked',
+
+    // Q Ops Control Tower
+    'ops.contribution': 'Contribution Overview',
+    'ops.contributionSub': 'Contribution Alignment',
+    'ops.tierContribution': 'Tier Contribution Ratio',
+    'ops.corePartnerRate': 'Core Partner Achievement Rate (Q/Q)',
+    'ops.enterPerfBoard': 'Enter Performance Board',
+    'ops.dealHealth': 'Deal Registration Health',
+    'ops.dealHealthSub': 'Registration Health',
+    'ops.grossPipeline': 'Gross Pipeline',
+    'ops.viewRegList': 'View Registration List',
+    'ops.marketingEfficiency': 'Marketing Efficiency',
+    'ops.marketingEfficiencySub': 'Marketing Yield & ROI',
+    'ops.activitiesThisQ': 'Activities This Quarter',
+    'ops.completed': 'Completed',
+    'ops.remaining': 'Remaining',
+    'ops.pipelineOutput': 'Pipeline Output',
+    'ops.leadConversion': 'Lead Conversion',
+    'ops.viewMarketingROI': 'View Marketing ROI',
+    'ops.incentiveRate': 'Incentive Achievement',
+    'ops.incentiveRateSub': 'Incentive Mastery',
+    'ops.active': 'Active',
+    'ops.viewIncentiveDetail': 'View Incentive Details',
+
+    // Strategic Goal Board
+    'goal.diagnosis': 'Diagnosis Report',
+    'goal.flowDiagnosis': 'Quarterly Revenue Flow Diagnosis',
+    'goal.aiUpdating': 'AI Real-time Updating',
+    'goal.conclusion': 'Conclusion',
+    'goal.q3Rate': 'Q3 Achievement Rate',
+    'goal.ytd': 'YTD Progress',
+    'goal.gap': 'GAP',
+    'goal.drillRegion': 'Drill Down by Region',
+    'goal.viewEnablement': 'View Enablement Plan',
   }
 };
 
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('zh');
+type InterpolationParams = Record<string, string | number>;
 
-  const t = (key: string) => {
-    return translations[language][key] || key;
-  };
+export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [language, setLanguage] = useState<Language>(() => {
+    const stored = localStorage.getItem('language');
+    return stored === 'en' ? 'en' : 'zh';
+  });
+
+  const t = useCallback((key: string, params?: InterpolationParams) => {
+    const text = translations[language][key];
+    if (!text) return key;
+    if (!params) return text;
+    return Object.entries(params).reduce((acc, [k, v]) => acc.replaceAll(`{{${k}}}`, String(v)), text);
+  }, [language]);
+
+  const setLanguagePersisted = useCallback((lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('language', lang);
+  }, []);
+
+  const formatDate = useCallback((date: string | Date) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
+    return d.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
+  }, [language]);
+
+  const formatNumber = useCallback((num: number) => {
+    const locale = language === 'zh' ? 'zh-CN' : 'en-US';
+    return new Intl.NumberFormat(locale).format(num);
+  }, [language]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: setLanguagePersisted, t, formatDate, formatNumber }}>
       {children}
     </LanguageContext.Provider>
   );

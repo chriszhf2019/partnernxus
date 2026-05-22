@@ -95,7 +95,7 @@ export const AdjustParametersModal: React.FC<AdjustParametersModalProps> = ({ is
                     type="number" 
                     value={budget}
                     onChange={(e) => setBudget(Number(e.target.value))}
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-xl font-black focus:outline-none focus:border-primary transition-all"
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-xl font-black focus:outline-none focus:border-black dark:border-white transition-all"
                   />
                   <span className="absolute right-6 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">CNY</span>
                 </div>
@@ -104,7 +104,7 @@ export const AdjustParametersModal: React.FC<AdjustParametersModalProps> = ({ is
                     <button 
                       key={val}
                       onClick={() => setBudget(val)}
-                      className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 hover:border-primary hover:text-primary transition-all"
+                      className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-600 hover:border-black dark:border-white hover:text-black dark:text-white transition-all"
                     >
                       + ¥{(val/1000).toLocaleString()}K
                     </button>
@@ -119,7 +119,7 @@ export const AdjustParametersModal: React.FC<AdjustParametersModalProps> = ({ is
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <Target className="w-3.5 h-3.5" /> 奖励比例 (Rate)
                     </label>
-                    <span className="text-xs font-black text-primary">{rewardRate}%</span>
+                    <span className="text-xs font-black text-black dark:text-white">{rewardRate}%</span>
                   </div>
                   <input 
                     type="range" 
@@ -128,7 +128,7 @@ export const AdjustParametersModal: React.FC<AdjustParametersModalProps> = ({ is
                     step="0.5"
                     value={rewardRate}
                     onChange={(e) => setRewardRate(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-primary"
+                    className="w-full h-2 bg-[#f5f5f7] rounded-lg appearance-none cursor-pointer accent-primary"
                   />
                 </div>
 
@@ -171,13 +171,13 @@ export const AdjustParametersModal: React.FC<AdjustParametersModalProps> = ({ is
                       className={cn(
                         "p-4 rounded-2xl border-2 transition-all text-left group",
                         item.active 
-                          ? "border-primary bg-primary/5" 
+                          ? "border-black dark:border-white bg-black dark:bg-white/5" 
                           : "border-slate-100 bg-slate-50 hover:border-slate-200"
                       )}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className={cn("text-[10px] font-black", item.active ? "text-primary" : "text-slate-400")}>{item.label}</span>
-                        {item.active && <CheckCircle2 className="w-3 h-3 text-primary" />}
+                        <span className={cn("text-[10px] font-black", item.active ? "text-black dark:text-white" : "text-slate-400")}>{item.label}</span>
+                        {item.active && <CheckCircle2 className="w-3 h-3 text-black dark:text-white" />}
                       </div>
                       <p className="text-[9px] font-bold text-slate-400 leading-tight">
                         {item.active ? '当前已覆盖' : '点击开放权限'}
@@ -193,7 +193,7 @@ export const AdjustParametersModal: React.FC<AdjustParametersModalProps> = ({ is
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <TrendingUp className="w-4 h-4 text-black dark:text-white" />
                     <span className="text-[10px] font-black uppercase tracking-widest">预期影响模拟 (Impact Simulation)</span>
                   </div>
                   <button 
@@ -224,7 +224,7 @@ export const AdjustParametersModal: React.FC<AdjustParametersModalProps> = ({ is
                 </div>
               </div>
               {/* Background Glow */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] -mr-16 -mt-16" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-black dark:bg-white/20 blur-[60px] -mr-16 -mt-16" />
             </div>
           </div>
 

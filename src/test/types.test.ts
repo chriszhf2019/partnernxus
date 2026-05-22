@@ -1,14 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { PARTNERS, DEALS, ACTIVITIES, PARTNER_DETAILS, DEAL_STATS, MDF_STATS, INCENTIVE_PROGRAMS } from '../constants';
+import { DEALS, ACTIVITIES, PARTNER_DETAILS, DEAL_STATS, MDF_STATS, INCENTIVE_PROGRAMS } from '../constants';
+import { IMPORTED_PARTNERS } from '../data/importedPartners';
 
 describe('Constants / Mock Data', () => {
-  it('PARTNERS is a non-empty array', () => {
-    expect(Array.isArray(PARTNERS)).toBe(true);
-    expect(PARTNERS.length).toBeGreaterThan(0);
+  it('IMPORTED_PARTNERS is a non-empty array', () => {
+    expect(Array.isArray(IMPORTED_PARTNERS)).toBe(true);
+    expect(IMPORTED_PARTNERS.length).toBeGreaterThan(0);
   });
 
   it('each partner has required fields', () => {
-    for (const p of PARTNERS) {
+    for (const p of IMPORTED_PARTNERS) {
       expect(typeof p.id).toBe('string');
       expect(typeof p.name).toBe('string');
       expect(typeof p.tier).toBe('string');

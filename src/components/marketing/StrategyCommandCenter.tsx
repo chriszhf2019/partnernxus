@@ -287,12 +287,12 @@ export const StrategyCommandCenter: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       {/* App Toolbar */}
-      <div className="flex items-center justify-between bg-white px-6 py-3 rounded-2xl border border-slate-100 shadow-sm">
+      <div className="flex items-center justify-between bg-white px-6 py-3 rounded-2xl border border-black/5 dark:border-white/5 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <Rocket className="w-4 h-4 text-primary" />
+          <div className="w-8 h-8 rounded-full bg-black dark:bg-white/10 flex items-center justify-center">
+            <Rocket className="w-4 h-4 text-black dark:text-white" />
           </div>
-          <span className="text-xs font-black text-slate-900 uppercase">战略指挥中心 v2.1</span>
+          <span className="text-xs font-black text-black dark:text-white uppercase">战略指挥中心 v2.1</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2 pr-4 border-r border-slate-100">
@@ -313,7 +313,7 @@ export const StrategyCommandCenter: React.FC = () => {
       </div>
 
       {/* Module 1: Revenue Alignment & Gap Analysis */}
-      <section className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <section className="bg-white dark:bg-[#1c1c1e] rounded-3xl border border-black/5 dark:border-white/5 shadow-sm overflow-hidden">
         <GapAnalysisHeader 
           winRate={winRate} setWinRate={setWinRate}
           salesTarget={salesTarget} setSalesTarget={setSalesTarget}
@@ -323,7 +323,7 @@ export const StrategyCommandCenter: React.FC = () => {
         <div className="px-8 py-6">
           <div className="relative pt-6 pb-10">
             {/* Bullet Chart / Stacked Bar */}
-            <div className="h-8 w-full bg-slate-100 rounded-xl relative overflow-hidden flex">
+            <div className="h-8 w-full bg-[#f5f5f7] rounded-xl relative overflow-hidden flex">
               {/* Actual Pipeline */}
               <motion.div 
                 initial={false}
@@ -368,13 +368,13 @@ export const StrategyCommandCenter: React.FC = () => {
                 <span className="text-[9px] font-black text-orange-600">{requiredPipeline}M (Required)</span>
               </div>
               <div className="flex flex-col items-center" style={{ position: 'absolute', right: '0' }}>
-                <div className="w-px h-4 bg-primary mb-0.5" />
-                <span className="text-[9px] font-black text-primary">¥{salesTarget}M (Target)</span>
+                <div className="w-px h-4 bg-black dark:bg-white mb-0.5" />
+                <span className="text-[9px] font-black text-black dark:text-white">¥{salesTarget}M (Target)</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+          <div className="mt-2 p-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl border border-black/5 dark:border-white/5 flex items-center gap-2">
             <Info className="w-3.5 h-3.5 text-slate-400" />
             <p className="text-[10px] text-slate-500 leading-none">
               基于 <span className="font-bold text-slate-700">{winRate}% 赢单率</span>，目标 ¥{salesTarget}M 需 Pipeline <span className="font-bold text-slate-700">¥{requiredPipeline}M</span>。
@@ -396,9 +396,9 @@ export const StrategyCommandCenter: React.FC = () => {
         />
 
         {/* Detailed Activity List */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">当季重点活动清单 (Q3 Key Activities)</h3>
+        <div className="bg-white dark:bg-[#1c1c1e] rounded-3xl border border-black/5 dark:border-white/5 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-black/5 dark:border-white/5 bg-slate-50/50">
+            <h3 className="text-xs font-black text-black dark:text-white uppercase tracking-widest">当季重点活动清单 (Q3 Key Activities)</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -416,7 +416,7 @@ export const StrategyCommandCenter: React.FC = () => {
                 {activities.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center space-y-3">
-                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto border border-slate-100">
+                      <div className="w-12 h-12 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-full flex items-center justify-center mx-auto border border-slate-100">
                         <Calendar className="w-6 h-6 text-slate-300" />
                       </div>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">暂无活跃活动，请点击“新增活动”开始规划</p>
@@ -430,7 +430,7 @@ export const StrategyCommandCenter: React.FC = () => {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900 group-hover:text-primary transition-colors">{act.name}</span>
+                        <span className="text-xs font-black text-black dark:text-white group-hover:text-black dark:text-white transition-colors">{act.name}</span>
                         <ChevronRight className="w-3 h-3 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                       </div>
                     </td>
@@ -441,7 +441,7 @@ export const StrategyCommandCenter: React.FC = () => {
                       <span className="text-[10px] font-bold text-slate-500">{act.location || '-'}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 text-[9px] font-black rounded-lg uppercase tracking-tighter">
+                      <span className="px-2 py-1 bg-[#f5f5f7] text-slate-600 text-[9px] font-black rounded-lg uppercase tracking-tighter">
                         {act.type}
                       </span>
                     </td>
@@ -451,7 +451,7 @@ export const StrategyCommandCenter: React.FC = () => {
                     <td className="px-6 py-4">
                       <span className={cn(
                         "px-2 py-1 text-[9px] font-black rounded-lg uppercase tracking-tighter",
-                        act.status === 'In Progress' ? 'text-blue-600 bg-blue-50' :
+                        act.status === 'In Progress' ? 'text-blue-600 bg-[#f5f5f7]' :
                         act.status === 'Completed' ? 'text-emerald-600 bg-emerald-50' :
                         'text-amber-600 bg-amber-50'
                       )}>
@@ -469,7 +469,7 @@ export const StrategyCommandCenter: React.FC = () => {
       {/* Module 3: Prescriptive Recommendations */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-lg font-black text-black dark:text-white tracking-tight flex items-center gap-2">
             <Lightbulb className={cn("w-5 h-5 transition-colors duration-500", showInsights ? "text-amber-500" : "text-slate-300")} />
             🤖 系统洞察与智能建议 (Insights & Next Best Actions)
           </h2>
@@ -479,7 +479,7 @@ export const StrategyCommandCenter: React.FC = () => {
               "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border",
               showInsights 
                 ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-200" 
-                : "bg-white text-slate-600 border-slate-200 hover:border-slate-900 hover:text-slate-900"
+                : "bg-white text-slate-600 border-black/5 dark:border-white/5 hover:border-black dark:hover:border-white hover:text-slate-900"
             )}
           >
             {showInsights ? (
@@ -507,7 +507,7 @@ export const StrategyCommandCenter: React.FC = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.1 }}
                   whileHover={{ y: -4 }}
-                  className="bg-white p-8 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group"
+                  className="bg-white dark:bg-[#1c1c1e] p-8 rounded-3xl border border-blue-100 shadow-sm relative overflow-hidden group"
                 >
                   <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                     <BarChart3 className="w-24 h-24 text-blue-600" />
@@ -515,16 +515,16 @@ export const StrategyCommandCenter: React.FC = () => {
                   
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-6">
-                      <div className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black rounded-full uppercase tracking-widest border border-blue-100">
+                      <div className="px-3 py-1 bg-[#f5f5f7] text-blue-600 text-[10px] font-black rounded-full uppercase tracking-widest border border-blue-100">
                         预算规划建议
                       </div>
-                      <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-[#f5f5f7]0 animate-pulse" />
                     </div>
 
                     <div className="space-y-4 mb-8">
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">洞察 (Insight)</p>
-                        <p className="text-sm font-bold text-slate-900 leading-relaxed">
+                        <p className="text-sm font-bold text-black dark:text-white leading-relaxed">
                           根据缺口分析，医疗与政务行业 Pipeline 严重不足，现有活动无法支撑 Q3 目标。
                         </p>
                       </div>
@@ -538,7 +538,7 @@ export const StrategyCommandCenter: React.FC = () => {
 
                     <button
                       onClick={() => alert('✅ 医疗专项定向 MDF 计划已生成\n\n- 目标伙伴: 42 家医疗 ISV\n- 预算: ¥120万\n- 执行周期: Q3-Q4\n- 预期 Pipeline: ¥25M')}
-                      className="w-full py-4 bg-blue-600 text-white text-xs font-black rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+                      className="w-full py-4 bg-black text-white text-xs font-black rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
                     >
                       <Rocket className="w-4 h-4" />
                       🚀 一键生成医疗专项定向 MDF 计划
@@ -552,7 +552,7 @@ export const StrategyCommandCenter: React.FC = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
                   whileHover={{ y: -4 }}
-                  className="bg-white p-8 rounded-3xl border border-orange-100 shadow-sm relative overflow-hidden group"
+                  className="bg-white dark:bg-[#1c1c1e] p-8 rounded-3xl border border-orange-100 shadow-sm relative overflow-hidden group"
                 >
                   <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
                     <Zap className="w-24 h-24 text-orange-600" />
@@ -569,7 +569,7 @@ export const StrategyCommandCenter: React.FC = () => {
                     <div className="space-y-4 mb-8">
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">洞察 (Insight)</p>
-                        <p className="text-sm font-bold text-slate-900 leading-relaxed">
+                        <p className="text-sm font-bold text-black dark:text-white leading-relaxed">
                           上月 15 场活动产出 800 个 MQL，但商机转化率仅为 <span className="text-orange-600">5%</span> (低于基准 12%)，存在大量沉睡线索。
                         </p>
                       </div>
@@ -583,7 +583,7 @@ export const StrategyCommandCenter: React.FC = () => {
 
                     <button
                       onClick={() => alert('✅ 线索激活 SPIFF 激励令已发布\n\n- 覆盖伙伴: 245 家\n- 激励金额: ¥5,000/条有效转化\n- 目标线索: 800 MQL\n- 预期激活商机: ¥12M')}
-                      className="w-full py-4 bg-orange-600 text-white text-xs font-black rounded-2xl hover:bg-orange-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-100"
+                      className="w-full py-4 bg-black text-white text-xs font-black rounded-2xl hover:bg-orange-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-100"
                     >
                       <Zap className="w-4 h-4" />
                       ⚡ 一键发布线索激活专项激励令
@@ -599,8 +599,8 @@ export const StrategyCommandCenter: React.FC = () => {
       {/* Module 4: Objective-Driven Execution Board */}
       <section className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Activity className={cn("w-5 h-5 transition-colors duration-500", showExecutionBoard ? "text-primary" : "text-slate-300")} />
+          <h2 className="text-lg font-black text-black dark:text-white tracking-tight flex items-center gap-2">
+            <Activity className={cn("w-5 h-5 transition-colors duration-500", showExecutionBoard ? "text-black dark:text-white" : "text-slate-300")} />
             以目标为导向的执行看板 (Objective-Driven Execution Board)
           </h2>
           <button 
@@ -609,7 +609,7 @@ export const StrategyCommandCenter: React.FC = () => {
               "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border",
               showExecutionBoard 
                 ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-200" 
-                : "bg-white text-slate-600 border-slate-200 hover:border-slate-900 hover:text-slate-900"
+                : "bg-white text-slate-600 border-black/5 dark:border-white/5 hover:border-black dark:hover:border-white hover:text-slate-900"
             )}
           >
             {showExecutionBoard ? (
@@ -636,7 +636,7 @@ export const StrategyCommandCenter: React.FC = () => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col"
+                  className="bg-white dark:bg-[#1c1c1e] rounded-3xl border border-black/5 dark:border-white/5 shadow-sm overflow-hidden flex flex-col"
                 >
                   <div className="p-8 border-b border-slate-100">
                     <div className="flex items-center justify-between mb-6">
@@ -657,7 +657,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           <p className="text-2xl font-black text-emerald-600">¥15M</p>
                         </div>
                       </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-[#f5f5f7] rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: '75%' }}
@@ -671,11 +671,11 @@ export const StrategyCommandCenter: React.FC = () => {
                   <div className="p-8 bg-slate-50/50 flex-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">包含的武器弹药 (Campaign Tools)</p>
                     <div className="flex flex-wrap gap-3">
-                      <div className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center gap-2 shadow-sm">
+                      <div className="px-4 py-2 bg-white border border-black/5 dark:border-white/5 rounded-xl flex items-center gap-2 shadow-sm">
                         <Users className="w-3.5 h-3.5 text-blue-500" />
                         <span className="text-xs font-bold text-slate-700">2 个 MDF 线下沙龙</span>
                       </div>
-                      <div className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center gap-2 shadow-sm">
+                      <div className="px-4 py-2 bg-white border border-black/5 dark:border-white/5 rounded-xl flex items-center gap-2 shadow-sm">
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
                         <span className="text-xs font-bold text-slate-700">1 个渠道首单 Incentive</span>
                       </div>
@@ -688,7 +688,7 @@ export const StrategyCommandCenter: React.FC = () => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col"
+                  className="bg-white dark:bg-[#1c1c1e] rounded-3xl border border-black/5 dark:border-white/5 shadow-sm overflow-hidden flex flex-col"
                 >
                   <div className="p-8 border-b border-slate-100">
                     <div className="flex items-center justify-between mb-6">
@@ -709,7 +709,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           <p className="text-2xl font-black text-red-600">¥2M</p>
                         </div>
                       </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-[#f5f5f7] rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: '20%' }}
@@ -723,11 +723,11 @@ export const StrategyCommandCenter: React.FC = () => {
                   <div className="p-8 bg-slate-50/50 flex-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">包含的武器弹药 (Campaign Tools)</p>
                     <div className="flex flex-wrap gap-3">
-                      <div className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center gap-2 shadow-sm">
+                      <div className="px-4 py-2 bg-white border border-black/5 dark:border-white/5 rounded-xl flex items-center gap-2 shadow-sm">
                         <MousePointer2 className="w-3.5 h-3.5 text-purple-500" />
                         <span className="text-xs font-bold text-slate-700">1 个 Webinar</span>
                       </div>
-                      <div className="px-4 py-2 bg-white border border-slate-200 rounded-xl flex items-center gap-2 shadow-sm">
+                      <div className="px-4 py-2 bg-white border border-black/5 dark:border-white/5 rounded-xl flex items-center gap-2 shadow-sm">
                         <TrendingDown className="w-3.5 h-3.5 text-emerald-500" />
                         <span className="text-xs font-bold text-slate-700">高额阶梯返点计划</span>
                       </div>
@@ -763,7 +763,7 @@ export const StrategyCommandCenter: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden"
+              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden"
             >
               <div className="p-8">
                 <div className="flex items-start justify-between mb-8">
@@ -774,7 +774,7 @@ export const StrategyCommandCenter: React.FC = () => {
                       </span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{selectedActivity.type}</span>
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+                    <h3 className="text-2xl font-black text-black dark:text-white tracking-tight">
                       {modalMode === 'leads' ? '线索跟进看板' : modalMode === 'edit' ? '编辑活动信息' : modalMode === 'attendees' ? '参会人员名单 (WeChat)' : selectedActivity.name}
                     </h3>
                   </div>
@@ -783,7 +783,7 @@ export const StrategyCommandCenter: React.FC = () => {
                       setSelectedActivity(null);
                       setModalMode('details');
                     }}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-[#f5f5f7] rounded-full transition-colors"
                   >
                     <X className="w-6 h-6 text-slate-400" />
                   </button>
@@ -794,7 +794,7 @@ export const StrategyCommandCenter: React.FC = () => {
                     <div className="grid grid-cols-2 gap-6 mb-8">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-slate-50 rounded-xl">
+                          <div className="p-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl">
                             <Calendar className="w-4 h-4 text-slate-600" />
                           </div>
                           <div>
@@ -803,7 +803,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-slate-50 rounded-xl">
+                          <div className="p-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl">
                             <MapPin className="w-4 h-4 text-slate-600" />
                           </div>
                           <div>
@@ -812,7 +812,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-slate-50 rounded-xl">
+                          <div className="p-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-xl">
                             <User className="w-4 h-4 text-slate-600" />
                           </div>
                           <div>
@@ -824,7 +824,7 @@ export const StrategyCommandCenter: React.FC = () => {
 
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-50 rounded-xl">
+                          <div className="p-2 bg-[#f5f5f7] rounded-xl">
                             <DollarSign className="w-4 h-4 text-blue-600" />
                           </div>
                           <div>
@@ -853,7 +853,7 @@ export const StrategyCommandCenter: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 mb-8">
+                    <div className="p-6 bg-[#f5f5f7] dark:bg-[#2c2c2e] rounded-3xl border border-black/5 dark:border-white/5 mb-8">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">活动简介 (Description)</p>
                       <p className="text-sm text-slate-600 leading-relaxed font-medium">
                         {selectedActivity.desc}
@@ -903,7 +903,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           </button>
                           <button 
                             onClick={() => setShowMiniAppPreview(true)}
-                            className="flex-1 py-2 bg-emerald-600 text-white text-[9px] font-black rounded-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-sm"
+                            className="flex-1 py-2 bg-black text-white text-[9px] font-black rounded-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-sm"
                           >
                             <Smartphone className="w-3 h-3" />
                             预览小程序端
@@ -925,7 +925,7 @@ export const StrategyCommandCenter: React.FC = () => {
                       </button>
                       <button 
                         onClick={() => setModalMode('leads')}
-                        className="flex-1 py-4 bg-white border border-slate-200 text-slate-600 text-xs font-black rounded-2xl hover:bg-slate-50 transition-all"
+                        className="flex-1 py-4 bg-white border border-black/5 dark:border-white/5 text-slate-600 text-xs font-black rounded-2xl hover:bg-[#f5f5f7] dark:bg-[#2c2c2e] transition-all"
                       >
                         查看线索跟进
                       </button>
@@ -942,7 +942,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           type="text" 
                           value={editData.name}
                           onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-4 py-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div className="space-y-1">
@@ -951,7 +951,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           type="date" 
                           value={editData.time}
                           onChange={(e) => setEditData({ ...editData, time: e.target.value })}
-                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-4 py-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div className="space-y-1">
@@ -960,7 +960,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           type="text" 
                           value={editData.loc}
                           onChange={(e) => setEditData({ ...editData, loc: e.target.value })}
-                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-4 py-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                       <div className="space-y-1">
@@ -969,7 +969,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           type="text" 
                           value={editData.budget}
                           onChange={(e) => setEditData({ ...editData, budget: e.target.value })}
-                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-4 py-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                     </div>
@@ -979,13 +979,13 @@ export const StrategyCommandCenter: React.FC = () => {
                         rows={3}
                         value={editData.desc}
                         onChange={(e) => setEditData({ ...editData, desc: e.target.value })}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        className="w-full px-4 py-2 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
                     <div className="flex gap-4 pt-4">
                       <button 
                         onClick={handleSaveEdit}
-                        className="flex-1 py-4 bg-primary text-white text-xs font-black rounded-2xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 py-4 bg-black dark:bg-white text-white text-xs font-black rounded-2xl hover:bg-black dark:bg-white/90 transition-all flex items-center justify-center gap-2"
                       >
                         <Save className="w-4 h-4" />
                         保存修改
@@ -1004,7 +1004,7 @@ export const StrategyCommandCenter: React.FC = () => {
                 {modalMode === 'leads' && (
                   <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                      <div className="p-4 bg-[#f5f5f7] rounded-2xl border border-blue-100">
                         <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">总线索 (MQL)</p>
                         <p className="text-xl font-black text-blue-600">{selectedActivity.leads}</p>
                       </div>
@@ -1025,21 +1025,21 @@ export const StrategyCommandCenter: React.FC = () => {
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">转化漏斗 (Funnel)</p>
                       <div className="space-y-2">
                         {[
-                          { label: '线索获取 (MQL)', value: 100, color: 'bg-blue-500' },
+                          { label: '线索获取 (MQL)', value: 100, color: 'bg-[#f5f5f7]0' },
                           { label: '初步沟通 (SAL)', value: 65, color: 'bg-blue-400' },
                           { label: '商机确认 (SQL)', value: 28, color: 'bg-emerald-500' },
                           { label: '方案报价 (Proposal)', value: 12, color: 'bg-emerald-400' },
                         ].map((step, idx) => (
                           <div key={idx} className="flex items-center gap-4">
                             <span className="w-24 text-[10px] font-bold text-slate-500">{step.label}</span>
-                            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="flex-1 h-2 bg-[#f5f5f7] rounded-full overflow-hidden">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${step.value}%` }}
                                 className={cn("h-full rounded-full", step.color)}
                               />
                             </div>
-                            <span className="w-8 text-[10px] font-black text-slate-900 text-right">{step.value}%</span>
+                            <span className="w-8 text-[10px] font-black text-black dark:text-white text-right">{step.value}%</span>
                           </div>
                         ))}
                       </div>
@@ -1060,21 +1060,21 @@ export const StrategyCommandCenter: React.FC = () => {
                 {modalMode === 'attendees' && (
                   <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <div className="bg-[#f5f5f7] dark:bg-[#2c2c2e] p-4 rounded-2xl border border-slate-100">
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">线索转化率</p>
                         <div className="flex items-baseline gap-2">
                           <span className="text-xl font-black text-slate-900">25%</span>
                           <span className="text-[8px] font-bold text-emerald-600">↑ 5%</span>
                         </div>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <div className="bg-[#f5f5f7] dark:bg-[#2c2c2e] p-4 rounded-2xl border border-slate-100">
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">已转商机</p>
                         <div className="flex items-baseline gap-2">
                           <span className="text-xl font-black text-blue-600">12</span>
                           <span className="text-[8px] font-bold text-slate-400">/ 48 Leads</span>
                         </div>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <div className="bg-[#f5f5f7] dark:bg-[#2c2c2e] p-4 rounded-2xl border border-slate-100">
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-1">高潜客户 (Hot)</p>
                         <div className="flex items-baseline gap-2">
                           <span className="text-xl font-black text-orange-600">8</span>
@@ -1104,11 +1104,11 @@ export const StrategyCommandCenter: React.FC = () => {
                               </td>
                               <td className="px-4 py-3">
                                 <div className="flex justify-center">
-                                  <div className="w-12 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className="w-12 h-1.5 bg-[#f5f5f7] rounded-full overflow-hidden">
                                     <div 
                                       className={cn(
                                         "h-full rounded-full",
-                                        person.score > 80 ? "bg-orange-500" : person.score > 60 ? "bg-blue-500" : "bg-slate-300"
+                                        person.score > 80 ? "bg-orange-500" : person.score > 60 ? "bg-[#f5f5f7]0" : "bg-slate-300"
                                       )}
                                       style={{ width: `${person.score}%` }}
                                     />
@@ -1121,7 +1121,7 @@ export const StrategyCommandCenter: React.FC = () => {
                                   person.followUpStatus === 'Opportunity' ? "bg-blue-100 text-blue-700" :
                                   person.followUpStatus === 'Qualified' ? "bg-emerald-100 text-emerald-700" :
                                   person.followUpStatus === 'Contacted' ? "bg-amber-100 text-amber-700" :
-                                  "bg-slate-100 text-slate-500"
+                                  "bg-[#f5f5f7] text-slate-500"
                                 )}>
                                   {person.followUpStatus === 'Opportunity' ? '已转商机' :
                                    person.followUpStatus === 'Qualified' ? '高潜力' :
@@ -1130,10 +1130,10 @@ export const StrategyCommandCenter: React.FC = () => {
                               </td>
                               <td className="px-4 py-3 text-right">
                                 <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors title='转商机'">
+                                  <button className="p-1.5 hover:bg-[#f5f5f7] text-blue-600 rounded-lg transition-colors title='转商机'">
                                     <TrendingUp className="w-3.5 h-3.5" />
                                   </button>
-                                  <button className="p-1.5 hover:bg-slate-100 text-slate-600 rounded-lg transition-colors title='添加备注'">
+                                  <button className="p-1.5 hover:bg-[#f5f5f7] text-slate-600 rounded-lg transition-colors title='添加备注'">
                                     <MessageSquare className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
@@ -1145,7 +1145,7 @@ export const StrategyCommandCenter: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                      <div className="p-4 bg-[#f5f5f7]/50 rounded-2xl border border-blue-100">
                         <div className="flex items-center gap-2 mb-2">
                           <MessageSquare className="w-3 h-3 text-blue-600" />
                           <span className="text-[9px] font-black text-blue-700 uppercase">热门提问</span>
@@ -1193,17 +1193,17 @@ export const StrategyCommandCenter: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden"
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-black/5 dark:border-white/5 overflow-hidden"
             >
               <div className="p-8">
                 <div className="flex items-start justify-between mb-8">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">规划新活动 (Plan New Activity)</p>
-                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">新增市场活动</h3>
+                    <p className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest">规划新活动 (Plan New Activity)</p>
+                    <h3 className="text-2xl font-black text-black dark:text-white tracking-tight">新增市场活动</h3>
                   </div>
                   <button 
                     onClick={() => setShowNewActivityModal(false)}
-                    className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                    className="p-2 hover:bg-[#f5f5f7] rounded-full transition-colors"
                   >
                     <X className="w-6 h-6 text-slate-400" />
                   </button>
@@ -1217,7 +1217,7 @@ export const StrategyCommandCenter: React.FC = () => {
                       placeholder="例如：Q3 行业合作伙伴峰会"
                       value={newActivityData.name}
                       onChange={(e) => setNewActivityData({ ...newActivityData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full px-4 py-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
 
@@ -1227,7 +1227,7 @@ export const StrategyCommandCenter: React.FC = () => {
                       <select 
                         value={newActivityData.type}
                         onChange={(e) => setNewActivityData({ ...newActivityData, type: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
+                        className="w-full px-4 py-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 appearance-none"
                       >
                         <option value="Marketing">Marketing (直营)</option>
                         <option value="PMDF">PMDF (渠道联合)</option>
@@ -1241,7 +1241,7 @@ export const StrategyCommandCenter: React.FC = () => {
                           placeholder="500,000"
                           value={newActivityData.budget}
                           onChange={(e) => setNewActivityData({ ...newActivityData, budget: e.target.value })}
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full px-4 py-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-300">¥</span>
                       </div>
@@ -1281,14 +1281,14 @@ export const StrategyCommandCenter: React.FC = () => {
                       placeholder="简述活动目标与预期产出..."
                       value={newActivityData.desc}
                       onChange={(e) => setNewActivityData({ ...newActivityData, desc: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full px-4 py-3 bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
 
                   <div className="flex gap-4 pt-4">
                     <button 
                       onClick={handleCreateActivity}
-                      className="flex-1 py-4 bg-primary text-white text-xs font-black rounded-2xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                      className="flex-1 py-4 bg-black dark:bg-white text-white text-xs font-black rounded-2xl hover:bg-black dark:bg-white/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/10 dark:shadow-white/10"
                     >
                       <PlusCircle className="w-4 h-4" />
                       确认并发布规划

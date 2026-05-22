@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import {
   DEALS,
   ACTIVITIES,
@@ -15,13 +15,14 @@ import {
 } from '../constants';
 import { IMPORTED_PARTNERS } from '../data/importedPartners';
 import { getMockCockpitData } from '../lib/mockGenerator';
-import type { CockpitData } from '../types';
+import type { CockpitData, Partner } from '../types';
 
 export function usePartners() {
+  const partnerListRef = useRef<Partner[]>(IMPORTED_PARTNERS);
   return useMemo(() => ({
     partners: IMPORTED_PARTNERS,
     partnerDetails: PARTNER_DETAILS,
-    getPartnerById: (id: string) => IMPORTED_PARTNERS.find((p) => p.id === id) || null,
+    partnerListRef,
   }), []);
 }
 

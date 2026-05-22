@@ -1,0 +1,120 @@
+/* ─── PartnerNexus 全局样式 ──────────────────────── */
+page {
+  --color-brand: #2563eb;
+  --color-brand-light: #3b82f6;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-bg: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --radius: 16rpx;
+  --shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  font-size: 28rpx;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  line-height: 1.6;
+}
+
+/* ─── 通用卡片 ──────────────────────────────────── */
+.card {
+  background: var(--color-bg-card);
+  border-radius: var(--radius);
+  padding: 24rpx;
+  margin: 16rpx 24rpx;
+  box-shadow: var(--shadow);
+  border: 1rpx solid var(--color-border);
+}
+
+/* ─── 通用按钮 ──────────────────────────────────── */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+  border-radius: var(--radius);
+  font-size: 28rpx;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: var(--color-brand);
+  color: #fff;
+}
+.btn-primary:active { background: var(--color-brand-light); }
+.btn-outline {
+  background: transparent;
+  color: var(--color-brand);
+  border: 2rpx solid var(--color-brand);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+.btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+.btn-sm { height: 56rpx; font-size: 24rpx; padding: 0 24rpx; }
+.btn-block { width: 100%; }
+
+/* ─── 标签 ──────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.badge-primary { background: #eff6ff; color: #2563eb; }
+.badge-success { background: #ecfdf5; color: #059669; }
+.badge-warning { background: #fffbeb; color: #d97706; }
+.badge-danger  { background: #fef2f2; color: #dc2626; }
+.badge-gold    { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; }
+.badge-silver  { background: #f1f5f9; color: #475569; }
+.badge-bronze  { background: #fef2f2; color: #b45309; }
+
+/* ─── 分割线 ────────────────────────────────────── */
+.divider {
+  height: 1rpx;
+  background: var(--color-border);
+  margin: 16rpx 0;
+}
+
+/* ─── 文本工具 ──────────────────────────────────── */
+.text-muted { color: var(--color-text-muted); }
+.text-secondary { color: var(--color-text-secondary); }
+.text-sm { font-size: 24rpx; }
+.text-lg { font-size: 36rpx; }
+.text-xl { font-size: 44rpx; font-weight: 700; }
+.text-center { text-align: center; }
+.font-bold { font-weight: 700; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ─── 弹性布局 ──────────────────────────────────── */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-1 { flex: 1; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-8 { gap: 8rpx; }
+.gap-12 { gap: 12rpx; }
+.gap-16 { gap: 16rpx; }
+.gap-24 { gap: 24rpx; }
+
+/* ─── 间距 ──────────────────────────────────────── */
+.mt-8 { margin-top: 8rpx; }
+.mt-16 { margin-top: 16rpx; }
+.mt-24 { margin-top: 24rpx; }
+.mb-8 { margin-bottom: 8rpx; }
+.mb-16 { margin-bottom: 16rpx; }
+.p-16 { padding: 16rpx; }
+.p-24 { padding: 24rpx; }

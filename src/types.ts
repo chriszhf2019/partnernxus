@@ -3,11 +3,24 @@ export type PartnerStatus = 'Cooperating' | 'Inactive' | 'Prospective';
 export type PartnerType = 'Reseller' | 'ISV' | 'OEM' | 'Service' | 'VAD' | 'VAR' | 'SI';
 export type DealStatus = 'Pending' | 'Approved' | 'Rejected' | 'Converted' | 'Closed Won' | 'Closed Lost';
 
+export interface JBPFormData {
+  title: string;
+  type: string;
+  date: string;
+  time: string;
+  duration: string;
+  location: string;
+  objectives: string[];
+  participants: { name: string; role: string; side: string }[];
+  agenda: { time: string; topic: string }[];
+}
+
 export interface PartnerContact {
   salutation?: string;
   firstName: string;
   lastName: string;
   title: string;
+  department?: string;
   phone: string;
   mobile: string;
   email: string;
@@ -24,12 +37,20 @@ export interface Partner {
   manager: string;
   location: string;
   region: string;
+  province?: string;
+  city?: string;
+  district?: string;
   startDate: string;
   years: number;
   prevTier: PartnerTier;
   tags: string[];
   winRate: number;
   contacts: PartnerContact[];
+  unifiedSocialCreditCode?: string;
+  industry?: string;
+  registeredAddress?: string;
+  cooperationScope?: string;
+  isCorePartner?: boolean;
 }
 
 export interface DealLifecycleEvent {
@@ -130,6 +151,37 @@ export interface FollowUpTask {
   category: 'Sales' | 'Marketing' | 'Enablement' | 'Operations';
 }
 
+export interface CooperationPlan {
+  id: string;
+  name: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  status: 'Active' | 'Completed' | 'Pending';
+  description: string;
+  revenueTarget?: number;
+  actualRevenue?: number;
+}
+
+export interface CooperationRecord {
+  id: string;
+  date: string;
+  type: 'meeting' | 'training' | 'activity' | 'deal' | 'other';
+  title: string;
+  description: string;
+  participants: string[];
+  outcome: string;
+}
+
+export interface SubPartner {
+  id: string;
+  name: string;
+  type: PartnerType;
+  contactPerson: string;
+  phone: string;
+  status: 'Active' | 'Inactive';
+}
+
 export interface PartnerDetails extends Partner {
   pipeline: PartnerPipeline;
   mdf: MDFData;
@@ -141,6 +193,9 @@ export interface PartnerDetails extends Partner {
     progress: number;
     closeDate: string;
   }[];
+  cooperationPlans?: CooperationPlan[];
+  cooperationRecords?: CooperationRecord[];
+  subPartners?: SubPartner[];
 }
 
 export interface Activity {
@@ -208,19 +263,17 @@ export interface AchievementData {
 export interface TimeSeriesMetric {
   metric_name: string;
   current_value: number;
-  yoy: number; // 同比
-  qoq: number; // 季环比
-  mom: number; // 月环比
-  linear_rate: number; // 季度线性度
-  
-  // 达成率多维度透视
+  yoy: number;
+  qoq: number;
+  mom: number;
+  linear_rate: number;
+
   achievements: {
     monthly: AchievementData;
     quarterly: AchievementData;
     yearly: AchievementData;
   };
 
-  // 活跃度拆分 (仅针对活跃伙伴)
   active_split?: {
     order_placing: { value: number; target: number; rate: number; yoy: number; qoq: number };
     leads_reporting: { value: number; target: number; rate: number; yoy: number; qoq: number };
@@ -228,26 +281,23 @@ export interface TimeSeriesMetric {
     incentive_participants: { value: number; target: number; rate: number; yoy: number; qoq: number };
   };
 
-  // Pipeline 拆分 (仅针对 Pipeline)
   pipeline_batch?: {
-    current_q_target: number; // 当季结单预期
-    next_q_count: number;     // 下季储备数量
-    new_in_q_ratio: number;   // 当季新增占比
-    historical_ratio: number; // 历史积存占比
+    current_q_target: number;
+    next_q_count: number;
+    new_in_q_ratio: number;
+    historical_ratio: number;
     historical_amount: number;
     new_amount: number;
   };
 
-  // 转化效率 (仅针对线索转化率)
   conversion_details?: {
-    cycle_days: number; // 转化周期
+    cycle_days: number;
     funnel_stages: {
       stage: string;
       count: number;
     }[];
   };
 
-  // 营销与激励 (仅针对 Marketing)
   marketing_details?: {
     pmdf_utilization: number;
     incentive_participation: number;
@@ -259,7 +309,6 @@ export interface TimeSeriesMetric {
     }[];
   };
 
-  // Strategic Summary for Revenue Overview
   strategic_revenue?: {
     achievement_amount: number;
     forecast_landing: number;
@@ -277,9 +326,8 @@ export interface TimeSeriesMetric {
     }[];
   };
 
-  // 维度达成 (用于下钻视图)
   dimensional_achievements?: {
-    type: 'region' | 'channel_type' | 'team' | 'channel' | 'industry' | 'order_size' | 'product_expertise' | 'partner_tier' | 'partner_type' | 'geo_coverage' | 'industry_vertical' | 'tier_role' | 'product_breadth' | 'customer_segment' | 'activity_health' | 'campaigns' | 'incentive_tracker' | 'certification_hub' | 'regional_roi' | 'deals_tracking' | 'conversion_velocity' | 'source_efficiency' | 'win_loss_analysis';
+    type: string;
     data: {
       name: string;
       current: number;
@@ -298,7 +346,6 @@ export interface TimeSeriesMetric {
         contribution: number;
         capability: number;
       };
-      // New fields for granular partner analysis
       sub_metrics?: {
         label: string;
         value: string | number;
@@ -315,7 +362,6 @@ export interface TimeSeriesMetric {
     }[];
   }[];
 
-  // 营销与激励概览 (模块三)
   marketing_overview?: {
     activities: {
       completed: number;
@@ -348,7 +394,6 @@ export interface TimeSeriesMetric {
     };
   };
 
-  // 商机报备与流转概览 (模块四)
   reporting_overview?: {
     pipeline: {
       total_count: number;
@@ -382,7 +427,6 @@ export interface TimeSeriesMetric {
     };
   };
 
-  // 渠道覆盖与生态合作 (针对活跃伙伴/合作伙伴看板)
   partner_ecosystem_details?: {
     coverage: {
       total: number;

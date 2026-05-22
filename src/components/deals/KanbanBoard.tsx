@@ -22,7 +22,7 @@ export const DealCard: React.FC<DealCardProps> = ({ deal }) => {
           ? "bg-surface-container-lowest border-secondary-container grayscale opacity-70 hover:grayscale-0 hover:opacity-100"
           : deal.isPriority 
             ? "bg-tertiary-fixed/10 border-tertiary" 
-            : "bg-surface-container-lowest border-primary"
+            : "bg-surface-container-lowest border-black dark:border-white"
       )}
     >
       {deal.isPriority && (
@@ -81,7 +81,7 @@ export const DealCard: React.FC<DealCardProps> = ({ deal }) => {
             </div>
             <div className="flex -space-x-2">
               {/* Team avatars removed or replaced with salesName */}
-              <div className="w-5 h-5 rounded-full border-2 border-white bg-primary flex items-center justify-center text-[8px] text-white font-black">
+              <div className="w-5 h-5 rounded-full border-2 border-white bg-black dark:bg-white flex items-center justify-center text-[8px] text-white font-black">
                 {deal.salesName.charAt(0)}
               </div>
             </div>
@@ -99,8 +99,8 @@ interface KanbanBoardProps {
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ deals }) => {
   const stages: { id: Deal['status']; label: string; color: string }[] = [
     { id: 'Pending', label: 'Pending', color: 'bg-amber-500' },
-    { id: 'Approved', label: 'Approved', color: 'bg-blue-500' },
-    { id: 'Converted', label: 'Converted', color: 'bg-primary' },
+    { id: 'Approved', label: 'Approved', color: 'bg-[#f5f5f7]0' },
+    { id: 'Converted', label: 'Converted', color: 'bg-black dark:bg-white' },
     { id: 'Closed Won', label: 'Closed Won', color: 'bg-emerald-500' },
   ];
 

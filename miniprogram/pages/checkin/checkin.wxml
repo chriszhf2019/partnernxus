@@ -1,0 +1,41 @@
+<!-- 扫码签到页 -->
+<view class="page">
+  <view class="checkin-hero text-center">
+    <view class="qr-frame" wx:if="{{!checkedIn}}">
+      <text class="text-lg font-bold mb-24">扫描会议二维码签到</text>
+      <view class="qr-scanner-box">
+        <text class="text-muted">对准二维码自动扫描</text>
+      </view>
+      <button class="btn btn-primary btn-block mt-24" bindtap="startScan">📷 打开扫一扫</button>
+    </view>
+
+    <view wx:if="{{checkedIn}}" class="checkin-success">
+      <text class="text-xl font-bold" style="color: #059669;">✅ 签到成功！</text>
+      <text class="text-lg mt-16">+30 积分</text>
+      <view class="mt-24">
+        <text class="text-sm text-muted">{{eventName}}</text>
+      </view>
+      <view class="mt-8">
+        <text class="text-sm text-muted">{{checkinTime}}</text>
+      </view>
+      <view class="mt-8">
+        <text class="text-sm">{{companyName}}</text>
+        <text class="text-sm text-muted ml-8">{{userName}}</text>
+      </view>
+      <view class="mt-24 p-16" style="background: #f0fdf4; border-radius: 8rpx;">
+        <text class="text-sm" style="color: #059669;">您已成功归属于 {{companyName}} 旗下</text>
+      </view>
+      <button class="btn btn-primary btn-block mt-24" bindtap="goEvent">进入活动</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="text-lg font-bold mb-16">签到说明</text>
+    <view class="flex gap-16 text-sm text-secondary">
+      <text>1. 打开扫一扫扫描会议现场二维码</text>
+      <text>2. 系统自动识别您的身份和归属公司</text>
+      <text>3. 签到成功获得 30 积分</text>
+      <text>4. 签到后方可参与提问和抽奖</text>
+    </view>
+  </view>
+</view>

@@ -64,7 +64,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetData, onNe
             label="Marketing (直营)" 
             total={budgetData.marketingTotal} 
             allocated={budgetData.marketingAllocated} 
-            color="bg-blue-500" 
+            color="bg-[#f5f5f7]0" 
             quarter={budgetData.quarter || 'Q3'}
           />
           <BudgetSection 
@@ -83,7 +83,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetData, onNe
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">当季度预算分配 (Q3 Allocation)</p>
           <button 
             onClick={onNewActivity}
-            className="p-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all shadow-sm flex items-center gap-1 active:scale-95"
+            className="p-1.5 bg-black dark:bg-white text-white rounded-lg hover:bg-black dark:bg-white/90 transition-all shadow-sm flex items-center gap-1 active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
             <span className="text-[9px] font-black uppercase">新增活动</span>
@@ -95,11 +95,11 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetData, onNe
               <span className="text-slate-400 uppercase">已分配 (Allocated)</span>
               <span className="text-slate-900">¥{(totalAllocated / 1000000).toFixed(1)}M</span>
             </div>
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-[#f5f5f7] rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${allocationRate}%` }}
-                className="h-full bg-primary rounded-full"
+                className="h-full bg-black dark:bg-white rounded-full"
               />
             </div>
           </div>
@@ -108,7 +108,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetData, onNe
               <span className="text-slate-400 uppercase">剩余 (Remaining)</span>
               <span className="text-slate-900">¥{((totalBudget - totalAllocated) / 1000000).toFixed(1)}M</span>
             </div>
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-[#f5f5f7] rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${100 - allocationRate}%` }}
@@ -116,7 +116,7 @@ export const BudgetOverview: React.FC<BudgetOverviewProps> = ({ budgetData, onNe
               />
             </div>
           </div>
-          <div className="pt-2 border-t border-slate-50">
+          <div className="pt-2 border-t border-black/5">
             <p className="text-[9px] text-slate-400 font-medium leading-relaxed">
               当前预算分配率 <span className="text-slate-900 font-black">{allocationRate}%</span>。{allocationRate > 80 ? '预算已接近饱和，建议收紧非核心投入。' : '仍有充足额度，建议优先对接高潜力渠道。'}
             </p>

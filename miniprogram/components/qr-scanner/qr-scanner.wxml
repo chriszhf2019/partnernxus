@@ -1,0 +1,9 @@
+<view class="qr-scanner" bindtap="startScan">
+  <view class="qr-frame">
+    <view class="qr-corner top-left" />
+    <view class="qr-corner top-right" />
+    <view class="qr-corner bottom-left" />
+    <view class="qr-corner bottom-right" />
+    <text class="qr-hint">对准二维码自动扫描</text>
+  </view>
+</view>

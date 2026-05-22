@@ -46,7 +46,7 @@ export const DealRegistrationForm: React.FC = () => {
         <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8">
           <CheckCircle2 className="w-10 h-10" />
         </div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">{t('deals.success')}</h2>
+        <h2 className="text-3xl font-black text-black dark:text-white tracking-tight">{t('deals.success')}</h2>
         <p className="text-slate-500 font-bold max-w-md mx-auto leading-relaxed">
           {t('deals.successDesc')}
         </p>
@@ -79,17 +79,17 @@ export const DealRegistrationForm: React.FC = () => {
               )}>
                 <div className={cn(
                   "w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs transition-all",
-                  step === s.id ? "bg-primary text-white shadow-lg shadow-primary/20 scale-110" : 
-                  step > s.id ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-400"
+                  step === s.id ? "bg-black dark:bg-white text-white shadow-lg shadow-black/10 dark:shadow-white/10 scale-110" : 
+                  step > s.id ? "bg-emerald-500 text-white" : "bg-[#f5f5f7] text-slate-400"
                 )}>
                   {step > s.id ? <CheckCircle2 className="w-4 h-4" /> : s.id}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 hidden sm:block">{s.label}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-black dark:text-white hidden sm:block">{s.label}</span>
               </div>
               {idx < 2 && (
                 <div className={cn(
                   "h-0.5 flex-1 mx-4 rounded-full transition-all",
-                  step > s.id ? "bg-emerald-500" : "bg-slate-100"
+                  step > s.id ? "bg-emerald-500" : "bg-[#f5f5f7]"
                 )} />
               )}
             </React.Fragment>
@@ -97,7 +97,7 @@ export const DealRegistrationForm: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden">
+        <div className="bg-white dark:bg-[#1c1c1e] p-10 rounded-[2.5rem] border border-black/5 dark:border-white/5 shadow-sm relative overflow-hidden">
           <form onSubmit={handleSubmit} className="space-y-8">
             <AnimatePresence mode="wait">
               {step === 1 && (
@@ -115,7 +115,7 @@ export const DealRegistrationForm: React.FC = () => {
                         name="partnerName"
                         value={formData.partnerName}
                         onChange={handleInputChange}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                       >
                         <option value="">Select a partner...</option>
                         <option value="CloudScale">CloudScale Solutions</option>
@@ -129,7 +129,7 @@ export const DealRegistrationForm: React.FC = () => {
                         name="customerName"
                         value={formData.customerName}
                         onChange={handleInputChange}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
+                        className="w-full bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
                         placeholder="e.g. Acme Corp" 
                         type="text" 
                       />
@@ -140,7 +140,7 @@ export const DealRegistrationForm: React.FC = () => {
                         name="projectTitle"
                         value={formData.projectTitle}
                         onChange={handleInputChange}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
+                        className="w-full bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
                         placeholder="Enterprise Infrastructure Expansion 2024" 
                         type="text" 
                       />
@@ -151,7 +151,7 @@ export const DealRegistrationForm: React.FC = () => {
                         name="salesStage"
                         value={formData.salesStage}
                         onChange={handleInputChange}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                        className="w-full bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                       >
                         <option value="">Select current stage...</option>
                         {config.salesStages.map(stage => (
@@ -184,7 +184,7 @@ export const DealRegistrationForm: React.FC = () => {
                           name="dealValue"
                           value={formData.dealValue}
                           onChange={handleInputChange}
-                          className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 pl-7 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
+                          className="w-full bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl p-3 pl-7 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
                           placeholder="0.00" 
                           type="number" 
                         />
@@ -196,7 +196,7 @@ export const DealRegistrationForm: React.FC = () => {
                         name="closeDate"
                         value={formData.closeDate}
                         onChange={handleInputChange}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
+                        className="w-full bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
                         type="date" 
                       />
                     </div>
@@ -206,7 +206,7 @@ export const DealRegistrationForm: React.FC = () => {
                         name="description"
                         value={formData.description}
                         onChange={handleInputChange}
-                        className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none" 
+                        className="w-full bg-[#f5f5f7] dark:bg-[#2c2c2e] border border-black/5 dark:border-white/5 rounded-xl p-3 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none" 
                         placeholder="Briefly describe the scope and primary objectives..." 
                         rows={4}
                       />
@@ -225,8 +225,8 @@ export const DealRegistrationForm: React.FC = () => {
                 >
                   <div className="space-y-4">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t('deals.documents')}</label>
-                    <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-12 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer group">
-                      <div className="w-16 h-16 rounded-3xl bg-white text-primary flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                    <div className="border-2 border-dashed border-black/5 dark:border-white/5 rounded-[2rem] p-12 flex flex-col items-center justify-center bg-[#f5f5f7] dark:bg-[#2c2c2e] hover:bg-[#f5f5f7] transition-all cursor-pointer group">
+                      <div className="w-16 h-16 rounded-3xl bg-white text-black dark:text-white flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                         <CloudUpload className="w-8 h-8" />
                       </div>
                       <p className="text-sm font-black text-slate-900">{t('deals.upload')}</p>
@@ -234,7 +234,7 @@ export const DealRegistrationForm: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100">
+                  <div className="p-6 bg-[#f5f5f7]/50 rounded-3xl border border-blue-100">
                     <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3">Review Summary</h4>
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div>
@@ -259,7 +259,7 @@ export const DealRegistrationForm: React.FC = () => {
                 <button 
                   type="button"
                   onClick={prevStep}
-                  className="px-6 py-2.5 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-slate-900 transition-colors flex items-center gap-2"
+                  className="px-6 py-2.5 text-slate-400 text-[10px] font-black uppercase tracking-widest hover:text-black dark:text-white transition-colors flex items-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" /> {t('deals.prev')}
                 </button>
@@ -279,7 +279,7 @@ export const DealRegistrationForm: React.FC = () => {
               ) : (
                 <button 
                   type="submit"
-                  className="px-8 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-primary/20"
+                  className="px-8 py-3 bg-black dark:bg-white text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-black/10 dark:shadow-white/10"
                 >
                   {t('deals.submit')}
                   <Send className="w-4 h-4" />
@@ -295,26 +295,26 @@ export const DealRegistrationForm: React.FC = () => {
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center">
-                <Lightbulb className="text-primary w-5 h-5" />
+                <Lightbulb className="text-black dark:text-white w-5 h-5" />
               </div>
               <h3 className="text-lg font-black tracking-tight">Registration Tips</h3>
             </div>
             <div className="space-y-6">
               <div className="flex gap-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white mt-2 flex-shrink-0" />
                 <p className="text-xs font-bold text-slate-400 leading-relaxed">
                   Ensure the <strong className="text-white">End Customer Name</strong> matches their legal registration for faster validation.
                 </p>
               </div>
               <div className="flex gap-4">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white mt-2 flex-shrink-0" />
                 <p className="text-xs font-bold text-slate-400 leading-relaxed">
                   Attaching a preliminary <strong className="text-white">Bill of Materials (BOM)</strong> increases approval speed by 40%.
                 </p>
               </div>
             </div>
           </div>
-          <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-black dark:bg-white/10 rounded-full blur-3xl" />
         </div>
       </div>
     </div>

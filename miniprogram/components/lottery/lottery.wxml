@@ -1,0 +1,17 @@
+<view class="lottery">
+  <view wx:if="{{!spinning}}" class="lottery-idle">
+    <text class="text-xl font-bold text-center">{{participants}}人参与</text>
+    <button class="btn btn-primary btn-block mt-16" bindtap="startSpin">开始抽奖</button>
+  </view>
+  <view wx:if="{{spinning}}" class="lottery-spinning">
+    <view class="name-scroll">
+      <text wx:for="{{rollingNames}}" wx:key="*this" class="roll-name {{index === currentIndex ? 'active' : ''}}">{{item}}</text>
+    </view>
+    <button wx:if="{{!showResult}}" class="btn btn-danger btn-block mt-24" bindtap="stopSpin">停止</button>
+  </view>
+  <view wx:if="{{showResult}}" class="lottery-result text-center">
+    <text class="text-xl font-bold" style="color: #d97706;">🎉 {{winner}}</text>
+    <text class="text-lg mt-8">获得 {{prize}}</text>
+    <button class="btn btn-primary btn-block mt-24" bindtap="reset">继续抽奖</button>
+  </view>
+</view>

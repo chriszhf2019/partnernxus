@@ -1,32 +1,35 @@
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useState, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopNav } from './components/layout/TopNav';
-import { EcosystemDashboard } from './components/dashboard/EcosystemDashboard';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { PageLoader } from './components/ui/PageLoader';
+import { NetworkStatus } from './components/ui/NetworkStatus';
 import { usePartners, useDeals, useActivities } from './hooks/useData';
-import { Shield, HelpCircle, Loader2 } from 'lucide-react';
+import { Shield, HelpCircle } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ConfigProvider } from './contexts/ConfigContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { LoginPage } from './components/auth/LoginPage';
+import type { PartnerDetails } from './types';
 
+const EcosystemDashboard = lazy(() => import('./components/dashboard/EcosystemDashboard').then(m => ({ default: m.EcosystemDashboard })));
 const PartnerList = lazy(() => import('./components/partners/PartnerList').then(m => ({ default: m.PartnerList })));
 const PartnerProfile = lazy(() => import('./components/partners/PartnerProfile').then(m => ({ default: m.PartnerProfile })));
 const MarketingIncentivePage = lazy(() => import('./components/marketing/MarketingIncentivePage').then(m => ({ default: m.MarketingIncentivePage })));
 const DealRegistrationPage = lazy(() => import('./components/deals/DealRegistrationPage').then(m => ({ default: m.DealRegistrationPage })));
 const DealRegistrationForm = lazy(() => import('./components/deals/DealRegistrationForm').then(m => ({ default: m.DealRegistrationForm })));
 const SettingsPage = lazy(() => import('./components/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
-
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[400px]">
-    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-  </div>
-);
+const IncentivesPage = lazy(() => import('./components/marketing/IncentivesPage').then(m => ({ default: m.IncentivesPage })));
+const EnablementPage = lazy(() => import('./components/marketing/EnablementPage').then(m => ({ default: m.EnablementPage })));
+const AnalyticsPage = lazy(() => import('./components/marketing/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const ChannelDashboard = lazy(() => import('./components/marketing/ChannelDashboard').then(m => ({ default: m.ChannelDashboard })));
 
 function EcosystemRoute() {
   const navigate = useNavigate();
   const handleNavigate = (view: string) => {
-    const route = ['partners', 'deals', 'marketing', 'settings'].includes(view) ? `/${view}` : '/ecosystem';
+    const route = ['partners', 'deals', 'marketing', 'incentives', 'enablement', 'analytics', 'settings'].includes(view) ? `/${view}` : '/ecosystem';
     navigate(route);
   };
   return (
@@ -43,8 +46,11 @@ function EcosystemRoute() {
 
 function PartnersRoute() {
   const navigate = useNavigate();
-  const { partners: initialPartners } = usePartners();
+  const { partners: initialPartners, partnerListRef } = usePartners();
   const [partners, setPartners] = useState(initialPartners);
+
+  // Sync local state to ref so PartnerProfileRoute can find imported partners
+  partnerListRef.current = partners;
 
   const handleImport = (imported: typeof initialPartners, mode: 'replace' | 'merge') => {
     if (mode === 'replace') {
@@ -52,7 +58,7 @@ function PartnersRoute() {
     } else {
       const existingIds = new Set(partners.map((p) => p.id));
       const newItems = imported.filter((p) => !existingIds.has(p.id));
-      setPartners([...partners, ...newItems]);
+      setPartners(prev => [...prev, ...newItems]);
     }
   };
 
@@ -71,11 +77,14 @@ function PartnersRoute() {
 
 function PartnerProfileRoute() {
   const { id } = useParams<{ id: string }>();
-  const { getPartnerById } = usePartners();
+  const { partnerListRef } = usePartners();
   const { activities } = useActivities();
   const navigate = useNavigate();
 
-  const partner = id ? getPartnerById(id) : null;
+  // Look up from the mutable ref first (for imported partners), fall back to static import
+  const partner = id
+    ? (partnerListRef.current.find((p) => p.id === id) || partnerListRef.current[0])
+    : null;
 
   if (!partner) {
     return (
@@ -86,21 +95,10 @@ function PartnerProfileRoute() {
     );
   }
 
-  // Build dynamic PartnerDetails with generated mock data based on real partner
-  const partnerDetails = {
+  const partnerDetails: PartnerDetails = {
     ...partner,
-    pipeline: {
-      registered: 0,
-      solution: 0,
-      commercial: 0,
-      won: 0,
-    },
-    mdf: {
-      total: 0,
-      used: 0,
-      remaining: 0,
-      activities: [],
-    },
+    pipeline: { registered: 0, solution: 0, commercial: 0, won: 0 },
+    mdf: { total: 0, used: 0, remaining: 0, activities: [] },
     enablement: {
       certifiedEngineers: partner.contacts.length,
       specialists: Math.max(1, Math.floor(partner.contacts.length / 3)),
@@ -109,6 +107,9 @@ function PartnerProfileRoute() {
     },
     followUps: [],
     topProjects: [],
+    cooperationPlans: [],
+    cooperationRecords: [],
+    subPartners: [],
   };
 
   return (
@@ -174,6 +175,36 @@ function MarketingRoute() {
   );
 }
 
+function IncentivesRoute() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <IncentivesPage />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+function EnablementRoute() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <EnablementPage />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+function AnalyticsRoute() {
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <AnalyticsPage />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
 function SettingsRoute() {
   return (
     <ErrorBoundary>
@@ -188,13 +219,14 @@ function AppLayout() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
+    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex">
       <Sidebar />
 
-      <div className="flex-1 ml-64 flex flex-col">
+      <div className="flex-1 ml-60 flex flex-col">
+        <NetworkStatus />
         <TopNav />
 
-        <main className="flex-1 pt-24 pb-12 px-8 max-w-[1600px] mx-auto w-full">
+        <main className="flex-1 pt-20 pb-16 px-8 max-w-[1440px] mx-auto w-full">
           <Routes>
             <Route path="/" element={<Navigate to="/ecosystem" replace />} />
             <Route path="/ecosystem" element={<EcosystemRoute />} />
@@ -203,18 +235,22 @@ function AppLayout() {
             <Route path="/deals" element={<DealsRoute />} />
             <Route path="/deals/new" element={<NewDealRoute />} />
             <Route path="/marketing" element={<MarketingRoute />} />
+            <Route path="/incentives" element={<IncentivesRoute />} />
+            <Route path="/enablement" element={<EnablementRoute />} />
+            <Route path="/analytics" element={<AnalyticsRoute />} />
             <Route path="/settings" element={<SettingsRoute />} />
+            <Route path="/channels" element={<Suspense fallback={<PageLoader />}><ChannelDashboard /></Suspense>} />
           </Routes>
         </main>
 
-        <footer className="mt-auto border-t border-surface-container-low dark:border-slate-800 p-6 flex justify-center items-center gap-10">
-          <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400 font-medium">
-            <Shield className="w-4 h-4" />
+        <footer className="mt-auto border-t border-neutral-200 dark:border-neutral-800 py-3 flex justify-center items-center gap-6">
+          <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-medium">
+            <Shield className="w-3.5 h-3.5" />
             {t('footer.secure')}
           </div>
-          <div className="h-4 w-px bg-surface-container-highest dark:bg-slate-700"></div>
-          <div className="flex items-center gap-2 text-xs text-on-surface-variant dark:text-slate-400 font-medium">
-            <HelpCircle className="w-4 h-4" />
+          <div className="h-3 w-px bg-neutral-200 dark:bg-neutral-700" />
+          <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-medium">
+            <HelpCircle className="w-3.5 h-3.5" />
             {t('footer.assistance')}
           </div>
         </footer>
@@ -227,11 +263,16 @@ export default function App() {
   return (
     <ThemeProvider>
       <ConfigProvider>
-        <LanguageProvider>
-          <BrowserRouter>
-            <AppLayout />
-          </BrowserRouter>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="*" element={<AppLayout />} />
+              </Routes>
+            </BrowserRouter>
+          </LanguageProvider>
+        </AuthProvider>
       </ConfigProvider>
     </ThemeProvider>
   );

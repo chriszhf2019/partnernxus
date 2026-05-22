@@ -82,7 +82,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
           <div className="bg-white p-8 border-b border-slate-200">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                <div className="w-14 h-14 rounded-2xl bg-black dark:bg-white/10 flex items-center justify-center text-black dark:text-white border border-black dark:border-white/20">
                   <Target className="w-8 h-8" />
                 </div>
                 <div>
@@ -95,7 +95,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                   </p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-900">
+              <button onClick={onClose} className="p-2 hover:bg-[#f5f5f7] rounded-full transition-colors text-slate-400 hover:text-slate-900">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -105,7 +105,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
               {[
                 { label: '参与伙伴', value: program.partnersCount, sub: '家活跃伙伴', icon: Users, color: 'text-blue-600' },
                 { label: '符合奖励商机', value: program.eligibleOpps, sub: '条有效报备', icon: Briefcase, color: 'text-emerald-600' },
-                { label: '预算消耗', value: program.consumed, sub: `总额 ${program.budget}`, icon: Coins, color: 'text-primary' },
+                { label: '预算消耗', value: program.consumed, sub: `总额 ${program.budget}`, icon: Coins, color: 'text-black dark:text-white' },
                 { label: '业务达成率', value: `${program.progress}%`, sub: '目标 20 家', icon: CheckCircle2, color: 'text-slate-900' },
               ].map((stat, i) => (
                 <div key={i} className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
@@ -135,7 +135,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                 className={cn(
                   "py-4 flex items-center gap-2 text-xs font-black transition-all border-b-2",
                   activeTab === tab.id 
-                    ? "border-primary text-primary" 
+                    ? "border-black dark:border-white text-black dark:text-white" 
                     : "border-transparent text-slate-400 hover:text-slate-600"
                 )}
               >
@@ -172,7 +172,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                         )}
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-white transition-colors">
+                          <div className="w-10 h-10 rounded-xl bg-[#f5f5f7] flex items-center justify-center text-slate-400 group-hover:bg-white transition-colors">
                             <Building2 className="w-5 h-5" />
                           </div>
                           <div>
@@ -183,7 +183,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                             </div>
                           </div>
                         </div>
-                        <ChevronRight className={cn("w-5 h-5 transition-all", selectedPartner === p.id ? "text-primary translate-x-1" : "text-slate-300")} />
+                        <ChevronRight className={cn("w-5 h-5 transition-all", selectedPartner === p.id ? "text-black dark:text-white translate-x-1" : "text-slate-300")} />
                       </button>
                     ))}
                   </div>
@@ -236,7 +236,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                     </div>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-center p-12">
-                      <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-300 mb-6">
+                      <div className="w-20 h-20 rounded-3xl bg-[#f5f5f7] flex items-center justify-center text-slate-300 mb-6">
                         <ArrowUpRight className="w-10 h-10" />
                       </div>
                       <h4 className="text-lg font-black text-slate-900 mb-2">选择一个伙伴查看明细</h4>
@@ -254,7 +254,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                 <div className="max-w-3xl mx-auto space-y-8">
                   <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
                     <h3 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-primary" />
+                      <FileText className="w-5 h-5 text-black dark:text-white" />
                       激励规则与条款 (Policy & Terms)
                     </h3>
                     <div className="space-y-6">
@@ -281,8 +281,8 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                   <div className="p-8 rounded-[2.5rem] bg-slate-900 text-white relative overflow-hidden">
                     <div className="relative z-10">
                       <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-primary/20 rounded-xl">
-                          <Lightbulb className="w-6 h-6 text-primary" />
+                        <div className="p-2 bg-black dark:bg-white/20 rounded-xl">
+                          <Lightbulb className="w-6 h-6 text-black dark:text-white" />
                         </div>
                         <h3 className="text-xl font-black tracking-tight">AI 策略优化建议</h3>
                       </div>
@@ -294,7 +294,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                           <div className="flex gap-3">
                             <button 
                               onClick={() => setIsAdjustModalOpen(true)}
-                              className="px-4 py-2 bg-primary text-white text-[10px] font-black rounded-xl hover:scale-105 transition-all"
+                              className="px-4 py-2 bg-black dark:bg-white text-white text-[10px] font-black rounded-xl hover:scale-105 transition-all"
                             >
                               开放技术专家支持包
                             </button>
@@ -309,7 +309,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
                       </div>
                     </div>
                     {/* Decorative background element */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] -mr-32 -mt-32" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-black dark:bg-white/20 blur-[100px] -mr-32 -mt-32" />
                   </div>
                 </div>
               </div>
@@ -323,7 +323,7 @@ export const IncentiveDetailModal: React.FC<IncentiveDetailModalProps> = ({ isOp
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">数据更新于: 2024-04-06 22:00</p>
             </div>
             <div className="flex gap-4">
-              <button className="px-8 py-3 bg-slate-100 text-slate-600 text-xs font-black rounded-2xl hover:bg-slate-200 transition-all">
+              <button className="px-8 py-3 bg-[#f5f5f7] text-slate-600 text-xs font-black rounded-2xl hover:bg-slate-200 transition-all">
                 导出完整清单
               </button>
               <button 

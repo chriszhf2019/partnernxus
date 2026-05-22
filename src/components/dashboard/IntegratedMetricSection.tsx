@@ -54,7 +54,7 @@ const ActionDropdown = () => {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600"
+        className="p-1.5 hover:bg-[#f5f5f7] rounded-lg transition-colors text-slate-400 hover:text-slate-600"
       >
         <MoreHorizontal className="w-4 h-4" />
       </button>
@@ -74,7 +74,7 @@ const ActionDropdown = () => {
             >
               <div className="p-1.5">
                 {[
-                  { label: '下钻分析', icon: BarChart3, color: 'text-primary' },
+                  { label: '下钻分析', icon: BarChart3, color: 'text-black dark:text-white' },
                   { label: '生成报告', icon: FileText, color: 'text-slate-600' },
                   { label: '导出数据', icon: Download, color: 'text-slate-600' },
                   { label: '分享看板', icon: Share2, color: 'text-slate-600' },
@@ -132,7 +132,7 @@ const MetricIndicatorGrid = ({ item, linearity, index, isCurrency = true }: { it
       </div>
       <div className="space-y-1">
         <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">实际完成</p>
-        <p className="text-[11px] font-black text-primary">{formatVal(item.current)}</p>
+        <p className="text-[11px] font-black text-black dark:text-white">{formatVal(item.current)}</p>
       </div>
       <div className="space-y-1">
         <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">同比/月环比</p>
@@ -389,8 +389,8 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 {/* 1. 生态全景总览 (Funnel) */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
-                     <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <LayoutDashboard className="w-3.5 h-3.5 text-primary" />
+                     <div className="w-6 h-6 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                        <LayoutDashboard className="w-3.5 h-3.5 text-black dark:text-white" />
                      </div>
                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">生态全景总览</h3>
                   </div>
@@ -414,7 +414,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                               "h-6 rounded-lg flex items-center px-3 transition-all shadow-sm border border-transparent",
                               idx === 0 ? "bg-slate-900 text-white" : 
                               idx === 1 ? "bg-slate-700 text-slate-100" :
-                              idx === 2 ? "bg-slate-500 text-white" : "bg-slate-100 text-slate-500 border-slate-200"
+                              idx === 2 ? "bg-slate-500 text-white" : "bg-[#f5f5f7] text-slate-500 border-slate-200"
                             )}
                             style={{ width: `${100 - idx * 12}%` }}
                           >
@@ -474,7 +474,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                            <motion.div 
                              initial={{ width: 0 }}
                              animate={{ width: `${data.partner_ecosystem_details.contribution_mix.revenue_percent}%` }}
-                             className="h-full bg-primary"
+                             className="h-full bg-black dark:bg-white"
                            />
                         </div>
                      </div>
@@ -500,7 +500,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                             <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-100" />
                             <motion.circle 
                               cx="16" cy="16" r="14" fill="none" stroke="currentColor" strokeWidth="2" 
-                              className={cn(f.val > 80 ? "text-emerald-500" : f.val > 60 ? "text-primary" : "text-rose-500")}
+                              className={cn(f.val > 80 ? "text-emerald-500" : f.val > 60 ? "text-black dark:text-white" : "text-rose-500")}
                               strokeDasharray={88}
                               initial={{ strokeDashoffset: 88 }}
                               animate={{ strokeDashoffset: 88 - (88 * f.val) / 100 }}
@@ -544,7 +544,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                           </span>
                         </div>
                       </div>
-                      <div className="overflow-hidden h-1.5 text-xs flex rounded-full bg-slate-100">
+                      <div className="overflow-hidden h-1.5 text-xs flex rounded-full bg-[#f5f5f7]">
                         <motion.div 
                           initial={{ width: 0 }} 
                           animate={{ width: `${(data.marketing_overview.activities.completed / data.marketing_overview.activities.planned) * 100}%` }} 
@@ -558,27 +558,27 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 {/* 2. 活动产出效能 (Activity Yield) */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
-                     <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                     <div className="w-6 h-6 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                        <TrendingUp className="w-3.5 h-3.5 text-black dark:text-white" />
                      </div>
                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">二、活动产出效能</h3>
                   </div>
                   <div className="grid grid-cols-1 gap-3">
-                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group/yield hover:border-primary/20 transition-all">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group/yield hover:border-black dark:border-white/20 transition-all">
                       <div>
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">线索总数 (PLs)</p>
                         <p className="text-xl font-black text-slate-900">{data.marketing_overview.yield.leads}</p>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover/yield:bg-primary/10 group-hover/yield:text-primary transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover/yield:bg-black dark:bg-white/10 group-hover/yield:text-black dark:text-white transition-colors">
                         <Users className="w-5 h-5" />
                       </div>
                     </div>
-                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group/yield2 hover:border-primary/20 transition-all">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group/yield2 hover:border-black dark:border-white/20 transition-all">
                       <div>
                         <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">转化商机额 (Pipelines)</p>
-                        <p className="text-xl font-black text-primary">¥{(data.marketing_overview.yield.pipeline_gen / 1000000).toFixed(1)}M</p>
+                        <p className="text-xl font-black text-black dark:text-white">¥{(data.marketing_overview.yield.pipeline_gen / 1000000).toFixed(1)}M</p>
                       </div>
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover/yield2:bg-primary/10 group-hover/yield2:text-primary transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover/yield2:bg-black dark:bg-white/10 group-hover/yield2:text-black dark:text-white transition-colors">
                         <Layers className="w-5 h-5" />
                       </div>
                     </div>
@@ -596,7 +596,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                       <span className="text-white text-lg font-black">{data.marketing_overview.incentives.active_programs}</span>
                       <span className="text-[8px] font-black text-slate-400 uppercase">运行中计划</span>
                     </div>
-                    <div className="bg-slate-100 p-3 rounded-2xl flex flex-col gap-1">
+                    <div className="bg-[#f5f5f7] p-3 rounded-2xl flex flex-col gap-1">
                       <span className="text-slate-900 text-lg font-black">{data.marketing_overview.incentives.payout_rate}%</span>
                       <span className="text-[8px] font-black text-slate-400 uppercase">兑现进度</span>
                     </div>
@@ -633,8 +633,8 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 {/* 1. 报备大盘 (Pipeline Volume) */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
-                     <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <Layers className="w-3.5 h-3.5 text-primary" />
+                     <div className="w-6 h-6 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                        <Layers className="w-3.5 h-3.5 text-black dark:text-white" />
                      </div>
                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">一、报备质量与大盘</h3>
                   </div>
@@ -653,16 +653,16 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                       <div className="flex mb-2 items-center justify-between">
                         <div className="text-[8px] font-black text-slate-400 uppercase">年度目标达成率 (Pipeline Target)</div>
                         <div className="text-right">
-                          <span className="text-[8px] font-black text-primary inline-block py-1 px-2 uppercase rounded-full bg-blue-50">
+                          <span className="text-[8px] font-black text-black dark:text-white inline-block py-1 px-2 uppercase rounded-full bg-[#f5f5f7]">
                             {data.reporting_overview.pipeline.target_achievement}%
                           </span>
                         </div>
                       </div>
-                      <div className="overflow-hidden h-1.5 text-xs flex rounded-full bg-slate-100">
+                      <div className="overflow-hidden h-1.5 text-xs flex rounded-full bg-[#f5f5f7]">
                         <motion.div 
                           initial={{ width: 0 }} 
                           animate={{ width: `${data.reporting_overview.pipeline.target_achievement}%` }} 
-                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"
+                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-black dark:bg-white"
                         />
                       </div>
                     </div>
@@ -696,7 +696,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                   <div className="space-y-2">
                     {[
                       { label: '销售建单', val: data.reporting_overview.attribution.sales_driven, color: 'bg-slate-900' },
-                      { label: 'PMDF 转化', val: data.reporting_overview.attribution.pmdf_driven, color: 'bg-primary' },
+                      { label: 'PMDF 转化', val: data.reporting_overview.attribution.pmdf_driven, color: 'bg-black dark:bg-white' },
                       { label: '激励驱动', val: data.reporting_overview.attribution.incentive_driven, color: 'bg-amber-400' },
                     ].map((s, idx) => (
                       <div key={idx} className="flex items-center gap-3">
@@ -706,7 +706,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                             <span className="text-[9px] font-black text-slate-600 uppercase">{s.label}</span>
                             <span className="text-[10px] font-black text-slate-900">{s.val}%</span>
                           </div>
-                          <div className="h-1 w-full bg-slate-100 rounded-full mt-1">
+                          <div className="h-1 w-full bg-[#f5f5f7] rounded-full mt-1">
                             <motion.div initial={{ width: 0 }} animate={{ width: `${s.val}%` }} className={cn("h-full rounded-full", s.color)} />
                           </div>
                         </div>
@@ -749,8 +749,8 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 {/* 1. 业绩进度看板 (Achievement Rate) */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
-                     <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center">
-                        <Target className="w-3.5 h-3.5 text-primary" />
+                     <div className="w-6 h-6 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                        <Target className="w-3.5 h-3.5 text-black dark:text-white" />
                      </div>
                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">一、业绩进度看板</h3>
                   </div>
@@ -808,9 +808,9 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                     <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50 flex flex-col gap-1.5">
                       <p className="text-[7px] font-black text-slate-400 uppercase tracking-tighter">订单 YoY/QoQ</p>
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] font-black text-primary">↑15%</span>
+                        <span className="text-[10px] font-black text-black dark:text-white">↑15%</span>
                         <span className="text-slate-200">/</span>
-                        <span className="text-[10px] font-black text-primary">↑8%</span>
+                        <span className="text-[10px] font-black text-black dark:text-white">↑8%</span>
                       </div>
                     </div>
                   </div>
@@ -838,16 +838,16 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                       </div>
                     </div>
                     
-                    <div className="pt-3 border-t border-slate-50">
+                    <div className="pt-3 border-t border-black/5">
                       <div className="flex justify-between items-center mb-1.5">
                         <span className="text-[7.5px] font-black text-slate-400 uppercase">年底预期达成率</span>
                         <span className="text-[9px] font-black text-blue-600">98%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex relative">
+                      <div className="h-1.5 w-full bg-[#f5f5f7] rounded-full overflow-hidden flex relative">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: '85%' }}
-                          className="h-full bg-blue-500"
+                          className="h-full bg-[#f5f5f7]0"
                         />
                         <motion.div 
                           initial={{ width: 0 }}
@@ -873,10 +873,10 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                     </div>
                     <div className="flex gap-2 text-[6px] font-black text-slate-400 uppercase">
                       <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" /> 实际
+                        <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" /> 实际
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-100" /> 目标
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#f5f5f7]" /> 目标
                       </div>
                     </div>
                   </div>
@@ -896,14 +896,14 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                           <motion.div 
                             initial={{ height: 0 }}
                             animate={{ height: `${m.plan}%` }}
-                            className="w-2.5 bg-slate-100 rounded-t-sm"
+                            className="w-2.5 bg-[#f5f5f7] rounded-t-sm"
                           />
                           <motion.div 
                             initial={{ height: 0 }}
                             animate={{ height: `${m.act}%` }}
                             className={cn(
                               "w-3 rounded-t-sm transition-colors",
-                              m.act >= m.plan ? "bg-primary" : "bg-rose-500"
+                              m.act >= m.plan ? "bg-black dark:bg-white" : "bg-rose-500"
                             )}
                           />
                         </div>
@@ -911,7 +911,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                           <span className="text-[8px] font-black text-slate-400 uppercase">{m.month}</span>
                           <span className={cn(
                             "text-[7px] font-black mt-0.5",
-                            m.act >= m.plan ? "text-primary" : "text-rose-500"
+                            m.act >= m.plan ? "text-black dark:text-white" : "text-rose-500"
                           )}>
                             {m.rate}
                           </span>
@@ -969,7 +969,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 className={cn(
                   "px-8 py-4 text-[10px] font-black uppercase transition-all whitespace-nowrap tracking-widest border-r border-slate-100 last:border-r-0",
                   activeDimension === tab.id 
-                    ? "bg-slate-50 text-primary shadow-[inset_0_-2px_0_currentColor]" 
+                    ? "bg-slate-50 text-black dark:text-white shadow-[inset_0_-2px_0_currentColor]" 
                     : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50"
                 )}
               >
@@ -991,7 +991,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 className={cn(
                   "px-8 py-4 text-[10px] font-black uppercase transition-all whitespace-nowrap tracking-widest border-r border-slate-100 last:border-r-0",
                   activeDimension === tab.id 
-                    ? "bg-slate-50 text-primary shadow-[inset_0_-2px_0_currentColor]" 
+                    ? "bg-slate-50 text-black dark:text-white shadow-[inset_0_-2px_0_currentColor]" 
                     : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50"
                 )}
               >
@@ -1044,7 +1044,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 className={cn(
                   "relative px-8 py-4 text-[10px] font-black uppercase transition-all whitespace-nowrap tracking-widest border-r border-slate-100 last:border-r-0 group",
                   activeDimension === tab.id 
-                    ? "text-primary bg-primary/5" 
+                    ? "text-black dark:text-white bg-black dark:bg-white/5" 
                     : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50"
                 )}
               >
@@ -1052,7 +1052,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                 {activeDimension === tab.id && (
                   <motion.div 
                     layoutId="activeSubTabReporting"
-                    className="absolute inset-x-0 bottom-0 h-0.5 bg-primary z-20"
+                    className="absolute inset-x-0 bottom-0 h-0.5 bg-black dark:bg-white z-20"
                   />
                 )}
               </button>
@@ -1070,8 +1070,8 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                         {activeDimension === 'order_size' ? (
                           <div className="space-y-8">
                             {[
-                              { group: 'High Value (核心大单)', items: currentDimData.filter(d => d.name.includes('大单') || d.name.includes('500万')), color: 'bg-primary' },
-                              { group: 'Mid Range (中端项目)', items: currentDimData.filter(d => d.name.includes('中单')), color: 'bg-blue-500' },
+                              { group: 'High Value (核心大单)', items: currentDimData.filter(d => d.name.includes('大单') || d.name.includes('500万')), color: 'bg-black dark:bg-white' },
+                              { group: 'Mid Range (中端项目)', items: currentDimData.filter(d => d.name.includes('中单')), color: 'bg-[#f5f5f7]0' },
                               { group: 'Volume Business (小额底量)', items: currentDimData.filter(d => d.name.includes('小单')), color: 'bg-slate-400' }
                             ].map((group, gIdx) => (
                               <div key={gIdx} className="space-y-4">
@@ -1086,7 +1086,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                     const linearity = (item.rate / timeProgress) * 100;
                                     return (
                                       <div key={i} className={cn(
-                                        "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-primary/20 transition-all flex flex-col shadow-sm",
+                                        "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-black dark:border-white/20 transition-all flex flex-col shadow-sm",
                                         isExpanded ? "space-y-5" : "space-y-3"
                                       )}>
                                         <div 
@@ -1096,7 +1096,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                           <div className="flex items-center gap-3">
                                             <div className={cn(
                                               "w-10 h-10 rounded-2xl flex items-center justify-center transition-all border",
-                                              isExpanded ? "bg-primary text-white border-primary" : "bg-slate-50 text-primary border-slate-100 group-hover/header:bg-slate-100"
+                                              isExpanded ? "bg-black dark:bg-white text-white border-black dark:border-white" : "bg-slate-50 text-black dark:text-white border-slate-100 group-hover/header:bg-[#f5f5f7]"
                                             )}>
                                               <Target className="w-4 h-4" />
                                             </div>
@@ -1104,7 +1104,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight mb-0.5">{item.name}</p>
                                               <div className="flex items-center gap-2">
                                                 <p className="text-lg font-black text-slate-800 tracking-tight">{formatValue(item.current)}</p>
-                                                <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-transform duration-300", isExpanded && "rotate-180 text-primary")} />
+                                                <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-transform duration-300", isExpanded && "rotate-180 text-black dark:text-white")} />
                                               </div>
                                             </div>
                                           </div>
@@ -1128,7 +1128,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                             >
                                               <MetricIndicatorGrid item={item} linearity={linearity} index={i} isCurrency={isCurrency} />
                                               <div className="flex items-start gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1 flex-shrink-0 animate-pulse" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white mt-1 flex-shrink-0 animate-pulse" />
                                                 <p className="text-[10px] font-bold text-slate-500 leading-relaxed italic uppercase">
                                                   “该笔订单已进入商务谈判终期。建议在本月 25 日前完成合同终审，防止营收漏项。”
                                                 </p>
@@ -1151,7 +1151,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
 
                             return (
                               <div key={i} className={cn(
-                                "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-primary/20 transition-all flex flex-col shadow-sm",
+                                "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-black dark:border-white/20 transition-all flex flex-col shadow-sm",
                                 isExpanded ? "space-y-5" : "space-y-3"
                               )}>
                                 <div 
@@ -1161,7 +1161,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                   <div className="flex items-center gap-3">
                                     <div className={cn(
                                       "w-10 h-10 rounded-2xl flex items-center justify-center transition-all border",
-                                      isExpanded ? "bg-primary text-white border-primary" : "bg-slate-50 text-primary border-slate-100 group-hover/header:bg-slate-100"
+                                      isExpanded ? "bg-black dark:bg-white text-white border-black dark:border-white" : "bg-slate-50 text-black dark:text-white border-slate-100 group-hover/header:bg-[#f5f5f7]"
                                     )}>
                                       {activeDimension === 'team' ? <Users className="w-4 h-4" /> : 
                                        activeDimension === 'industry' ? <Activity className="w-4 h-4" /> : 
@@ -1174,7 +1174,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight mb-0.5">{item.name}</p>
                                       <div className="flex items-center gap-2">
                                         <p className="text-lg font-black text-slate-800 tracking-tight">{formatValue(item.current)}</p>
-                                        <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-transform duration-300", isExpanded && "rotate-180 text-primary")} />
+                                        <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-transform duration-300", isExpanded && "rotate-180 text-black dark:text-white")} />
                                       </div>
                                     </div>
                                   </div>
@@ -1204,7 +1204,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                         <div className="space-y-3">
                                           <div className="flex items-center justify-between px-1">
                                             <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Top 3 城市核心业绩 (当季)</p>
-                                            <button className="text-[8px] font-black text-primary hover:underline uppercase">查看全部城市</button>
+                                            <button className="text-[8px] font-black text-black dark:text-white hover:underline uppercase">查看全部城市</button>
                                           </div>
                                           <div className="grid grid-cols-3 gap-3">
                                             {[
@@ -1212,7 +1212,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                               { city: item.name === '华东区' ? '杭州' : item.name === '华北区' ? '天津' : item.name === '华南区' ? '广州' : item.name === '西部区' ? '西安' : '长沙', current: item.current * 0.25, rate: 94, trend: 'up' },
                                               { city: item.name === '华东区' ? '南京' : item.name === '华北区' ? '济南' : item.name === '华南区' ? '东莞' : item.name === '西部区' ? '重庆' : '郑州', current: item.current * 0.15, rate: 88, trend: 'down' }
                                             ].map((city, cIdx) => (
-                                              <div key={cIdx} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm space-y-2 hover:border-primary/20 transition-all">
+                                              <div key={cIdx} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm space-y-2 hover:border-black dark:border-white/20 transition-all">
                                                 <div className="flex justify-between items-center">
                                                   <span className="text-[10px] font-black text-slate-800">{city.city}</span>
                                                   {city.trend === 'up' ? <TrendingUp className="w-2.5 h-2.5 text-emerald-500" /> : <TrendingDown className="w-2.5 h-2.5 text-rose-500" />}
@@ -1235,7 +1235,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                       {['team', 'industry', 'channel', 'channel_type'].includes(activeDimension) && (
                                         <div className="space-y-3">
                                           <div className="flex items-center justify-between px-1">
-                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-primary">AI 识别 - 核心贡献单元 (当季)</p>
+                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest text-black dark:text-white">AI 识别 - 核心贡献单元 (当季)</p>
                                           </div>
                                           <div className="grid grid-cols-3 gap-3">
                                             {[
@@ -1250,7 +1250,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                                   <span className={cn(
                                                     "text-[7px] font-black uppercase px-1 rounded-sm",
                                                     sub.status === '超预期' ? "text-emerald-600 bg-emerald-50" :
-                                                    sub.status === '正常' ? "text-blue-600 bg-blue-50" : "text-amber-600 bg-amber-50"
+                                                    sub.status === '正常' ? "text-blue-600 bg-[#f5f5f7]" : "text-amber-600 bg-amber-50"
                                                   )}>{sub.status}</span>
                                                 </div>
                                               </div>
@@ -1264,11 +1264,11 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                           <span>当前业绩贡献占比 (较总体完成额)</span>
                                           <span className="text-slate-900">{contributionToTotal.toFixed(1)}%</span>
                                         </div>
-                                        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div className="h-1.5 w-full bg-[#f5f5f7] rounded-full overflow-hidden">
                                           <motion.div 
                                             initial={{ width: 0 }}
                                             animate={{ width: `${contributionToTotal}%` }}
-                                            className="h-full bg-primary rounded-full transition-all"
+                                            className="h-full bg-black dark:bg-white rounded-full transition-all"
                                           />
                                         </div>
                                       </div>
@@ -1285,11 +1285,11 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
 
                   {/* AI Strategic Diagnosis (Bottom Static) */}
                     <div className="bg-white rounded-[2rem] p-6 border border-slate-100 relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] -translate-y-1/2 translate-x-1/2" />
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-black dark:bg-white/5 blur-[80px] -translate-y-1/2 translate-x-1/2" />
                       <div className="flex items-center justify-between relative z-10">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
-                            <Zap className="w-5 h-5 text-primary" />
+                          <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white/10 flex items-center justify-center">
+                            <Zap className="w-5 h-5 text-black dark:text-white" />
                           </div>
                           <div>
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">战略建议 · AI 诊断</h4>
@@ -1320,7 +1320,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                             const contextName = currentDimData[0]?.name || '业绩总体';
                             alert(`启动 [${contextName}] 4维度深度诊断...\n\n结论示例：${contextName} 业务虽然达标，但结构性指标存在偏移。建议加强 [能力维度] 赋能，重点关注大客户攻坚。`);
                           }}
-                          className="flex items-center justify-center gap-3 bg-primary text-white px-6 py-4 rounded-2xl hover:bg-slate-800 transition-all text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                          className="flex items-center justify-center gap-3 bg-black dark:bg-white text-white px-6 py-4 rounded-2xl hover:bg-slate-800 transition-all text-xs font-black uppercase tracking-widest shadow-xl shadow-black/10 dark:shadow-white/10"
                         >
                           <BarChart3 className="w-5 h-5" />
                           四维度深度诊断
@@ -1364,8 +1364,8 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                               }}
                               key={i} 
                               className={cn(
-                                "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-primary/20 transition-all flex flex-col shadow-sm",
-                                isExpanded ? "ring-2 ring-primary/5 border-primary/20 space-y-5" : "space-y-3"
+                                "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-black dark:border-white/20 transition-all flex flex-col shadow-sm",
+                                isExpanded ? "ring-2 ring-primary/5 border-black dark:border-white/20 space-y-5" : "space-y-3"
                               )}
                             >
                               <div 
@@ -1375,7 +1375,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                 <div className="flex items-center gap-4">
                                   <div className={cn(
                                     "w-12 h-12 rounded-2xl flex items-center justify-center transition-all border shadow-sm relative overflow-hidden",
-                                    isExpanded ? (isMarketing ? "bg-rose-500 text-white border-rose-500 shadow-rose-200" : "bg-primary text-white border-primary shadow-blue-200") : "bg-slate-50 text-slate-400 border-slate-100 group-hover/header:bg-slate-100 group-hover/header:text-slate-600"
+                                    isExpanded ? (isMarketing ? "bg-rose-500 text-white border-rose-500 shadow-rose-200" : "bg-black dark:bg-white text-white border-black dark:border-white shadow-blue-200") : "bg-slate-50 text-slate-400 border-slate-100 group-hover/header:bg-[#f5f5f7] group-hover/header:text-slate-600"
                                   )}>
                                     <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover/header:opacity-100 transition-opacity" />
                                     {activeDimension === 'campaigns' ? <Activity className="w-5 h-5" /> : 
@@ -1399,7 +1399,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                         <span className="text-[9px] font-black text-slate-400 uppercase">达成</span>
                                       </div>
                                       <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
-                                        <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-colors", isExpanded && "text-primary")} />
+                                        <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-colors", isExpanded && "text-black dark:text-white")} />
                                       </motion.div>
                                     </div>
                                   </div>
@@ -1451,7 +1451,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                           <Activity className="w-12 h-12" />
                                         </div>
                                         <div className="flex items-center gap-2 relative z-10">
-                                          <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                                          <TrendingUp className="w-3.5 h-3.5 text-black dark:text-white" />
                                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">维度分析与诊断</span>
                                         </div>
                                         <p className="text-[10px] font-bold text-slate-600 leading-relaxed italic relative z-10">
@@ -1463,7 +1463,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                           <Zap className="w-12 h-12 text-white" />
                                         </div>
                                         <div className="flex items-center gap-2 relative z-10">
-                                          <Zap className="w-3.5 h-3.5 text-primary" />
+                                          <Zap className="w-3.5 h-3.5 text-black dark:text-white" />
                                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-white/50">ECO 管理抓手</span>
                                         </div>
                                         <p className="text-[10px] font-black leading-relaxed tracking-tight text-white/90 relative z-10">
@@ -1482,17 +1482,17 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
 
                     {/* Footer AI Section for Marketing/Reporting */}
                     <div className="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 relative overflow-hidden group shadow-inner">
-                      <div className={cn("absolute inset-0 blur-[100px] opacity-[0.03] transition-opacity group-hover:opacity-[0.07]", isMarketing ? "bg-rose-500" : "bg-primary")} />
+                      <div className={cn("absolute inset-0 blur-[100px] opacity-[0.03] transition-opacity group-hover:opacity-[0.07]", isMarketing ? "bg-rose-500" : "bg-black dark:bg-white")} />
                       <div className="flex items-start justify-between relative z-10 gap-8">
                         <div className="flex items-center gap-4">
-                          <div className={cn("w-14 h-14 rounded-3xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-105", isMarketing ? "bg-rose-500 text-white shadow-rose-200" : "bg-primary text-white shadow-blue-200")}>
+                          <div className={cn("w-14 h-14 rounded-3xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-105", isMarketing ? "bg-rose-500 text-white shadow-rose-200" : "bg-black dark:bg-white text-white shadow-blue-200")}>
                             <Zap className="w-7 h-7" />
                           </div>
                           <div>
                             <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-500 mb-1">{isMarketing ? '营销战役 · AI 决策建议' : '商机漏斗 · 提效分析报告'}</h4>
                             <div className="flex items-center gap-2">
                               <div className="flex -space-x-1">
-                                {[1,2,3].map(i => <div key={i} className="w-4 h-4 rounded-full border-2 border-slate-50 bg-slate-200" />)}
+                                {[1,2,3].map(i => <div key={i} className="w-4 h-4 rounded-full border-2 border-black/5 bg-slate-200" />)}
                               </div>
                               <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest pl-1 border-l border-slate-200">ECOSYSTEM AI AGENT ACTIVE</span>
                             </div>
@@ -1510,7 +1510,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                           <FileText className="w-5 h-5 text-slate-400" />
                           查看{isMarketing ? '营销战役' : '商机转化'}全景明细 (Full List)
                         </button>
-                        <button className={cn("flex items-center justify-center gap-3 text-white px-6 py-4 rounded-3xl transition-all text-[11px] font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-[0.98]", isMarketing ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20" : "bg-primary hover:bg-slate-800 shadow-primary/20")}>
+                        <button className={cn("flex items-center justify-center gap-3 text-white px-6 py-4 rounded-3xl transition-all text-[11px] font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-[0.98]", isMarketing ? "bg-black hover:bg-rose-700 shadow-rose-600/20" : "bg-black dark:bg-white hover:bg-slate-800 shadow-black/10 dark:shadow-white/10")}>
                           <BarChart3 className="w-5 h-5" />
                           {isMarketing ? '启动 ROI 多维归因穿透' : '开启 4维度流转提效诊断'}
                         </button>
@@ -1529,7 +1529,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
 
                           return (
                             <div key={i} className={cn(
-                              "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-primary/20 transition-all flex flex-col shadow-sm",
+                              "relative p-5 bg-white rounded-3xl border border-slate-100 group/dim hover:border-black dark:border-white/20 transition-all flex flex-col shadow-sm",
                               isExpanded ? "space-y-5" : "space-y-3"
                             )}>
                               <div 
@@ -1539,7 +1539,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                 <div className="flex items-center gap-4">
                                   <div className={cn(
                                     "w-12 h-12 rounded-2xl flex items-center justify-center transition-all border shadow-sm relative overflow-hidden",
-                                    isExpanded ? "bg-primary text-white border-primary" : "bg-white text-primary border-slate-100 group-hover/header:bg-slate-50"
+                                    isExpanded ? "bg-black dark:bg-white text-white border-black dark:border-white" : "bg-white text-black dark:text-white border-slate-100 group-hover/header:bg-slate-50"
                                   )}>
                                     {activeDimension === 'region' ? <LayoutDashboard className="w-5 h-5" /> : 
                                      activeDimension === 'industry' ? <Briefcase className="w-5 h-5" /> : 
@@ -1556,7 +1556,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                           "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter",
                                           item.segment_tag === 'Growth' ? "bg-emerald-100 text-emerald-600" :
                                           item.segment_tag === 'Harvesting' ? "bg-amber-100 text-amber-600" :
-                                          item.segment_tag === 'Risk' ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-600"
+                                          item.segment_tag === 'Risk' ? "bg-rose-100 text-rose-600" : "bg-[#f5f5f7] text-slate-600"
                                         )}>
                                           {item.segment_tag}
                                         </span>
@@ -1569,7 +1569,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                         <span className="text-[9px] font-black text-slate-400 uppercase">达成</span>
                                         <span className={cn("text-[10px] font-black", item.rate >= 100 ? "text-emerald-600" : "text-amber-500")}>{Math.round(item.rate)}%</span>
                                       </div>
-                                      <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-transform duration-300", isExpanded && "rotate-180 text-primary")} />
+                                      <ChevronDown className={cn("w-3 h-3 text-slate-300 transition-transform duration-300", isExpanded && "rotate-180 text-black dark:text-white")} />
                                     </div>
                                   </div>
                                 </div>
@@ -1610,9 +1610,9 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                        </div>
                                        <div className="space-y-1">
                                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">活跃度评分</p>
-                                          <p className="text-sm font-black text-primary">{item.activity_rate || 0}/100</p>
+                                          <p className="text-sm font-black text-black dark:text-white">{item.activity_rate || 0}/100</p>
                                           <div className="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
-                                            <div className={cn("h-full", (item.activity_rate || 0) > 80 ? "bg-emerald-500" : "bg-primary")} style={{ width: `${item.activity_rate}%` }} />
+                                            <div className={cn("h-full", (item.activity_rate || 0) > 80 ? "bg-emerald-500" : "bg-black dark:bg-white")} style={{ width: `${item.activity_rate}%` }} />
                                           </div>
                                        </div>
                                        <div className="space-y-1">
@@ -1633,9 +1633,9 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
 
                                     {/* Actionable Insight */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                      <div className="p-4 bg-white border border-slate-100 rounded-2xl space-y-2 group/card hover:border-primary/30 transition-all">
+                                      <div className="p-4 bg-white border border-slate-100 rounded-2xl space-y-2 group/card hover:border-black dark:border-white/30 transition-all">
                                         <div className="flex items-center gap-2">
-                                          <BarChart className="w-3.5 h-3.5 text-primary" />
+                                          <BarChart className="w-3.5 h-3.5 text-black dark:text-white" />
                                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">维度诊断</span>
                                         </div>
                                         <p className="text-[10px] font-bold text-slate-600 leading-relaxed italic pr-4">
@@ -1644,7 +1644,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                                       </div>
                                       <div className="p-4 bg-slate-900 text-white rounded-2xl space-y-2 group/card hover:bg-slate-800 transition-all">
                                         <div className="flex items-center gap-2">
-                                          <Zap className="w-3.5 h-3.5 text-primary" />
+                                          <Zap className="w-3.5 h-3.5 text-black dark:text-white" />
                                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">行动建议</span>
                                         </div>
                                         <p className="text-[10px] font-black leading-relaxed tracking-tight text-slate-300">
@@ -1679,11 +1679,11 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
 
                     {/* AI Strategic Diagnosis (Bottom Static) */}
                     <div className="bg-white rounded-[2rem] p-6 border border-slate-100 relative overflow-hidden group mt-6">
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] -translate-y-1/2 translate-x-1/2" />
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-black dark:bg-white/5 blur-[80px] -translate-y-1/2 translate-x-1/2" />
                       <div className="flex items-center justify-between relative z-10">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
-                            <Zap className="w-5 h-5 text-primary" />
+                          <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white/10 flex items-center justify-center">
+                            <Zap className="w-5 h-5 text-black dark:text-white" />
                           </div>
                           <div>
                             <h4 className="text-[10px] font-black uppercase tracking-[0.2em]">生态战略 · AI 诊断</h4>
@@ -1713,7 +1713,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                             const contextName = currentDimData[0]?.name || '生态总体';
                             alert(`启动 [${contextName}] 4维度渠道健康诊断...\n\n结论：${contextName} 区域覆盖充沛，但 [能力维度] 与 [意愿维度] 出现背离。建议通过 PMDF 加强赋能。`);
                           }}
-                          className="flex items-center justify-center gap-3 bg-primary text-white px-6 py-4 rounded-2xl hover:bg-slate-800 transition-all text-xs font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                          className="flex items-center justify-center gap-3 bg-black dark:bg-white text-white px-6 py-4 rounded-2xl hover:bg-slate-800 transition-all text-xs font-black uppercase tracking-widest shadow-xl shadow-black/10 dark:shadow-white/10"
                         >
                           <BarChart3 className="w-5 h-5" />
                           四维度渠道健康诊断
@@ -1744,7 +1744,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                            <div className="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase">
                               <span>当季新增 vs 历史积存额</span>
                            </div>
-                           <div className="h-6 w-full bg-slate-100 rounded-xl flex overflow-hidden p-1">
+                           <div className="h-6 w-full bg-[#f5f5f7] rounded-xl flex overflow-hidden p-1">
                               <div className="h-full bg-slate-900 rounded-lg flex items-center justify-center text-[8px] text-white font-black" style={{ width: `${data.pipeline_batch.new_in_q_ratio}%` }}>
                                 NEW {data.pipeline_batch.new_in_q_ratio}%
                               </div>
@@ -1758,7 +1758,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">金额构成分析</p>
                         <div className="space-y-2">
                            {[
-                             { label: '新单金额', val: data.pipeline_batch.new_amount, color: 'bg-primary' },
+                             { label: '新单金额', val: data.pipeline_batch.new_amount, color: 'bg-black dark:bg-white' },
                              { label: '历史积存', val: data.pipeline_batch.historical_amount, color: 'bg-slate-300' }
                            ].map((item, i) => (
                              <div key={i} className="flex items-center justify-between">
@@ -1793,7 +1793,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                        {data.conversion_details.funnel_stages.map((stage, i) => (
                          <div key={i} className="flex-1 flex flex-col items-center gap-3 group/bar">
                             <div className="w-full relative flex flex-col items-center">
-                               <div className="w-full bg-slate-900 rounded-t-2xl transition-all group-hover/bar:bg-primary" 
+                               <div className="w-full bg-slate-900 rounded-t-2xl transition-all group-hover/bar:bg-black dark:bg-white" 
                                     style={{ height: `${(stage.count / 1300) * 120}px` }}>
                                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-6 text-[10px] font-black text-slate-900 opacity-0 group-hover/bar:opacity-100 transition-all">{stage.count}</div>
                                </div>
@@ -1803,7 +1803,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
                        ))}
                     </div>
                     <div className="mt-8 flex justify-end">
-                       <button className="text-[10px] font-black text-primary uppercase flex items-center gap-1 hover:gap-2 transition-all">
+                       <button className="text-[10px] font-black text-black dark:text-white uppercase flex items-center gap-1 hover:gap-2 transition-all">
                          下钻各阶段损耗分析 <ChevronRight className="w-3 h-3" />
                        </button>
                     </div>
@@ -1870,7 +1870,7 @@ export const IntegratedMetricSection: React.FC<IntegratedMetricSectionProps> = (
 
             {/* Time Perspective Selector (at the bottom, horizontal bar) */}
             <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-              <div className="flex bg-slate-100 p-1 rounded-xl">
+              <div className="flex bg-[#f5f5f7] p-1 rounded-xl">
                  {[
                    { id: 'monthly', label: '月度视图' },
                    { id: 'quarterly', label: '季度聚焦' },

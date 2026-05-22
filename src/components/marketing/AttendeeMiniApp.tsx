@@ -172,7 +172,7 @@ export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, ac
             </button>
             <span className="text-sm font-black text-slate-900 truncate max-w-[180px]">{activityName}</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-full">
+          <div className="flex items-center gap-1.5 bg-[#f5f5f7] p-1 rounded-full">
             <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
             <div className="w-4 h-4 rounded-full border-2 border-slate-400" />
           </div>
@@ -196,7 +196,7 @@ export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, ac
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-primary text-white text-[10px] font-black rounded-full shadow-lg">热报中</span>
+                    <span className="px-3 py-1 bg-black dark:bg-white text-white text-[10px] font-black rounded-full shadow-lg">热报中</span>
                   </div>
                 </div>
 
@@ -219,7 +219,7 @@ export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, ac
                   <ul className="space-y-2">
                     {['大咖面对面交流', '行业数字化白皮书首发', '现场抽取华为 Mate 60'].map((item, i) => (
                       <li key={i} className="flex items-start gap-2 text-xs text-slate-600">
-                        <div className="w-1 h-1 rounded-full bg-primary mt-1.5" />
+                        <div className="w-1 h-1 rounded-full bg-black dark:bg-white mt-1.5" />
                         {item}
                       </li>
                     ))}
@@ -273,7 +273,7 @@ export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, ac
                     onClick={handleFeedback}
                     className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-transform"
                   >
-                    <div className="p-3 bg-blue-50 rounded-2xl">
+                    <div className="p-3 bg-[#f5f5f7] rounded-2xl">
                       <ClipboardCheck className="w-6 h-6 text-blue-600" />
                     </div>
                     <span className="text-xs font-black text-slate-900">问卷反馈</span>
@@ -282,7 +282,7 @@ export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, ac
 
                 <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-primary" />
+                    <MessageSquare className="w-4 h-4 text-black dark:text-white" />
                     <span className="text-sm font-black text-slate-900">提问互动</span>
                   </div>
                   <div className="relative">
@@ -295,7 +295,7 @@ export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, ac
                     />
                     <button 
                       onClick={handleSendQuestion}
-                      className="absolute bottom-3 right-3 p-2 bg-primary text-white rounded-xl shadow-lg"
+                      className="absolute bottom-3 right-3 p-2 bg-black dark:bg-white text-white rounded-xl shadow-lg"
                     >
                       <Send className="w-3.5 h-3.5" />
                     </button>
@@ -318,7 +318,7 @@ export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, ac
           )}
           {view === 'live' && (
             <div className="flex items-center justify-center gap-8 py-2">
-              <div className="flex flex-col items-center gap-1 text-primary">
+              <div className="flex flex-col items-center gap-1 text-black dark:text-white">
                 <Calendar className="w-5 h-5" />
                 <span className="text-[10px] font-black">活动</span>
               </div>

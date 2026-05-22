@@ -1,0 +1,87 @@
+<!-- 首页：活动列表 + 积分概览 -->
+<view class="page">
+  <!-- 头部 -->
+  <view class="header">
+    <view class="flex items-center justify-between p-24">
+      <view>
+        <text class="text-lg font-bold">{{companyName || 'PartnerNexus'}}</text>
+        <view class="text-sm text-muted mt-8">渠道合作伙伴会议平台</view>
+      </view>
+      <view class="flex items-center gap-16">
+        <view class="score-preview" bindtap="goScore">
+          <text class="text-xl font-bold" style="color: #d97706;">{{totalScore}}</text>
+          <text class="text-sm text-muted">积分</text>
+        </view>
+        <image class="avatar" src="{{avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" bindtap="goProfile" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 积分概览卡片 -->
+  <view class="card score-card">
+    <view class="flex items-center justify-between">
+      <view>
+        <text class="text-sm text-muted">累计积分</text>
+        <view class="flex items-center gap-8 mt-8">
+          <text class="text-xl font-bold" style="color: #d97706;">{{totalScore}}</text>
+          <view class="badge badge-{{scoreLevel}}">{{scoreLevelText}}</view>
+        </view>
+      </view>
+      <view class="flex gap-8">
+        <button class="btn btn-sm btn-outline" bindtap="goStore">兑换礼品</button>
+      </view>
+    </view>
+    <view class="divider" />
+    <view class="flex justify-between text-sm text-muted">
+      <text>报名 {{scoreDetail.register || 0}}分</text>
+      <text>签到 {{scoreDetail.checkin || 0}}分</text>
+      <text>互动 {{scoreDetail.interaction || 0}}分</text>
+      <text>邀请 {{scoreDetail.referral || 0}}分</text>
+    </view>
+  </view>
+
+  <!-- Tab: 即将开始 / 已结束 -->
+  <view class="tabs">
+    <view class="tab {{activeTab === 'upcoming' ? 'active' : ''}}" bindtap="switchTab" data-tab="upcoming">即将开始</view>
+    <view class="tab {{activeTab === 'past' ? 'active' : ''}}" bindtap="switchTab" data-tab="past">已结束</view>
+  </view>
+
+  <!-- 活动列表 -->
+  <view wx:if="{{loading}}" class="text-center p-24">
+    <text class="text-muted">加载中...</text>
+  </view>
+
+  <block wx:for="{{events}}" wx:key="id">
+    <view class="card event-card" bindtap="goEvent" data-id="{{item.id}}">
+      <!-- 倒计时 -->
+      <view wx:if="{{item.status === 'upcoming'}}" class="countdown-badge">
+        <text>{{item.countdown}}</text>
+      </view>
+      <view class="flex justify-between items-start">
+        <view class="flex-1">
+          <text class="text-lg font-bold">{{item.title}}</text>
+          <view class="flex items-center gap-16 mt-8 text-sm text-secondary">
+            <text>{{item.date}}</text>
+            <text>{{item.time}}</text>
+          </view>
+          <view class="flex items-center gap-8 mt-8">
+            <text class="text-sm text-muted">{{item.location}}</text>
+          </view>
+        </view>
+        <view class="badge badge-{{item.status === 'upcoming' ? 'primary' : 'success'}}">
+          {{item.status === 'upcoming' ? '即将开始' : '已结束'}}
+        </view>
+      </view>
+      <view class="divider" />
+      <view class="flex justify-between text-sm text-muted">
+        <text>{{item.attendeeCount || 0}}人已报名</text>
+        <text wx:if="{{item.status === 'upcoming'}}">{{item.distance || ''}}</text>
+        <text wx:if="{{item.hasCheckedIn}}">✅ 已签到</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{!loading && events.length === 0}}" class="text-center p-24">
+    <text class="text-muted">暂无活动</text>
+  </view>
+</view>

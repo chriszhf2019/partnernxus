@@ -14,19 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { PartnerDetails } from '../../types';
-
-interface JBPFormData {
-  title: string;
-  type: string;
-  date: string;
-  time: string;
-  duration: string;
-  location: string;
-  objectives: string[];
-  participants: { name: string; role: string; side: string }[];
-  agenda: { time: string; topic: string }[];
-}
+import { PartnerDetails, JBPFormData } from '../../types';
 
 interface JBPMeetingFormProps {
   partner: PartnerDetails;
@@ -83,7 +71,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
         {/* Header */}
         <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+            <div className="w-12 h-12 rounded-2xl bg-black dark:bg-white flex items-center justify-center shadow-lg shadow-black/10 dark:shadow-white/10">
               <Target className="text-white w-6 h-6" />
             </div>
             <div>
@@ -93,14 +81,14 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-slate-900"
+            className="p-2 hover:bg-[#f5f5f7] rounded-xl transition-colors text-slate-400 hover:text-slate-900"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Stepper */}
-        <div className="px-8 py-4 bg-white border-b border-slate-50 flex items-center justify-center gap-12">
+        <div className="px-8 py-4 bg-white border-b border-black/5 flex items-center justify-center gap-12">
           {[
             { step: 1, label: '基础信息', icon: FileText },
             { step: 2, label: '目标与议程', icon: Zap },
@@ -109,7 +97,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
             <div key={item.step} className="flex items-center gap-3">
               <div className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all",
-                step >= item.step ? "bg-primary text-white shadow-md" : "bg-slate-100 text-slate-400"
+                step >= item.step ? "bg-black dark:bg-white text-white shadow-md" : "bg-[#f5f5f7] text-slate-400"
               )}>
                 {step > item.step ? <CheckCircle2 className="w-5 h-5" /> : item.step}
               </div>
@@ -119,7 +107,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
               )}>
                 {item.label}
               </span>
-              {item.step < 3 && <div className="w-12 h-px bg-slate-100 ml-4" />}
+              {item.step < 3 && <div className="w-12 h-px bg-[#f5f5f7] ml-4" />}
             </div>
           ))}
         </div>
@@ -142,7 +130,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                       type="text" 
                       value={formData.title}
                       onChange={(e) => setFormData({...formData, title: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-black dark:border-white transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -150,7 +138,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                     <select 
                       value={formData.type}
                       onChange={(e) => setFormData({...formData, type: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-black dark:border-white transition-all"
                     >
                       <option>Quarterly Planning</option>
                       <option>Annual Strategic Review</option>
@@ -164,7 +152,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                       type="text" 
                       value={formData.location}
                       onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-black dark:border-white transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -173,7 +161,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
                         type="date" 
-                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-black dark:border-white transition-all"
                       />
                     </div>
                   </div>
@@ -183,7 +171,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                       <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input 
                         type="time" 
-                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-black dark:border-white transition-all"
                       />
                     </div>
                   </div>
@@ -204,7 +192,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">核心议题与目标</label>
                     <button 
                       onClick={handleAddObjective}
-                      className="text-[10px] font-black text-primary hover:text-primary/80 flex items-center gap-1"
+                      className="text-[10px] font-black text-black dark:text-white hover:text-black dark:text-white/80 flex items-center gap-1"
                     >
                       <Plus className="w-3 h-3" /> 添加目标
                     </button>
@@ -213,13 +201,13 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                     {formData.objectives.map((obj, idx) => (
                       <div key={idx} className="flex gap-3">
                         <div className="flex-1 relative">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />
                           <input 
                             type="text" 
                             value={obj}
                             onChange={(e) => handleObjectiveChange(idx, e.target.value)}
                             placeholder="输入会议目标..."
-                            className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-black dark:border-white transition-all"
                           />
                         </div>
                         <button 
@@ -261,11 +249,11 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" /> 内部参会人员 (Internal)
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#f5f5f7]0" /> 内部参会人员 (Internal)
                     </label>
                     <div className="space-y-3">
                       {formData.participants.filter(p => p.side === 'Internal').map((p, idx) => (
-                        <div key={idx} className="flex items-center gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-xl">
+                        <div key={idx} className="flex items-center gap-3 p-3 bg-[#f5f5f7]/50 border border-blue-100 rounded-xl">
                           <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">
                             {p.name.charAt(0)}
                           </div>
@@ -275,7 +263,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                           </div>
                         </div>
                       ))}
-                      <button className="w-full py-3 border-2 border-dashed border-slate-100 rounded-xl text-[10px] font-black text-slate-400 hover:border-primary/30 hover:text-primary transition-all">
+                      <button className="w-full py-3 border-2 border-dashed border-slate-100 rounded-xl text-[10px] font-black text-slate-400 hover:border-black dark:border-white/30 hover:text-black dark:text-white transition-all">
                         + 邀请内部专家
                       </button>
                     </div>
@@ -297,7 +285,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
                           </div>
                         </div>
                       ))}
-                      <button className="w-full py-3 border-2 border-dashed border-slate-100 rounded-xl text-[10px] font-black text-slate-400 hover:border-primary/30 hover:text-primary transition-all">
+                      <button className="w-full py-3 border-2 border-dashed border-slate-100 rounded-xl text-[10px] font-black text-slate-400 hover:border-black dark:border-white/30 hover:text-black dark:text-white transition-all">
                         + 邀请伙伴侧人员
                       </button>
                     </div>
@@ -336,7 +324,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
           <div className="flex gap-3">
             <button 
               onClick={onClose}
-              className="px-6 py-3 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
+              className="px-6 py-3 text-sm font-bold text-slate-500 hover:bg-[#f5f5f7] rounded-xl transition-all"
             >
               取消
             </button>
@@ -350,7 +338,7 @@ export const JBPMeetingForm: React.FC<JBPMeetingFormProps> = ({ partner, onClose
             ) : (
               <button 
                 onClick={() => onSubmit(formData)}
-                className="px-10 py-3 bg-primary text-white text-sm font-black rounded-xl shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+                className="px-10 py-3 bg-black dark:bg-white text-white text-sm font-black rounded-xl shadow-xl shadow-black/10 dark:shadow-white/10 hover:scale-105 transition-all flex items-center gap-2"
               >
                 立即发送邀请 <Zap className="w-4 h-4 fill-current" />
               </button>

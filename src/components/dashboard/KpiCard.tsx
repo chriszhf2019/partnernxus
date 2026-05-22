@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useMemo, useCallback } from 'react';
 import { TrendingUp, TrendingDown, Minus, Info, Clock, Target, Calendar } from 'lucide-react';
 import { cn, formatCurrency } from '../../lib/utils';
 import { TimeSeriesMetric, AchievementData } from '../../types';
@@ -12,7 +12,7 @@ interface KpiCardProps {
 
 type TimePerspective = 'monthly' | 'quarterly' | 'yearly';
 
-export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = false }) => {
+export const KpiCard: React.FC<KpiCardProps> = memo(({ data, unit = '', isCurrency = false }) => {
   const [perspective, setPerspective] = useState<TimePerspective>('quarterly');
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -60,7 +60,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{label}</span>
         <div className={cn(
           "flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-black",
-          value === 0 ? "bg-slate-100 text-slate-500" :
+          value === 0 ? "bg-[#f5f5f7] text-slate-500" :
           isPositive ? "bg-emerald-50/80 text-emerald-600" : "bg-red-50/80 text-red-600"
         )}>
           <Icon className="w-2.5 h-2.5 mr-0.5" />
@@ -71,7 +71,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
   };
 
   return (
-    <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all group relative overflow-hidden flex flex-col min-h-[380px]">
+    <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 hover:border-black dark:border-white/20 hover:shadow-2xl hover:shadow-primary/5 transition-all group relative overflow-hidden flex flex-col min-h-[380px]">
       <div className="relative space-y-4 flex-1">
         {/* Header: Name & Perspective Switcher */}
         <div className="flex justify-between items-start">
@@ -79,7 +79,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{data.metric_name}</p>
             <div className="relative">
               <Info 
-                className="w-3 h-3 text-slate-300 cursor-help hover:text-primary transition-colors" 
+                className="w-3 h-3 text-slate-300 cursor-help hover:text-black dark:text-white transition-colors" 
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
               />
@@ -92,7 +92,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
                     className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-slate-900 text-white rounded-xl shadow-2xl z-50 pointer-events-none"
                   >
                     <div className="space-y-2 text-[9px] leading-relaxed">
-                      <p><span className="text-primary font-black uppercase tracking-widest block mb-0.5">定义:</span> {context.desc}</p>
+                      <p><span className="text-black dark:text-white font-black uppercase tracking-widest block mb-0.5">定义:</span> {context.desc}</p>
                       <p><span className="text-amber-400 font-black uppercase tracking-widest block mb-0.5">意义:</span> {context.sig}</p>
                       <div className="h-px bg-white/10 my-1" />
                       <p className="text-emerald-400 font-bold italic">建议: {context.tip}</p>
@@ -110,7 +110,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
                 onClick={() => setPerspective(p)}
                 className={cn(
                   "px-2 py-0.5 text-[8px] font-black uppercase transition-all rounded",
-                  perspective === p ? "bg-white text-primary shadow-sm ring-1 ring-slate-100" : "text-slate-400 hover:text-slate-600"
+                  perspective === p ? "bg-white text-black dark:text-white shadow-sm ring-1 ring-slate-100" : "text-slate-400 hover:text-slate-600"
                 )}
               >
                 {p.charAt(0)}
@@ -132,7 +132,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
         </div>
 
         {/* Growth Stats */}
-        <div className="flex items-center gap-4 py-3 border-y border-slate-50">
+        <div className="flex items-center gap-4 py-3 border-y border-black/5">
           <AchievementTag label="YoY (同比)" value={data.yoy} />
           <AchievementTag label="QoQ (环比)" value={data.qoq} />
         </div>
@@ -144,7 +144,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">活跃构成 (按优先级)</p>
               <div className="space-y-2">
                 {[
-                  { label: '下单伙伴', val: data.active_split.order_placing, color: 'bg-primary' },
+                  { label: '下单伙伴', val: data.active_split.order_placing, color: 'bg-black dark:bg-white' },
                   { label: '报备伙伴', val: data.active_split.leads_reporting, color: 'bg-blue-400' },
                   { label: '其他参与', val: data.active_split.incentive_participants, color: 'bg-slate-300' }
                 ].map((item, i) => (
@@ -152,7 +152,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
                     <span className="text-[10px] font-bold text-slate-600">{item.label}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-black text-slate-900">{item.val.value}</span>
-                      <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-16 h-1 bg-[#f5f5f7] rounded-full overflow-hidden">
                         <div className={cn("h-full rounded-full transition-all duration-700", item.color)} style={{ width: `${(item.val.value / data.current_value) * 100}%` }} />
                       </div>
                     </div>
@@ -167,7 +167,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
               <div className="grid grid-cols-2 gap-2">
                 <div className="p-2 bg-slate-50 rounded-xl border border-slate-100">
                   <div className="flex items-center gap-1 mb-1">
-                    <Target className="w-2.5 h-2.5 text-primary" />
+                    <Target className="w-2.5 h-2.5 text-black dark:text-white" />
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">当季预期结单</span>
                   </div>
                   <p className="text-xs font-black text-slate-800">{formatValue(data.pipeline_batch.current_q_target)}</p>
@@ -185,8 +185,8 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
                   <span>当季新增: {data.pipeline_batch.new_in_q_ratio}%</span>
                   <span>历史积存: {data.pipeline_batch.historical_ratio}%</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                  <div className="h-full bg-primary" style={{ width: `${data.pipeline_batch.new_in_q_ratio}%` }} />
+                <div className="h-1.5 w-full bg-[#f5f5f7] rounded-full overflow-hidden flex">
+                  <div className="h-full bg-black dark:bg-white" style={{ width: `${data.pipeline_batch.new_in_q_ratio}%` }} />
                   <div className="h-full bg-slate-300" style={{ width: `${data.pipeline_batch.historical_ratio}%` }} />
                 </div>
               </div>
@@ -205,7 +205,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
               <div className="flex items-end gap-1 h-12 pt-2">
                 {data.conversion_details.funnel_stages.map((stage, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className={cn("w-full bg-primary/20 hover:bg-primary transition-colors rounded-t-sm relative group/bar")} style={{ height: `${(stage.count / 1500) * 100}%` }}>
+                    <div className={cn("w-full bg-black dark:bg-white/20 hover:bg-black dark:bg-white transition-colors rounded-t-sm relative group/bar")} style={{ height: `${(stage.count / 1500) * 100}%` }}>
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover/bar:block bg-slate-900 text-white text-[8px] px-1 rounded shadow-xl z-10">{stage.count}</div>
                     </div>
                     <span className="text-[8px] font-bold text-slate-400">{stage.stage}</span>
@@ -219,7 +219,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
             <div className="space-y-4 pt-4">
               <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col items-center justify-center">
                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">年度业绩总目标锁定</p>
-                 <p className="text-xl font-black text-primary">¥ 32,000,000</p>
+                 <p className="text-xl font-black text-black dark:text-white">¥ 32,000,000</p>
               </div>
             </div>
           )}
@@ -234,22 +234,22 @@ export const KpiCard: React.FC<KpiCardProps> = ({ data, unit = '', isCurrency = 
           </span>
           <span className={cn(
             "text-[10px] font-black uppercase tracking-widest",
-            currentAchievement.rate < 60 ? "text-amber-500" : "text-primary"
+            currentAchievement.rate < 60 ? "text-amber-500" : "text-black dark:text-white"
           )}>
              {Math.round(currentAchievement.rate)}%
           </span>
         </div>
-        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-2 w-full bg-[#f5f5f7] rounded-full overflow-hidden">
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(100, currentAchievement.rate)}%` }}
             className={cn(
               "h-full rounded-full transition-all duration-1000",
-              currentAchievement.rate < 60 ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]" : "bg-primary shadow-[0_0_10px_rgba(0,102,255,0.3)]"
+              currentAchievement.rate < 60 ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]" : "bg-black dark:bg-white shadow-[0_0_10px_rgba(0,102,255,0.3)]"
             )}
           />
         </div>
       </div>
     </div>
   );
-};
+});

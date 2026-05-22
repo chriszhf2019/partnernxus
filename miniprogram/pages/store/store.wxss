@@ -1,0 +1,6 @@
+.page { min-height: 100vh; padding-bottom: 40rpx; }
+.store-header { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; padding: 16rpx 24rpx; }
+.gift-card { margin: 0; }
+.gift-image { height: 120rpx; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: var(--radius); }
+.gift-emoji { font-size: 60rpx; }

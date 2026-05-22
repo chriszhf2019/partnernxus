@@ -43,7 +43,7 @@ export const GapAnalysisHeader: React.FC<GapAnalysisHeaderProps> = ({
     <div className="px-6 py-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
       <div>
         <h2 className="text-base font-black text-slate-900 tracking-tight flex items-center gap-2">
-          <Target className="w-5 h-5 text-primary" />
+          <Target className="w-5 h-5 text-black dark:text-white" />
           销售目标与 Pipeline 缺口监控
         </h2>
         <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest text-nowrap">Revenue Alignment & Gap Analysis</p>

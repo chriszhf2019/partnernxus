@@ -1,0 +1,65 @@
+<!-- 积分页：积分总览 + 明细 + 排行榜 -->
+<view class="page">
+  <!-- 积分头部 -->
+  <view class="score-hero text-center p-24">
+    <text class="text-sm text-muted">累计积分</text>
+    <text class="score-number">{{totalScore}}</text>
+    <view class="badge badge-{{scoreLevel}} mt-8">{{scoreLevelText}}会员</view>
+    <text class="text-sm text-muted mt-8">距离下一级还需 {{nextLevelScore}} 分</text>
+  </view>
+
+  <!-- 积分构成 -->
+  <view class="card">
+    <text class="text-lg font-bold mb-16">积分构成</text>
+    <view class="flex justify-between text-center">
+      <view class="flex-1">
+        <text class="text-xl font-bold" style="color: #2563eb;">{{scoreDetail.register || 0}}</text>
+        <text class="text-sm text-muted mt-8">报名</text>
+      </view>
+      <view class="flex-1">
+        <text class="text-xl font-bold" style="color: #059669;">{{scoreDetail.checkin || 0}}</text>
+        <text class="text-sm text-muted mt-8">签到</text>
+      </view>
+      <view class="flex-1">
+        <text class="text-xl font-bold" style="color: #d97706;">{{scoreDetail.interaction || 0}}</text>
+        <text class="text-sm text-muted mt-8">互动</text>
+      </view>
+      <view class="flex-1">
+        <text class="text-xl font-bold" style="color: #dc2626;">{{scoreDetail.referral || 0}}</text>
+        <text class="text-sm text-muted mt-8">邀请</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Tab: 获得 / 消耗 -->
+  <view class="tabs">
+    <view class="tab {{activeTab === 'earn' ? 'active' : ''}}" bindtap="switchTab" data-tab="earn">获得记录</view>
+    <view class="tab {{activeTab === 'spend' ? 'active' : ''}}" bindtap="switchTab" data-tab="spend">消耗记录</view>
+  </view>
+
+  <!-- 积分明细 -->
+  <view wx:for="{{records}}" wx:key="id" class="card">
+    <view class="flex justify-between items-center">
+      <view>
+        <text class="font-bold">{{item.desc}}</text>
+        <text class="text-sm text-muted mt-4">{{item.time}}</text>
+      </view>
+      <text class="text-lg font-bold {{item.type === 'earn' ? 'earn' : 'spend'}}">
+        {{item.type === 'earn' ? '+' : '-'}}{{item.points}}
+      </text>
+    </view>
+  </view>
+
+  <view wx:if="{{records.length === 0}}" class="text-center p-24">
+    <text class="text-muted">暂无记录</text>
+  </view>
+
+  <!-- 积分规则 -->
+  <view class="card">
+    <text class="text-lg font-bold mb-16">积分规则</text>
+    <view wx:for="{{rules}}" wx:key="action" class="flex justify-between py-12">
+      <text class="text-secondary">{{item.action}}</text>
+      <text class="font-bold" style="color: #d97706;">+{{item.points}}分{{item.note || ''}}</text>
+    </view>
+  </view>
+</view>

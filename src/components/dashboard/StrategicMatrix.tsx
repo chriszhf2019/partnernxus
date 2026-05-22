@@ -93,10 +93,10 @@ export const StrategicMatrix: React.FC = () => {
     };
     const t = thresholds[metric];
     if (value < t[0]) return 'bg-slate-50 text-slate-400';
-    if (value < t[1]) return 'bg-blue-50 text-blue-600';
+    if (value < t[1]) return 'bg-[#f5f5f7] text-blue-600';
     if (value < t[2]) return 'bg-blue-200 text-blue-800';
     if (value < t[3]) return 'bg-blue-400 text-white';
-    return 'bg-blue-600 text-white';
+    return 'bg-black text-white';
   };
 
   const handleCellClick = (industry: string, region: string) => {
@@ -120,7 +120,7 @@ export const StrategicMatrix: React.FC = () => {
               onClick={() => setMetric(tMetric)}
               className={cn(
                 "px-3 py-1 text-[10px] font-bold rounded-md transition-all",
-                metric === tMetric ? "bg-blue-600 text-white shadow-md" : "text-slate-500 hover:bg-slate-50"
+                metric === tMetric ? "bg-black text-white shadow-md" : "text-slate-500 hover:bg-slate-50"
               )}
             >
               {tMetric === 'Headcount' ? t('matrix.headcount') : tMetric === 'Pipeline' ? t('matrix.pipeline') : t('matrix.mdf')}
@@ -132,7 +132,7 @@ export const StrategicMatrix: React.FC = () => {
       {/* Matrix Grid */}
       <div className="p-4 flex-1 overflow-auto">
         <div 
-          className="grid gap-1 bg-slate-100 border border-slate-200 rounded-lg overflow-hidden min-w-[500px]"
+          className="grid gap-1 bg-[#f5f5f7] border border-slate-200 rounded-lg overflow-hidden min-w-[500px]"
           style={{ gridTemplateColumns: `70px repeat(${REGIONS.length}, 1fr) 70px` }}
         >
           {/* Header Row */}
@@ -206,7 +206,7 @@ export const StrategicMatrix: React.FC = () => {
               </span>
             </div>
           ))}
-          <div className="bg-slate-100 p-2 border-l border-slate-200"></div>
+          <div className="bg-[#f5f5f7] p-2 border-l border-slate-200"></div>
         </div>
       </div>
 
@@ -268,12 +268,12 @@ export const StrategicMatrix: React.FC = () => {
                   <div key={partner.name} className="p-3 rounded-xl border border-slate-100 bg-white shadow-sm hover:border-blue-200 transition-all group">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">
+                        <div className="w-8 h-8 rounded-lg bg-[#f5f5f7] flex items-center justify-center text-[10px] font-black text-slate-400">
                           {partner.name[0]}
                         </div>
                         <div>
                           <h6 className="text-[11px] font-black text-slate-900">{partner.name}</h6>
-                          <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] font-bold text-blue-600 bg-[#f5f5f7] px-1.5 py-0.5 rounded">
                             {partner.tier}
                           </span>
                         </div>
@@ -289,7 +289,7 @@ export const StrategicMatrix: React.FC = () => {
                       <span className="text-[10px] font-medium text-slate-600">{partner.cert}</span>
                     </div>
 
-                    <button className="w-full py-2 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
+                    <button className="w-full py-2 bg-black text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
                       <UserPlus className="w-3 h-3" /> {t('matrix.assignLead')}
                     </button>
                   </div>

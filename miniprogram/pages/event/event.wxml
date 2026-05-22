@@ -1,0 +1,87 @@
+<!-- 活动详情：议程、签到、提问、抽奖 -->
+<view class="page">
+  <!-- 活动信息 -->
+  <view class="event-hero">
+    <view class="p-24">
+      <view class="badge badge-primary mb-16">{{event.statusText}}</view>
+      <text class="text-xl font-bold">{{event.title}}</text>
+      <view class="flex flex-col gap-8 mt-16 text-sm text-secondary">
+        <view class="flex items-center gap-8"><text>📅 {{event.date}} {{event.time}}</text></view>
+        <view class="flex items-center gap-8"><text>📍 {{event.location}}</text></view>
+        <view class="flex items-center gap-8"><text>👥 {{event.attendeeCount}}人已报名</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="card">
+    <view class="flex justify-between">
+      <button class="btn btn-sm btn-primary flex-1 mr-8" bindtap="doCheckin" disabled="{{event.hasCheckedIn}}">
+        {{event.hasCheckedIn ? '✅ 已签到' : '📷 扫码签到'}}
+      </button>
+      <button class="btn btn-sm btn-outline flex-1 mr-8" bindtap="doReminder">
+        🔔 {{event.hasReminder ? '已提醒' : '设置提醒'}}
+      </button>
+      <button class="btn btn-sm btn-outline flex-1" bindtap="doShare">
+        📤 分享
+      </button>
+    </view>
+    <button class="btn btn-sm btn-danger btn-block mt-16" wx:if="{{event.canLottery}}" bindtap="doLottery">
+      🎰 参与抽奖
+    </button>
+  </view>
+
+  <!-- 议程 -->
+  <view class="card">
+    <text class="text-lg font-bold mb-16">会议议程</text>
+    <view wx:for="{{event.agenda}}" wx:key="time" class="agenda-item">
+      <view class="time-dot {{index === 0 ? 'active' : ''}}" />
+      <view class="flex-1 ml-16">
+        <text class="text-sm text-muted">{{item.time}}</text>
+        <text class="text-lg font-bold">{{item.topic}}</text>
+        <text class="text-sm text-secondary">{{item.speaker}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提问互动 -->
+  <view class="card">
+    <view class="flex items-center justify-between mb-16">
+      <text class="text-lg font-bold">互动提问</text>
+      <text class="text-sm text-muted">{{questions.length}}条提问</text>
+    </view>
+    <!-- 提问输入 -->
+    <view class="flex items-center gap-8 mb-16">
+      <input class="question-input flex-1" placeholder="输入你的问题..." value="{{questionText}}" bindinput="onQuestionInput" />
+      <label class="flex items-center gap-8 text-sm text-muted">
+        <switch checked="{{isAnonymous}}" bindchange="onAnonSwitch" /> 匿名
+      </label>
+      <button class="btn btn-sm btn-primary" bindtap="askQuestion">提问</button>
+    </view>
+    <!-- 提问列表 -->
+    <view wx:for="{{questions}}" wx:key="id" class="question-item">
+      <view class="flex items-start gap-8">
+        <image class="avatar-sm" src="{{item.isAnonymous ? '/images/anonymous.png' : item.avatar}}" />
+        <view class="flex-1">
+          <view class="flex items-center gap-8">
+            <text class="font-bold">{{item.isAnonymous ? '匿名' : item.userName}}</text>
+            <text class="text-sm text-muted">{{item.time}}</text>
+          </view>
+          <text class="text-lg">{{item.content}}</text>
+          <view wx:if="{{item.reply}}" class="reply-box mt-8">
+            <text class="text-sm text-secondary">💬 回复：{{item.reply}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 抽奖结果 -->
+  <view wx:if="{{lotteryResult}}" class="card lottery-card">
+    <text class="text-xl font-bold text-center">🎉 中奖名单</text>
+    <view wx:for="{{lotteryResult}}" wx:key="name" class="flex justify-between p-16 mt-16">
+      <text class="font-bold">{{item.name}}</text>
+      <text class="text-secondary">{{item.prize}}</text>
+    </view>
+  </view>
+</view>

@@ -29,7 +29,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
   // Dynamic Options State
   const [objectives, setObjectives] = useState([
     { id: 'volume', label: '基础规模返点', sub: 'Volume Rebates', icon: BarChart3, color: 'text-slate-900', bg: 'bg-slate-50', border: 'border-slate-200' },
-    { id: 'new_product', label: '新产品破冰', sub: 'New Product SPIFFs', icon: Rocket, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+    { id: 'new_product', label: '新产品破冰', sub: 'New Product SPIFFs', icon: Rocket, color: 'text-blue-600', bg: 'bg-[#f5f5f7]', border: 'border-blue-200' },
     { id: 'competitive', label: '竞品替换阻击', sub: 'Competitive Takeout', icon: ShieldCheck, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
     { id: 'velocity', label: '销售结单加速', sub: 'Velocity Accelerators', icon: Zap, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
   ]);
@@ -113,7 +113,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
           <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div>
               <h2 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Rocket className="w-6 h-6 text-primary" />
+                <Rocket className="w-6 h-6 text-black dark:text-white" />
                 发起目标导向型激励 (Create Objective-driven Incentive)
               </h2>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Step {step} of 2: Define Strategic Intent</p>
@@ -135,7 +135,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">选择核心商业目标 (Select Strategic Objective)</label>
                     <button 
                       onClick={() => setShowAddInput('objective')}
-                      className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline flex items-center gap-1"
+                      className="text-[10px] font-black text-black dark:text-white uppercase tracking-widest hover:underline flex items-center gap-1"
                     >
                       <Plus className="w-3 h-3" /> 新增目标
                     </button>
@@ -148,7 +148,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                         value={newOptionValue}
                         onChange={(e) => setNewOptionValue(e.target.value)}
                         placeholder="输入新目标名称..."
-                        className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-primary"
+                        className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-black dark:border-white"
                         onKeyDown={(e) => e.key === 'Enter' && handleAddOption('objective')}
                       />
                       <button 
@@ -159,7 +159,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                       </button>
                       <button 
                         onClick={() => setShowAddInput(null)}
-                        className="px-4 py-2 bg-slate-100 text-slate-500 text-[10px] font-black rounded-xl"
+                        className="px-4 py-2 bg-[#f5f5f7] text-slate-500 text-[10px] font-black rounded-xl"
                       >
                         取消
                       </button>
@@ -189,7 +189,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                         </div>
                         {selectedObjectiveId === obj.id && (
                           <div className="absolute top-4 right-4">
-                            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                            <div className="w-6 h-6 bg-black dark:bg-white rounded-full flex items-center justify-center">
                               <ChevronRight className="w-4 h-4 text-white" />
                             </div>
                           </div>
@@ -205,7 +205,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                     <input 
                       type="text" 
                       placeholder="例如: Q4 医疗信创替换专项激励"
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-black dark:border-white transition-all"
                     />
                   </div>
                   
@@ -215,7 +215,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">目标受众 (Target Audience)</label>
                         <button 
                           onClick={() => setShowAddInput('audience')}
-                          className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                          className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest hover:underline"
                         >
                           + 新增受众
                         </button>
@@ -280,7 +280,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">奖励发放形式 (Payout Type)</label>
                         <button 
                           onClick={() => setShowAddInput('payout')}
-                          className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                          className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest hover:underline"
                         >
                           + 新增形式
                         </button>
@@ -309,7 +309,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                               "px-4 py-3 border rounded-xl text-xs font-bold transition-all",
                               selectedPayout === type 
                                 ? "bg-slate-900 text-white border-slate-900 shadow-md"
-                                : "bg-white border-slate-200 text-slate-600 hover:border-primary"
+                                : "bg-white border-slate-200 text-slate-600 hover:border-black dark:border-white"
                             )}
                           >
                             {type}
@@ -321,7 +321,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
 
                   <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
                     <div className="flex items-center gap-2 mb-4">
-                      <Info className="w-4 h-4 text-primary" />
+                      <Info className="w-4 h-4 text-black dark:text-white" />
                       <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">ROI 预测模型 (System Projection)</p>
                     </div>
                     <div className="space-y-6">
@@ -347,7 +347,7 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">核心考核指标 (Key KPI)</label>
                     <button 
                       onClick={() => setShowAddInput('kpi')}
-                      className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                      className="text-[9px] font-black text-black dark:text-white uppercase tracking-widest hover:underline"
                     >
                       + 新增指标
                     </button>
@@ -375,8 +375,8 @@ export const CreateIncentiveModal: React.FC<CreateIncentiveModalProps> = ({ isOp
                         className={cn(
                           "px-6 py-2 text-xs font-bold rounded-full transition-all border",
                           selectedKpis.includes(kpi)
-                            ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                            : "bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200"
+                            ? "bg-black dark:bg-white text-white border-black dark:border-white shadow-lg shadow-black/10 dark:shadow-white/10"
+                            : "bg-[#f5f5f7] text-slate-600 border-transparent hover:bg-slate-200"
                         )}
                       >
                         {kpi}

@@ -1,0 +1,37 @@
+<!-- 个人中心 -->
+<view class="page">
+  <view class="profile-hero p-24">
+    <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" />
+    <text class="text-lg font-bold mt-16">{{userInfo.nickName || '用户'}}</text>
+    <view class="flex items-center gap-8 mt-8">
+      <text class="text-sm text-muted">{{companyName || '未绑定公司'}}</text>
+      <view wx:if="{{companyName}}" class="badge badge-success">已认证</view>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{!companyName}}">
+    <text class="font-bold mb-16">绑定公司</text>
+    <text class="text-sm text-muted mb-16">绑定后签到积分将归属到对应公司名下</text>
+    <input class="company-input mb-16" placeholder="输入公司名称搜索..." value="{{searchText}}" bindinput="onSearch" />
+    <view wx:for="{{searchResults}}" wx:key="id" class="company-item" bindtap="bindCompany" data-id="{{item.id}}" data-name="{{item.name}}">
+      <text class="font-bold">{{item.name}}</text>
+      <text class="text-sm text-muted ml-8">{{item.type}}</text>
+    </view>
+    <button wx:if="{{searchResults.length === 0 && searchText}}" class="btn btn-sm btn-outline btn-block mt-16" bindtap="applyNew">申请新增公司</button>
+  </view>
+
+  <view class="card">
+    <text class="text-lg font-bold mb-16">我的数据</text>
+    <view class="flex justify-between text-center">
+      <view class="flex-1"><text class="text-xl font-bold">{{stats.events || 0}}</text><text class="text-sm text-muted mt-8">参加活动</text></view>
+      <view class="flex-1"><text class="text-xl font-bold">{{stats.questions || 0}}</text><text class="text-sm text-muted mt-8">提问数</text></view>
+      <view class="flex-1"><text class="text-xl font-bold">{{stats.referrals || 0}}</text><text class="text-sm text-muted mt-8">邀请人数</text></view>
+      <view class="flex-1"><text class="text-xl font-bold">{{totalScore || 0}}</text><text class="text-sm text-muted mt-8">总积分</text></view>
+    </view>
+  </view>
+
+  <view class="card">
+    <button class="btn btn-outline btn-block" bindtap="switchAccount">切换账号</button>
+    <button class="btn btn-ghost btn-block mt-16" bindtap="about">关于 PartnerNexus</button>
+  </view>
+</view>

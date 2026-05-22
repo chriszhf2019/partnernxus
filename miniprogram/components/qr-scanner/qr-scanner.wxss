@@ -1,0 +1,8 @@
+.qr-scanner { display: flex; align-items: center; justify-content: center; padding: 40rpx; }
+.qr-frame { width: 400rpx; height: 400rpx; position: relative; display: flex; align-items: center; justify-content: center; }
+.qr-corner { position: absolute; width: 40rpx; height: 40rpx; border-color: var(--color-brand); border-style: solid; }
+.qr-corner.top-left { top: 0; left: 0; border-width: 4rpx 0 0 4rpx; border-radius: 8rpx 0 0 0; }
+.qr-corner.top-right { top: 0; right: 0; border-width: 4rpx 4rpx 0 0; border-radius: 0 8rpx 0 0; }
+.qr-corner.bottom-left { bottom: 0; left: 0; border-width: 0 0 4rpx 4rpx; border-radius: 0 0 0 8rpx; }
+.qr-corner.bottom-right { bottom: 0; right: 0; border-width: 0 4rpx 4rpx 0; border-radius: 0 0 8rpx 0; }
+.qr-hint { color: var(--color-text-muted); font-size: 24rpx; }

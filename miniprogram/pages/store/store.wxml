@@ -1,0 +1,38 @@
+<!-- 积分兑换商城 -->
+<view class="page">
+  <view class="store-header p-24">
+    <text class="text-sm text-muted">可用积分</text>
+    <text class="text-xl font-bold" style="color: #d97706;">{{totalScore}}</text>
+  </view>
+
+  <view class="gift-grid">
+    <view wx:for="{{gifts}}" wx:key="id" class="gift-card card">
+      <view class="gift-image text-center">
+        <text class="gift-emoji">{{item.image}}</text>
+      </view>
+      <text class="font-bold mt-8">{{item.name}}</text>
+      <view class="flex justify-between items-center mt-8">
+        <view class="badge badge-warning">{{item.cost}}积分</view>
+        <text class="text-sm {{item.stock > 10 ? 'text-muted' : ''}}" style="{{item.stock <= 10 ? 'color: #dc2626;' : ''}}">
+          库存{{item.stock}}件
+        </text>
+      </view>
+      <button class="btn btn-sm btn-primary btn-block mt-12"
+        disabled="{{totalScore < item.cost || item.stock === 0}}"
+        bindtap="doRedeem" data-id="{{item.id}}" data-name="{{item.name}}" data-cost="{{item.cost}}">
+        {{totalScore < item.cost ? '积分不足' : item.stock === 0 ? '已售罄' : '立即兑换'}}
+      </button>
+    </view>
+  </view>
+
+  <view wx:if="{{orders.length > 0}}" class="card mt-24">
+    <text class="text-lg font-bold mb-16">兑换记录</text>
+    <view wx:for="{{orders}}" wx:key="id" class="flex justify-between py-12">
+      <view>
+        <text class="font-bold">{{item.giftName}}</text>
+        <text class="text-sm text-muted ml-8">{{item.time}}</text>
+      </view>
+      <text class="text-sm text-muted">-{{item.cost}}积分</text>
+    </view>
+  </view>
+</view>

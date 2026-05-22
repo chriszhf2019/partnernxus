@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(claude plugins *)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, name: e\\\\.target\\\\.value }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'name', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, unifiedSocialCreditCode: e\\\\.target\\\\.value }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'unifiedSocialCreditCode', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, startDate: e\\\\.target\\\\.value }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'startDate', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, registeredAddress: e\\\\.target\\\\.value }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'registeredAddress', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, cooperationScope: e\\\\.target\\\\.value }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'cooperationScope', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, type: e\\\\.target\\\\.value as typeof formData\\\\.type }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'type', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, tier: e\\\\.target\\\\.value as typeof formData\\\\.tier }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'tier', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, status: e\\\\.target\\\\.value as typeof formData\\\\.status }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'status', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(e\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, industry: e\\\\.target\\\\.value }\\)}/onChange={\\(e\\) => dispatch\\({ type: 'SET', field: 'industry', value: e.target.value }\\)}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/onChange={\\(v\\) => setFormData\\({ \\\\.\\\\.\\\\.formData, \\\\.\\\\.\\\\.v }\\)}/onChange={\\(v\\) => { dispatch\\({ type: 'SET', field: 'province', value: v.province }\\); dispatch\\({ type: 'SET', field: 'city', value: v.city }\\); dispatch\\({ type: 'SET', field: 'district', value: v.district }\\); }}/g\" src/components/partners/PartnerProfile.tsx)",
+      "Bash(sed -i '' \"s/label: '今年新增'/label: t\\('deals.yearNew'\\)/g\" src/components/deals/DealRegistrationPage.tsx)",
+      "Bash(sed -i '' \"s/label: '本季新增'/label: t\\('deals.quarterNew'\\)/g\" src/components/deals/DealRegistrationPage.tsx)",
+      "Bash(sed -i '' \"s/label: '本月新增'/label: t\\('deals.monthNew'\\)/g\" src/components/deals/DealRegistrationPage.tsx)",
+      "Bash(sed -i '' \"s/label: '本周新增'/label: t\\('deals.weekNew'\\)/g\" src/components/deals/DealRegistrationPage.tsx)",
+      "Bash(sed -i '' \"s/label: '已拒绝'/label: t\\('deals.rejected'\\)/g\" src/components/deals/DealRegistrationPage.tsx)",
+      "Bash(npx vercel *)",
+      "Bash(npx supabase *)",
+      "Bash(npm install *)",
+      "Bash(gh auth *)",
+      "Bash(brew install *)",
+      "Bash(git add *)"
+    ]
+  }
+}

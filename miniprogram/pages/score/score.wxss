@@ -1,0 +1,8 @@
+.page { min-height: 100vh; padding-bottom: 40rpx; }
+.score-hero { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.score-number { font-size: 80rpx; font-weight: 800; color: #d97706; display: block; margin: 8rpx 0; }
+.tabs { display: flex; margin: 16rpx 24rpx; background: #fff; border-radius: var(--radius); border: 1rpx solid var(--color-border); overflow: hidden; }
+.tab { flex: 1; text-align: center; padding: 20rpx; font-size: 28rpx; color: var(--color-text-secondary); }
+.tab.active { background: var(--color-text); color: #fff; font-weight: 600; }
+.earn { color: #059669; }
+.spend { color: #dc2626; }

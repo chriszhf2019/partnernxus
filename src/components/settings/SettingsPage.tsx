@@ -58,12 +58,12 @@ export const SettingsPage: React.FC = () => {
   };
 
   const tabs = [
-    { id: 'profile', label: '个人资料', enLabel: 'Profile', icon: User },
-    { id: 'organization', label: '组织架构', enLabel: 'Organization', icon: Building2 },
-    { id: 'global', label: '全局配置', enLabel: 'Global Settings', icon: Settings },
-    { id: 'notifications', label: '通知提醒', enLabel: 'Notifications', icon: Bell },
-    { id: 'security', label: '安全合规', enLabel: 'Security', icon: Shield },
-    { id: 'system', label: '系统偏好', enLabel: 'System', icon: Globe },
+    { id: 'profile', label: t('settings.profile'), icon: User },
+    { id: 'organization', label: t('settings.organization'), icon: Building2 },
+    { id: 'global', label: t('settings.global'), icon: Settings },
+    { id: 'notifications', label: t('settings.notifications'), icon: Bell },
+    { id: 'security', label: t('settings.security'), icon: Shield },
+    { id: 'system', label: t('settings.system'), icon: Globe },
   ];
 
   const handleListUpdate = (key: keyof GlobalConfig, value: string) => {
@@ -368,10 +368,8 @@ export const SettingsPage: React.FC = () => {
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-700">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{language === 'zh' ? '系统设置' : 'System Settings'}</h1>
-          <p className="text-slate-400 text-sm font-bold opacity-80 uppercase tracking-widest">
-            {language === 'zh' ? '管理您的个人偏好、组织架构与安全选项。' : 'Manage your profile, organization, and security preferences.'}
-          </p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{t('settings.title')}</h1>
+          <p className="text-slate-400 text-sm font-bold opacity-80 uppercase tracking-widest">{t('settings.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <AnimatePresence>
@@ -382,7 +380,7 @@ export const SettingsPage: React.FC = () => {
                 exit={{ opacity: 0, x: 20 }}
                 className="px-4 py-2 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-xl border border-emerald-100 flex items-center gap-2"
               >
-                <Check className="w-3 h-3" /> {language === 'zh' ? '设置已保存' : 'Settings Saved'}
+                <Check className="w-3 h-3" /> {t('settings.saved')}
               </motion.div>
             )}
           </AnimatePresence>
@@ -396,7 +394,7 @@ export const SettingsPage: React.FC = () => {
             ) : (
               <Save className="w-4 h-4" />
             )}
-            {language === 'zh' ? '保存更改' : 'Save Changes'}
+            {t('settings.save')}
           </button>
         </div>
       </div>
@@ -416,7 +414,7 @@ export const SettingsPage: React.FC = () => {
               )}
             >
               <tab.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", activeTab === tab.id ? "text-primary" : "text-slate-300")} />
-              <span>{language === 'zh' ? tab.label : tab.enLabel}</span>
+              <span>{tab.label}</span>
               {activeTab === tab.id && <ChevronRight className="w-4 h-4 ml-auto" />}
             </button>
           ))}
@@ -431,11 +429,11 @@ export const SettingsPage: React.FC = () => {
       {/* Danger Zone */}
       <div className="p-8 bg-red-50/30 rounded-[2.5rem] border border-red-100/50 flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-black text-red-600 uppercase tracking-widest mb-1">{language === 'zh' ? '危险区域' : 'Danger Zone'}</h4>
-          <p className="text-xs text-red-800/60 font-bold">{language === 'zh' ? '删除您的账户或注销组织。此操作不可逆。' : 'Delete your account or deactivate the organization. This action is irreversible.'}</p>
+          <h4 className="text-sm font-black text-red-600 uppercase tracking-widest mb-1">{t('settings.dangerZone')}</h4>
+          <p className="text-xs text-red-800/60 font-bold">{t('settings.dangerDesc')}</p>
         </div>
         <button className="px-6 py-2.5 bg-white text-red-500 text-[10px] font-black rounded-xl border border-red-100 shadow-sm hover:bg-red-50 transition-all uppercase tracking-widest">
-          {language === 'zh' ? '注销账户' : 'Deactivate Account'}
+          {t('settings.deactivate')}
         </button>
       </div>
     </div>

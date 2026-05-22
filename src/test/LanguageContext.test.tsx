@@ -31,7 +31,7 @@ describe('LanguageContext', () => {
         <TestConsumer />
       </LanguageProvider>
     );
-    expect(screen.getByTestId('dashboard')).toHaveTextContent('生态系统驾驶舱');
+    expect(screen.getByTestId('dashboard')).toHaveTextContent('工作台');
   });
 
   it('switches to English', async () => {
@@ -43,7 +43,7 @@ describe('LanguageContext', () => {
     );
     await user.click(screen.getByText('Switch to EN'));
     expect(screen.getByTestId('lang')).toHaveTextContent('en');
-    expect(screen.getByTestId('dashboard')).toHaveTextContent('Ecosystem Dashboard');
+    expect(screen.getByTestId('dashboard')).toHaveTextContent('Dashboard');
   });
 
   it('falls back to key on missing translation', () => {

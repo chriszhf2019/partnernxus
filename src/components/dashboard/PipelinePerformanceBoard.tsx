@@ -39,19 +39,19 @@ export const PipelinePerformanceBoard: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-4 border-t border-slate-50">
+        <div className="pt-4 border-t border-black/5">
           <div className="flex justify-between items-center mb-3">
             <span className="text-[10px] font-bold text-slate-500 uppercase">商机来源分布</span>
             <PieChart className="w-3 h-3 text-slate-300" />
           </div>
           <div className="h-2 w-full flex rounded-full overflow-hidden mb-4">
-            <div className="h-full bg-blue-600 w-[65%]" title="Deal Reg: 65%"></div>
+            <div className="h-full bg-black w-[65%]" title="Deal Reg: 65%"></div>
             <div className="h-full bg-blue-300 w-[35%]" title="Vendor Assigned: 35%"></div>
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                <div className="w-2 h-2 rounded-full bg-black"></div>
                 <span className="text-[10px] font-bold text-slate-600">伙伴自主报备 (Deal Reg)</span>
               </div>
               <span className="text-[10px] font-black text-slate-900">65%</span>
@@ -89,13 +89,13 @@ export const PipelinePerformanceBoard: React.FC = () => {
                   <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 text-[8px] font-bold rounded border border-emerald-100">
                     {stage.inflow}
                   </span>
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[8px] font-bold rounded border border-slate-200">
+                  <span className="px-1.5 py-0.5 bg-[#f5f5f7] text-slate-400 text-[8px] font-bold rounded border border-slate-200">
                     {stage.outflow}
                   </span>
                 </div>
                 {/* Visual indicator for stage */}
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-slate-100 rounded-b-lg overflow-hidden">
-                  <div className={cn("h-full bg-blue-500", idx === 4 ? "bg-green-500" : "")} style={{ width: `${100 - idx * 15}%` }}></div>
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#f5f5f7] rounded-b-lg overflow-hidden">
+                  <div className={cn("h-full bg-[#f5f5f7]0", idx === 4 ? "bg-green-500" : "")} style={{ width: `${100 - idx * 15}%` }}></div>
                 </div>
               </div>
               {idx < funnelStages.length - 1 && (
@@ -121,7 +121,7 @@ export const PipelinePerformanceBoard: React.FC = () => {
             <h3 className="text-xl font-black text-slate-900">¥78M <span className="text-slate-300 font-medium">/ ¥100M</span></h3>
             <span className="text-xs font-black text-orange-600">78%</span>
           </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-[#f5f5f7] h-1.5 rounded-full overflow-hidden">
             <div className="bg-orange-500 h-full rounded-full shadow-sm" style={{ width: '78%' }}></div>
           </div>
         </div>

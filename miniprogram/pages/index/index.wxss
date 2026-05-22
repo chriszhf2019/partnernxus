@@ -1,0 +1,10 @@
+.page { min-height: 100vh; padding-bottom: 40rpx; }
+.header { background: #fff; border-bottom: 1rpx solid var(--color-border); }
+.avatar { width: 64rpx; height: 64rpx; border-radius: 50%; background: #e2e8f0; }
+.score-preview { text-align: center; }
+.score-card { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-color: #fde68a; }
+.tabs { display: flex; margin: 16rpx 24rpx; background: #fff; border-radius: var(--radius); border: 1rpx solid var(--color-border); overflow: hidden; }
+.tab { flex: 1; text-align: center; padding: 20rpx; font-size: 28rpx; color: var(--color-text-secondary); transition: all 0.2s; }
+.tab.active { background: var(--color-text); color: #fff; font-weight: 600; }
+.event-card { position: relative; }
+.countdown-badge { position: absolute; top: -8rpx; right: 24rpx; background: #dc2626; color: #fff; padding: 4rpx 16rpx; border-radius: 8rpx; font-size: 22rpx; font-weight: 600; }
