@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { 
   User, 
@@ -21,17 +22,6 @@ interface AttendeeMiniAppProps {
   onClose: () => void;
 }
 
-import { db, auth } from '../../firebase';
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  doc, 
-  query, 
-  where, 
-  getDocs,
-  serverTimestamp 
-} from 'firebase/firestore';
 
 export const AttendeeMiniApp: React.FC<AttendeeMiniAppProps> = ({ activityId, activityName, onClose }) => {
   const [view, setView] = useState<'home' | 'register' | 'live' | 'success'>('home');

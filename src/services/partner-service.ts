@@ -1,114 +1,50 @@
-import { db } from '../firebase';
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, type QueryConstraint } from 'firebase/firestore';
+import { db } from '../lib/supabase';
 import type { Partner } from '../types';
 import { IMPORTED_PARTNERS } from '../data/importedPartners';
-import type { PaginatedResponse, PaginationParams, PartnerFilters } from './types';
-
-const COLLECTION = 'partners';
-
-const buildQuery = (filters: PartnerFilters = {}): QueryConstraint[] => {
-  const constraints: QueryConstraint[] = [];
-  if (filters.tier?.length) constraints.push(where('tier', 'in', filters.tier));
-  if (filters.status?.length) constraints.push(where('status', 'in', filters.status));
-  if (filters.type?.length) constraints.push(where('type', 'in', filters.type));
-  if (filters.region?.length) constraints.push(where('region', 'in', filters.region));
-  return constraints;
-};
+import type { PaginatedResponse, PartnerFilters } from './types';
 
 export const partnerService = {
-  list: async (filters: PartnerFilters = {}, pagination: PaginationParams = {}): Promise<PaginatedResponse<Partner>> => {
-    const constraints = buildQuery(filters);
-    if (pagination.sortBy) {
-      constraints.push(orderBy(pagination.sortBy, pagination.sortOrder || 'desc'));
-    }
-
+  list: async (filters: PartnerFilters = {}): Promise<PaginatedResponse<Partner>> => {
     try {
-      const q = query(collection(db, COLLECTION), ...constraints);
-      const snapshot = await getDocs(q);
-      const partners = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Partner));
-
-      let filtered = partners;
+      let query = db.partners().select('*');
+      if (filters.tier?.length) query = query.in('tier', filters.tier);
+      if (filters.status?.length) query = query.in('status', filters.status);
+      if (filters.type?.length) query = query.in('type', filters.type);
+      if (filters.region?.length) query = query.in('region', filters.region);
+      const { data } = await query;
+      let partners = (data || []) as Partner[];
       if (filters.search) {
         const s = filters.search.toLowerCase();
-        filtered = partners.filter(
-          (p) =>
-            p.name.toLowerCase().includes(s) ||
-            p.tags.some((t) => t.toLowerCase().includes(s)) ||
-            p.manager.toLowerCase().includes(s),
-        );
+        partners = partners.filter((p) => p.name.toLowerCase().includes(s) || p.tags?.some((t) => t.toLowerCase().includes(s)) || p.manager?.toLowerCase().includes(s));
       }
-
-      const page = pagination.page || 1;
-      const pageSize = pagination.pageSize || 50;
-      const start = (page - 1) * pageSize;
-      return {
-        items: filtered.slice(start, start + pageSize),
-        total: filtered.length,
-        page,
-        pageSize,
-      };
+      return { items: partners, total: partners.length, page: 1, pageSize: partners.length };
     } catch {
-      // Fallback to local data when Firebase is unavailable
-      let filtered = [...IMPORTED_PARTNERS];
-      if (filters.search) {
-        const s = filters.search.toLowerCase();
-        filtered = filtered.filter(
-          (p) =>
-            p.name.toLowerCase().includes(s) ||
-            p.tags.some((t) => t.toLowerCase().includes(s)) ||
-            p.manager.toLowerCase().includes(s),
-        );
-      }
-      if (filters.tier?.length) filtered = filtered.filter((p) => filters.tier!.includes(p.tier));
-      if (filters.status?.length) filtered = filtered.filter((p) => filters.status!.includes(p.status));
-
-      const page = pagination.page || 1;
-      const pageSize = pagination.pageSize || 50;
-      const start = (page - 1) * pageSize;
-      return {
-        items: filtered.slice(start, start + pageSize),
-        total: filtered.length,
-        page,
-        pageSize,
-      };
+      return { items: IMPORTED_PARTNERS, total: IMPORTED_PARTNERS.length, page: 1, pageSize: IMPORTED_PARTNERS.length };
     }
   },
 
   getById: async (id: string): Promise<Partner | null> => {
     try {
-      const docRef = doc(db, COLLECTION, id);
-      const snapshot = await getDoc(docRef);
-      if (snapshot.exists()) {
-        return { id: snapshot.id, ...snapshot.data() } as Partner;
-      }
+      const { data } = await db.partners().select('*').eq('id', id).single();
+      return (data as Partner) || IMPORTED_PARTNERS.find((p) => p.id === id) || null;
     } catch {
-      // Fallback to local data
+      return IMPORTED_PARTNERS.find((p) => p.id === id) || null;
     }
-    return IMPORTED_PARTNERS.find((p) => p.id === id) || null;
   },
 
   create: async (partner: Omit<Partner, 'id'>): Promise<Partner> => {
-    try {
-      const docRef = await addDoc(collection(db, COLLECTION), partner);
-      return { id: docRef.id, ...partner };
-    } catch {
-      throw new Error('Failed to create partner');
-    }
+    const { data, error } = await db.partners().insert(partner).select().single();
+    if (error) throw new Error(error.message);
+    return data as Partner;
   },
 
   update: async (id: string, data: Partial<Partner>): Promise<void> => {
-    try {
-      await updateDoc(doc(db, COLLECTION, id), data);
-    } catch {
-      throw new Error('Failed to update partner');
-    }
+    const { error } = await db.partners().update(data).eq('id', id);
+    if (error) throw new Error(error.message);
   },
 
   delete: async (id: string): Promise<void> => {
-    try {
-      await deleteDoc(doc(db, COLLECTION, id));
-    } catch {
-      throw new Error('Failed to delete partner');
-    }
+    const { error } = await db.partners().delete().eq('id', id);
+    if (error) throw new Error(error.message);
   },
 };

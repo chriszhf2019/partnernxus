@@ -1,70 +1,45 @@
-import { db } from '../firebase';
-import { collection, doc, getDocs, getDoc, addDoc, updateDoc, query, where, orderBy, type QueryConstraint } from 'firebase/firestore';
+import { db } from '../lib/supabase';
 import type { Deal } from '../types';
 import { DEALS, DEAL_STATS } from '../constants';
 import type { PaginatedResponse, DealFilters } from './types';
 
-const COLLECTION = 'deals';
-
 export const dealService = {
   list: async (filters: DealFilters = {}): Promise<PaginatedResponse<Deal>> => {
-    const constraints: QueryConstraint[] = [];
-    if (filters.status?.length) constraints.push(where('status', 'in', filters.status));
-    if (filters.region?.length) constraints.push(where('region', 'in', filters.region));
-    if (filters.partnerId) constraints.push(where('partnerId', '==', filters.partnerId));
-    constraints.push(orderBy('createdDate', 'desc'));
-
     try {
-      const q = query(collection(db, COLLECTION), ...constraints);
-      const snapshot = await getDocs(q);
-      const deals = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Deal));
-
-      let filtered = deals;
+      let query = db.deals().select('*');
+      if (filters.status?.length) query = query.in('status', filters.status);
+      if (filters.region?.length) query = query.in('region', filters.region);
+      if (filters.partnerId) query = query.eq('partner_id', filters.partnerId);
+      const { data } = await query.order('created_date', { ascending: false });
+      let deals = (data || []) as Deal[];
       if (filters.search) {
         const s = filters.search.toLowerCase();
-        filtered = deals.filter(
-          (d) => d.title.toLowerCase().includes(s) || d.customer.toLowerCase().includes(s),
-        );
+        deals = deals.filter((d) => d.title.toLowerCase().includes(s) || d.customer.toLowerCase().includes(s));
       }
-
-      return { items: filtered, total: filtered.length, page: 1, pageSize: filtered.length };
+      return { items: deals, total: deals.length, page: 1, pageSize: deals.length };
     } catch {
-      let filtered = [...DEALS];
-      if (filters.status?.length) filtered = filtered.filter((d) => filters.status!.includes(d.status));
-      if (filters.partnerId) filtered = filtered.filter((d) => d.partnerId === filters.partnerId);
-      if (filters.search) {
-        const s = filters.search.toLowerCase();
-        filtered = filtered.filter(
-          (d) => d.title.toLowerCase().includes(s) || d.customer.toLowerCase().includes(s),
-        );
-      }
-      return { items: filtered, total: filtered.length, page: 1, pageSize: filtered.length };
+      return { items: DEALS, total: DEALS.length, page: 1, pageSize: DEALS.length };
     }
   },
 
   getById: async (id: string): Promise<Deal | null> => {
     try {
-      const snapshot = await getDoc(doc(db, COLLECTION, id));
-      if (snapshot.exists()) return { id: snapshot.id, ...snapshot.data() } as Deal;
-    } catch {}
-    return DEALS.find((d) => d.id === id) || null;
+      const { data } = await db.deals().select('*').eq('id', id).single();
+      return (data as Deal) || DEALS.find((d) => d.id === id) || null;
+    } catch {
+      return DEALS.find((d) => d.id === id) || null;
+    }
   },
 
   create: async (deal: Omit<Deal, 'id'>): Promise<Deal> => {
-    try {
-      const docRef = await addDoc(collection(db, COLLECTION), deal);
-      return { id: docRef.id, ...deal };
-    } catch {
-      throw new Error('Failed to create deal');
-    }
+    const { data, error } = await db.deals().insert(deal).select().single();
+    if (error) throw new Error(error.message);
+    return data as Deal;
   },
 
   update: async (id: string, data: Partial<Deal>): Promise<void> => {
-    try {
-      await updateDoc(doc(db, COLLECTION, id), data);
-    } catch {
-      throw new Error('Failed to update deal');
-    }
+    const { error } = await db.deals().update(data).eq('id', id);
+    if (error) throw new Error(error.message);
   },
 
   getStats: () => DEAL_STATS,

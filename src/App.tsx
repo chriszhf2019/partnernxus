@@ -5,6 +5,7 @@ import { TopNav } from './components/layout/TopNav';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { PageLoader } from './components/ui/PageLoader';
 import { NetworkStatus } from './components/ui/NetworkStatus';
+import { ToastProvider } from './components/ui/Toast';
 import { usePartners, useDeals, useActivities } from './hooks/useData';
 import { Shield, HelpCircle } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
@@ -268,12 +269,14 @@ export default function App() {
       <ConfigProvider>
         <AuthProvider>
           <LanguageProvider>
+          <ToastProvider>
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="*" element={<AppLayout />} />
               </Routes>
             </BrowserRouter>
+          </ToastProvider>
           </LanguageProvider>
         </AuthProvider>
       </ConfigProvider>
