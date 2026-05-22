@@ -1,4 +1,5 @@
 import { useState, useMemo, useDeferredValue, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Upload, Pencil, Trash2, MapPin, Phone } from 'lucide-react';
 import { Partner, PartnerStatus } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -22,6 +23,7 @@ const ITEMS_PER_PAGE = 10;
 export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerListProps) => {
   const { t } = useLanguage();
   const { config } = useConfig();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearch = useDeferredValue(searchTerm);
   const [statusFilter, setStatusFilter] = useState<PartnerStatus | 'All'>('All');
@@ -73,7 +75,7 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
               <Upload className="w-4 h-4" /> Import
             </Button>
           )}
-          <Button variant="brand" size="md" onClick={() => onSelectPartner('new')}>
+          <Button variant="brand" size="md" onClick={() => navigate('/partners/new')}>
             {t('partners.add')}
           </Button>
         </div>

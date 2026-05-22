@@ -19,6 +19,7 @@ import type { PartnerDetails } from './types';
 const EcosystemDashboard = lazy(() => import('./components/dashboard/EcosystemDashboard').then(m => ({ default: m.EcosystemDashboard })));
 const PartnerList = lazy(() => import('./components/partners/PartnerList').then(m => ({ default: m.PartnerList })));
 const PartnerProfile = lazy(() => import('./components/partners/PartnerProfile').then(m => ({ default: m.PartnerProfile })));
+const PartnerFormPage = lazy(() => import('./components/partners/PartnerFormPage').then(m => ({ default: m.PartnerFormPage })));
 const MarketingIncentivePage = lazy(() => import('./components/marketing/MarketingIncentivePage').then(m => ({ default: m.MarketingIncentivePage })));
 const DealRegistrationPage = lazy(() => import('./components/deals/DealRegistrationPage').then(m => ({ default: m.DealRegistrationPage })));
 const DealRegistrationForm = lazy(() => import('./components/deals/DealRegistrationForm').then(m => ({ default: m.DealRegistrationForm })));
@@ -234,7 +235,8 @@ function AppLayout() {
               <Route path="/" element={<Navigate to="/ecosystem" replace />} />
               <Route path="/ecosystem" element={<EcosystemRoute />} />
               <Route path="/partners" element={<PartnersRoute />} />
-              <Route path="/partners/:id" element={<PartnerProfileRoute />} />
+              <Route path="/partners/new" element={<Suspense fallback={<PageLoader />}><PartnerFormPage /></Suspense>} />
+            <Route path="/partners/:id" element={<PartnerProfileRoute />} />
               <Route path="/deals" element={<DealsRoute />} />
               <Route path="/deals/new" element={<NewDealRoute />} />
               <Route path="/marketing" element={<MarketingRoute />} />
