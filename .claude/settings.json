@@ -23,7 +23,15 @@
       "Bash(npm install *)",
       "Bash(gh auth *)",
       "Bash(brew install *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(SUPABASE_ACCESS_TOKEN=REDACTED_TOKEN npx supabase projects list)",
+      "Bash(SUPABASE_ACCESS_TOKEN=REDACTED_TOKEN npx supabase projects create partnernxus --org-id mvmfqmlcddrrjsqeaavo --region ap-southeast-1 --db-password \"REDACTED_PASSWORD\")",
+      "Bash(export SUPABASE_ACCESS_TOKEN=REDACTED_TOKEN)",
+      "Bash(curl -s -X POST https://api.github.com/user/repos -H 'Accept: application/vnd.github+json' -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -d '{\"name\":\"partnernxus\",\"private\":false,\"description\":\"Enterprise Partner Relationship Management Platform\"}')",
+      "Bash(gh repo *)",
+      "Bash(sed -i '' 's/REDACTED_TOKEN/REDACTED_TOKEN/g' .claude/settings.json)",
+      "Bash(sed -i '' 's/REDACTED_PASSWORD/REDACTED_PASSWORD/g' .claude/settings.json)"
     ]
   }
 }
