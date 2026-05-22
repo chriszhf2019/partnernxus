@@ -12,6 +12,7 @@ import { ConfigProvider } from './contexts/ConfigContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { LoginPage } from './components/auth/LoginPage';
+import { AuthGuard } from './components/auth/AuthGuard';
 import type { PartnerDetails } from './types';
 
 const EcosystemDashboard = lazy(() => import('./components/dashboard/EcosystemDashboard').then(m => ({ default: m.EcosystemDashboard })));
@@ -227,20 +228,22 @@ function AppLayout() {
         <TopNav />
 
         <main className="flex-1 pt-20 pb-16 px-8 max-w-[1440px] mx-auto w-full">
-          <Routes>
-            <Route path="/" element={<Navigate to="/ecosystem" replace />} />
-            <Route path="/ecosystem" element={<EcosystemRoute />} />
-            <Route path="/partners" element={<PartnersRoute />} />
-            <Route path="/partners/:id" element={<PartnerProfileRoute />} />
-            <Route path="/deals" element={<DealsRoute />} />
-            <Route path="/deals/new" element={<NewDealRoute />} />
-            <Route path="/marketing" element={<MarketingRoute />} />
-            <Route path="/incentives" element={<IncentivesRoute />} />
-            <Route path="/enablement" element={<EnablementRoute />} />
-            <Route path="/analytics" element={<AnalyticsRoute />} />
-            <Route path="/settings" element={<SettingsRoute />} />
-            <Route path="/channels" element={<Suspense fallback={<PageLoader />}><ChannelDashboard /></Suspense>} />
-          </Routes>
+          <AuthGuard>
+            <Routes>
+              <Route path="/" element={<Navigate to="/ecosystem" replace />} />
+              <Route path="/ecosystem" element={<EcosystemRoute />} />
+              <Route path="/partners" element={<PartnersRoute />} />
+              <Route path="/partners/:id" element={<PartnerProfileRoute />} />
+              <Route path="/deals" element={<DealsRoute />} />
+              <Route path="/deals/new" element={<NewDealRoute />} />
+              <Route path="/marketing" element={<MarketingRoute />} />
+              <Route path="/incentives" element={<IncentivesRoute />} />
+              <Route path="/enablement" element={<EnablementRoute />} />
+              <Route path="/analytics" element={<AnalyticsRoute />} />
+              <Route path="/settings" element={<SettingsRoute />} />
+              <Route path="/channels" element={<Suspense fallback={<PageLoader />}><ChannelDashboard /></Suspense>} />
+            </Routes>
+          </AuthGuard>
         </main>
 
         <footer className="mt-auto border-t border-neutral-200 dark:border-neutral-800 py-3 flex justify-center items-center gap-6">

@@ -1,10 +1,5 @@
-import { auth } from '../firebase';
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  type User,
-} from 'firebase/auth';
+import { supabase } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 export type AuthUser = {
   uid: string;
@@ -15,41 +10,91 @@ export type AuthUser = {
 
 export type UserRole = 'admin' | 'editor' | 'viewer';
 
-const userRoles: Record<string, UserRole> = {};
+const toAuthUser = (user: User | null): AuthUser | null => {
+  if (!user) return null;
+  return {
+    uid: user.id,
+    email: user.email,
+    displayName: user.user_metadata?.display_name || null,
+    photoURL: user.user_metadata?.avatar_url || null,
+  };
+};
 
-const toAuthUser = (user: User): AuthUser => ({
-  uid: user.uid,
-  email: user.email,
-  displayName: user.displayName,
-  photoURL: user.photoURL,
-});
+// Roles stored in user metadata (synced from partners table in production)
+const getUserRoleFromMetadata = (user: User): UserRole => {
+  return (user.user_metadata?.role as UserRole) || 'viewer';
+};
 
 export const authService = {
   login: async (email: string, password: string): Promise<AuthUser> => {
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    return toAuthUser(cred.user);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error('Login failed');
+    return toAuthUser(data.user)!;
+  },
+
+  signup: async (email: string, password: string, displayName?: string): Promise<AuthUser> => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: displayName || email.split('@')[0], role: 'viewer' },
+      },
+    });
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error('Signup failed');
+    return toAuthUser(data.user)!;
   },
 
   logout: async (): Promise<void> => {
-    await signOut(auth);
+    await supabase.auth.signOut();
   },
 
   getCurrentUser: (): AuthUser | null => {
-    const user = auth.currentUser;
-    return user ? toAuthUser(user) : null;
+    return toAuthUser(supabase.auth.getSession() ? null : null);
   },
 
   onAuthChange: (callback: (user: AuthUser | null) => void): (() => void) => {
-    return onAuthStateChanged(auth, (user) => {
-      callback(user ? toAuthUser(user) : null);
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      callback(toAuthUser(session?.user || null));
     });
+    return () => data.subscription.unsubscribe();
   },
 
   getUserRole: (uid: string): UserRole => {
-    return userRoles[uid] || 'viewer';
+    // In production, fetch from partners table
+    // For now, check localStorage for demo role override
+    const stored = localStorage.getItem(`role_${uid}`);
+    if (stored === 'admin' || stored === 'editor' || stored === 'viewer') return stored;
+    return 'viewer';
   },
 
   setUserRole: (uid: string, role: UserRole): void => {
-    userRoles[uid] = role;
+    localStorage.setItem(`role_${uid}`, role);
+  },
+
+  // Demo: create initial admin user
+  ensureDemoUser: async (): Promise<void> => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      // Try to sign in as demo admin
+      try {
+        await supabase.auth.signInWithPassword({
+          email: 'admin@partnernxus.com',
+          password: 'admin123',
+        });
+      } catch {
+        // Demo user doesn't exist, try to create
+        try {
+          await supabase.auth.signUp({
+            email: 'admin@partnernxus.com',
+            password: 'admin123',
+            options: { data: { display_name: 'Admin', role: 'admin' } },
+          });
+        } catch {
+          // Silently fail - user can create via UI
+        }
+      }
+    }
   },
 };

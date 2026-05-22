@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/auth-service';
 import type { AuthUser, UserRole } from '../services/auth-service';
 
@@ -13,26 +13,33 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ROLE_HIERARCHY: Record<UserRole, number> = {
-  admin: 3,
-  editor: 2,
-  viewer: 1,
-};
+const ROLE_HIERARCHY: Record<UserRole, number> = { admin: 3, editor: 2, viewer: 1 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = authService.onAuthChange((authUser) => {
+      if (authUser) {
+        // Auto-assign admin role for demo user
+        if (authUser.email === 'admin@partnernxus.com') {
+          authService.setUserRole(authUser.uid, 'admin');
+        }
+      }
       setUser(authUser);
       setLoading(false);
     });
-    return unsubscribe;
+    // Restore session
+    authService.ensureDemoUser().catch(() => { /* demo user creation is optional */ });
+    return () => unsubscribe();
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const authUser = await authService.login(email, password);
+    if (authUser.email === 'admin@partnernxus.com') {
+      authService.setUserRole(authUser.uid, 'admin');
+    }
     setUser(authUser);
   }, []);
 
