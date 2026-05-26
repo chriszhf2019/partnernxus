@@ -1,4 +1,5 @@
-import { Suspense, lazy, useState, useRef } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
+import type { Partner } from './types';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopNav } from './components/layout/TopNav';
@@ -7,27 +8,29 @@ import { PageLoader } from './components/ui/PageLoader';
 import { NetworkStatus } from './components/ui/NetworkStatus';
 import { ToastProvider } from './components/ui/Toast';
 import { usePartners, useDeals, useActivities } from './hooks/useData';
+import { partnerService } from './services/partner-service';
+import { buildPartnerDetails } from './lib/partnerDataBuilder';
 import { Shield, HelpCircle } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ConfigProvider } from './contexts/ConfigContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { LoginPage } from './components/auth/LoginPage';
-import { AuthGuard } from './components/auth/AuthGuard';
 import type { PartnerDetails } from './types';
+import { retryableLazy } from './lib/retryableLazy';
 
-const EcosystemDashboard = lazy(() => import('./components/dashboard/EcosystemDashboard').then(m => ({ default: m.EcosystemDashboard })));
-const PartnerList = lazy(() => import('./components/partners/PartnerList').then(m => ({ default: m.PartnerList })));
-const PartnerProfile = lazy(() => import('./components/partners/PartnerProfile').then(m => ({ default: m.PartnerProfile })));
-const PartnerFormPage = lazy(() => import('./components/partners/PartnerFormPage').then(m => ({ default: m.PartnerFormPage })));
-const MarketingIncentivePage = lazy(() => import('./components/marketing/MarketingIncentivePage').then(m => ({ default: m.MarketingIncentivePage })));
-const DealRegistrationPage = lazy(() => import('./components/deals/DealRegistrationPage').then(m => ({ default: m.DealRegistrationPage })));
-const DealRegistrationForm = lazy(() => import('./components/deals/DealRegistrationForm').then(m => ({ default: m.DealRegistrationForm })));
-const SettingsPage = lazy(() => import('./components/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const IncentivesPage = lazy(() => import('./components/marketing/IncentivesPage').then(m => ({ default: m.IncentivesPage })));
-const EnablementPage = lazy(() => import('./components/marketing/EnablementPage').then(m => ({ default: m.EnablementPage })));
-const AnalyticsPage = lazy(() => import('./components/marketing/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
-const ChannelDashboard = lazy(() => import('./components/marketing/ChannelDashboard').then(m => ({ default: m.ChannelDashboard })));
+const EcosystemDashboard = retryableLazy(() => import('./components/dashboard/EcosystemDashboard').then(m => ({ default: m.EcosystemDashboard })));
+const PartnerList = retryableLazy(() => import('./components/partners/PartnerList').then(m => ({ default: m.PartnerList })));
+import { PartnerProfile } from './components/partners/PartnerProfile';
+const PartnerFormPage = retryableLazy(() => import('./components/partners/PartnerFormPage').then(m => ({ default: m.PartnerFormPage })));
+const MarketingIncentivePage = retryableLazy(() => import('./components/marketing/MarketingIncentivePage').then(m => ({ default: m.MarketingIncentivePage })));
+const DealRegistrationPage = retryableLazy(() => import('./components/deals/DealRegistrationPage').then(m => ({ default: m.DealRegistrationPage })));
+const DealRegistrationForm = retryableLazy(() => import('./components/deals/DealRegistrationForm').then(m => ({ default: m.DealRegistrationForm })));
+const SettingsPage = retryableLazy(() => import('./components/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const IncentivesPage = retryableLazy(() => import('./components/marketing/IncentivesPage').then(m => ({ default: m.IncentivesPage })));
+const EnablementPage = retryableLazy(() => import('./components/marketing/EnablementPage').then(m => ({ default: m.EnablementPage })));
+const AnalyticsPage = retryableLazy(() => import('./components/marketing/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const ChannelDashboard = retryableLazy(() => import('./components/marketing/ChannelDashboard').then(m => ({ default: m.ChannelDashboard })));
 
 function EcosystemRoute() {
   const navigate = useNavigate();
@@ -52,7 +55,20 @@ function PartnersRoute() {
   const { partners: initialPartners, partnerListRef } = usePartners();
   const [partners, setPartners] = useState(initialPartners);
 
-  // Sync local state to ref so PartnerProfileRoute can find imported partners
+  // Fetch Supabase partners and merge with imported/local (Supabase data takes precedence for same ID)
+  useEffect(() => {
+    partnerService.list().then((result) => {
+      const dbIds = new Set(result.items.map((p: Partner) => p.id));
+      const kept = initialPartners.filter((p) => !dbIds.has(p.id));
+      const merged = [...result.items, ...kept];
+      setPartners(merged);
+      partnerListRef.current = merged;
+    }).catch(() => {
+      // Keep using initialPartners from usePartners
+    });
+  }, []);
+
+  // Sync local state to ref so PartnerProfileRoute can find all partners
   partnerListRef.current = partners;
 
   const handleImport = (imported: typeof initialPartners, mode: 'replace' | 'merge') => {
@@ -83,37 +99,38 @@ function PartnerProfileRoute() {
   const { partnerListRef } = usePartners();
   const { activities } = useActivities();
   const navigate = useNavigate();
+  const [partner, setPartner] = useState<Partner | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Look up from the mutable ref first (for imported partners), fall back to static import
-  const partner = id
-    ? (partnerListRef.current.find((p) => p.id === id) || partnerListRef.current[0])
-    : null;
+  useEffect(() => {
+    if (!id) { setLoading(false); return; }
+    const fromRef = partnerListRef.current.find((p) => p.id === id);
+    if (fromRef) { setPartner({...fromRef}); setLoading(false); return; }
+    partnerService.getById(id).then((p) => {
+      if (p) setPartner(p);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [id, refreshKey]);
+
+  const handlePartnerUpdate = (updated: Partner) => {
+    setPartner(updated);
+    setRefreshKey(k => k + 1);
+  };
+
+  if (loading) return <PageLoader />;
 
   if (!partner) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <p className="text-lg font-black text-slate-400">Partner not found</p>
-        <button onClick={() => navigate('/partners')} className="text-sm font-bold text-primary hover:underline">Back to Partner List</button>
+        <p className="text-lg font-semibold text-neutral-400">未找到合作伙伴</p>
+        <p className="text-sm text-neutral-400">ID: {id}</p>
+        <button onClick={() => navigate('/partners')} className="text-sm text-brand hover:underline">返回合作伙伴列表</button>
       </div>
     );
   }
 
-  const partnerDetails: PartnerDetails = {
-    ...partner,
-    pipeline: { registered: 0, solution: 0, commercial: 0, won: 0 },
-    mdf: { total: 0, used: 0, remaining: 0, activities: [] },
-    enablement: {
-      certifiedEngineers: partner.contacts.length,
-      specialists: Math.max(1, Math.floor(partner.contacts.length / 3)),
-      expiryRiskCount: 0,
-      expiryDays: 0,
-    },
-    followUps: [],
-    topProjects: [],
-    cooperationPlans: [],
-    cooperationRecords: [],
-    subPartners: [],
-  };
+  const partnerDetails: PartnerDetails = buildPartnerDetails(partner);
 
   return (
     <ErrorBoundary>
@@ -122,6 +139,7 @@ function PartnerProfileRoute() {
           partner={partnerDetails}
           activities={activities}
           onBack={() => navigate('/partners')}
+          onPartnerUpdate={handlePartnerUpdate}
         />
       </Suspense>
     </ErrorBoundary>
@@ -230,9 +248,8 @@ function AppLayout() {
         <TopNav />
 
         <main className="flex-1 pt-20 pb-16 px-8 max-w-[1440px] mx-auto w-full">
-          <AuthGuard>
-            <Routes>
-              <Route path="/" element={<Navigate to="/ecosystem" replace />} />
+          <Routes>
+            <Route path="/" element={<Navigate to="/ecosystem" replace />} />
               <Route path="/ecosystem" element={<EcosystemRoute />} />
               <Route path="/partners" element={<PartnersRoute />} />
               <Route path="/partners/new" element={<Suspense fallback={<PageLoader />}><PartnerFormPage /></Suspense>} />
@@ -246,7 +263,6 @@ function AppLayout() {
               <Route path="/settings" element={<SettingsRoute />} />
               <Route path="/channels" element={<Suspense fallback={<PageLoader />}><ChannelDashboard /></Suspense>} />
             </Routes>
-          </AuthGuard>
         </main>
 
         <footer className="mt-auto border-t border-neutral-200 dark:border-neutral-800 py-3 flex justify-center items-center gap-6">

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PartnerNexus - 渠道管理理论模型</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --bg: #06060c;
+    --card: #0e0e18;
+    --border: #1a1a2e;
+    --text: #e2e2e7;
+    --muted: #62627a;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --emerald: #10b981;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --pink: #ec4899;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 3840px;
+    height: 2160px;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .poster {
+    width: 3840px;
+    height: 2160px;
+    padding: 80px 100px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background:
+      radial-gradient(ellipse 1200px 800px at 15% 20%, rgba(59,130,246,0.04), transparent),
+      radial-gradient(ellipse 1000px 700px at 85% 70%, rgba(139,92,246,0.04), transparent),
+      radial-gradient(ellipse 800px 600px at 50% 50%, rgba(16,185,129,0.03), transparent);
+  }
+
+  .grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 80px 80px;
+    pointer-events: none;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 48px;
+    position: relative; z-index: 1;
+  }
+  .title-main {
+    font-size: 52px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .title-sub {
+    font-size: 22px;
+    color: var(--muted);
+    margin-top: 8px;
+    font-weight: 400;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 32px;
+    flex: 1;
+    position: relative; z-index: 1;
+  }
+
+  .col { display: flex; flex-direction: column; gap: 20px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    border-radius: 4px 0 0 4px;
+  }
+  .card-blue::after { background: var(--blue); }
+  .card-purple::after { background: var(--purple); }
+  .card-emerald::after { background: var(--emerald); }
+  .card-amber::after { background: var(--amber); }
+  .card-red::after { background: var(--red); }
+  .card-cyan::after { background: var(--cyan); }
+  .card-pink::after { background: var(--pink); }
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .card-author {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 10px;
+  }
+  .card-desc {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .card-app {
+    font-size: 14px;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+
+  .diagram-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .layer-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 24px;
+    text-align: center;
+    width: 100%;
+  }
+  .arrow-down {
+    color: var(--muted);
+    font-size: 22px;
+  }
+
+  .loop-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+  }
+  .loop-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .formula-box {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    text-align: center;
+    font-family: 'Inter', monospace;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+  }
+
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tag {
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--muted);
+    position: relative; z-index: 1;
+  }
+
+  .conclusion {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    max-width: 900px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="poster">
+  <div class="grid"></div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1 class="title-main">PartnerNexus 渠道管理理论模型</h1>
+      <p class="title-sub">8 个经典理论 × 3 层架构 × 5 维评分 × 3 个自增强闭环 — 从经验驱动到理论+数据驱动的渠道生态系统</p>
+    </div>
+    <div style="text-align:right">
+      <p style="font-size:18px;font-weight:700">渠道管理研究院</p>
+      <p style="font-size:14px;color:var(--muted)">2026 · v1.0</p>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COLUMN GRID -->
+  <div class="main-grid">
+
+    <!-- COL 1: THEORIES -->
+    <div class="col">
+      <div class="card card-blue">
+        <div class="card-title" style="color:var(--blue)">资源基础观 (RBV)</div>
+        <div class="card-author">Barney, 1991 · VRIN框架</div>
+        <div class="card-desc">伙伴独特资源=竞争优势来源。有价值+稀缺+不可模仿+组织到位 → 可持续壁垒</div>
+        <div class="card-app" style="background:rgba(59,130,246,0.08);color:var(--blue)">→ 隐藏优势识别引擎</div>
+      </div>
+
+      <div class="card card-purple">
+        <div class="card-title" style="color:var(--purple)">动态能力理论</div>
+        <div class="card-author">Teece, 2007 · 感知→抓住→转型</div>
+        <div class="card-desc">伙伴能力不是静态库存，而是感知机会、抓住机会、重新配置资源的动态过程</div>
+        <div class="card-app" style="background:rgba(139,92,246,0.08);color:var(--purple)">→ 能力画像 + 差距分析</div>
+      </div>
+
+      <div class="card card-emerald">
+        <div class="card-title" style="color:var(--emerald)">PLM 渠道生命周期</div>
+        <div class="card-author">Jap & Ganesan, 2000 · 关系阶段模型</div>
+        <div class="card-desc">招募→成长→扩张→成熟→战略→引领。每阶段需不同管理策略：从管控到赋权</div>
+        <div class="card-app" style="background:rgba(16,185,129,0.08);color:var(--emerald)">→ 6阶段轨迹 + 等级变迁</div>
+      </div>
+
+      <div class="card card-amber">
+        <div class="card-title" style="color:var(--amber)">结构洞理论</div>
+        <div class="card-author">Burt, 1992 · 社会网络分析</div>
+        <div class="card-desc">桥接不互通群体的行动者享有信息优势+控制优势。网络位置=权力</div>
+        <div class="card-app" style="background:rgba(245,158,11,0.08);color:var(--amber)">→ 生态网络拓扑 + 协作价值</div>
+      </div>
+
+      <div class="card card-red">
+        <div class="card-title" style="color:var(--red)">竞合理论</div>
+        <div class="card-author">Brandenburger & Nalebuff, 1996</div>
+        <div class="card-desc">伙伴同时是互补者(价值共创)和竞争者(价值争夺)。客户层面尤其显著</div>
+        <div class="card-app" style="background:rgba(239,68,68,0.08);color:var(--red)">→ 客户份额 + 竞品矩阵</div>
+      </div>
+
+      <div class="card card-cyan">
+        <div class="card-title" style="color:var(--cyan)">RFM → 多维评分</div>
+        <div class="card-author">Hughes, 1994 · 客户分析模型(渠道适配)</div>
+        <div class="card-desc">Recency(活跃度) × Frequency(能力深度) × Monetary(贡献度) → 综合健康度</div>
+        <div class="card-app" style="background:rgba(6,182,212,0.08);color:var(--cyan)">→ 5维加权评分引擎</div>
+      </div>
+
+      <div class="card card-pink">
+        <div class="card-title" style="color:var(--pink)">Metcalfe定律 + 交易成本</div>
+        <div class="card-author">Metcalfe, 1980 · Williamson, 1975</div>
+        <div class="card-desc">网络价值∝n²。内部化vs外包的边界由交易成本决定</div>
+        <div class="card-app" style="background:rgba(236,72,153,0.08);color:var(--pink)">→ 网络增长预测 + 子伙伴决策</div>
+      </div>
+    </div>
+
+    <!-- COL 2: ARCHITECTURE + FORMULA + FLOW -->
+    <div class="col">
+      <div class="card" style="text-align:center;border:2px solid var(--border)">
+        <p style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--muted)">三层架构 · Simon (1977) 决策模型</p>
+        <div class="diagram-section">
+          <div class="layer-box" style="border-left:4px solid var(--blue)">
+            <p style="font-size:20px;font-weight:700;color:var(--blue)">L1 · 执行面</p>
+            <p style="font-size:15px;color:var(--muted);margin-top:4px">情报阶段 · 实时业务数据</p>
+            <p style="font-size:14px;color:var(--muted)">商机漏斗 · MDF · 认证 · QBR</p>
+          </div>
+          <div class="arrow-down">↓ 驱动 & 被驱动 ↓</div>
+          <div class="layer-box" style="border-left:4px solid var(--purple)">
+            <p style="font-size:20px;font-weight:700;color:var(--purple)">L2 · 透视面</p>
+            <p style="font-size:15px;color:var(--muted);margin-top:4px">设计阶段 · 多维诊断分析</p>
+            <p style="font-size:14px;color:var(--muted)">能力画像 · 生命周期 · 生态网络</p>
+          </div>
+          <div class="arrow-down">↓ 综合 & 交叉分析 ↓</div>
+          <div class="layer-box" style="border-left:4px solid var(--emerald)">
+            <p style="font-size:20px;font-weight:700;color:var(--emerald)">L3 · 决策面</p>
+            <p style="font-size:15px;color:var(--muted);margin-top:4px">选择阶段 · AI驱动建议</p>
+            <p style="font-size:14px;color:var(--muted)">突破口 · 预测 · 战略路径</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center">
+        <p style="font-size:18px;font-weight:700;margin-bottom:14px">综合评分公式</p>
+        <div class="formula-box" style="font-size:18px;margin-bottom:12px">
+          <span style="color:var(--blue)">活跃度×0.25</span> +
+          <span style="color:var(--purple)">能力值×0.25</span> +
+          <span style="color:var(--emerald)">Pipeline×0.20</span> +
+          <span style="color:var(--amber)">忠诚度×0.15</span> +
+          <span style="color:var(--cyan)">增长力×0.15</span>
+        </div>
+        <div class="formula-box" style="font-size:18px">
+          流失风险 =
+          <span style="color:var(--red)">非合作(35)</span> +
+          <span style="color:var(--amber)">认证过期(20)</span> +
+          <span style="color:var(--amber)">Pipeline不足(20)</span> +
+          <span style="color:var(--amber)">赢单率低(15)</span> +
+          <span style="color:var(--amber)">MDF闲置(10)</span>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center">
+        <p style="font-size:18px;font-weight:700;margin-bottom:14px">三个自增强闭环</p>
+        <div class="loop-box" style="margin-bottom:10px">
+          <div class="loop-icon" style="background:rgba(59,130,246,0.12);color:var(--blue)">①</div>
+          <div><span style="color:var(--blue);font-weight:600">诊断→行动</span><br><span style="font-size:14px;color:var(--muted)">发现问题→培训→验证效果</span></div>
+        </div>
+        <div class="loop-box" style="margin-bottom:10px">
+          <div class="loop-icon" style="background:rgba(139,92,246,0.12);color:var(--purple)">②</div>
+          <div><span style="color:var(--purple);font-weight:600">投入→产出</span><br><span style="font-size:14px;color:var(--muted)">MDF→线索→Pipeline→ROI</span></div>
+        </div>
+        <div class="loop-box">
+          <div class="loop-icon" style="background:rgba(16,185,129,0.12);color:var(--emerald)">③</div>
+          <div><span style="color:var(--emerald);font-weight:600">个体→网络</span><br><span style="font-size:14px;color:var(--muted)">能力互补→协作→网络价值↑</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 3: DATA CORRELATION + EVIDENCE -->
+    <div class="col">
+      <div class="card card-purple" style="flex:1">
+        <p style="font-size:18px;font-weight:700;margin-bottom:14px;color:var(--purple)">数据因果关联网络</p>
+        <div style="font-size:15px;line-height:2.2;color:var(--muted)">
+          <p><span style="color:var(--blue)">能力画像AI=25分</span> → 瑞金丢标 ← <span style="color:var(--red)">竞品AWS</span></p>
+          <p style="margin-left:16px;font-size:13px">↳ 根因: 无AI认证 · 需补AI能力</p>
+
+          <p style="margin-top:8px"><span style="color:var(--amber)">认证3人过期</span> → 报备资格丧失 ← <span style="color:var(--red)">14天内</span></p>
+          <p style="margin-left:16px;font-size:13px">↳ 关联: 技术部(吴忠奎) · Q2能力升级</p>
+
+          <p style="margin-top:8px"><span style="color:var(--emerald)">结构洞位置</span> → 协作2.4x客单价 ← <span style="color:var(--purple)">3个连接</span></p>
+          <p style="margin-left:16px;font-size:13px">↳ 证据: SI+ISV+Reseller · 5节点网络</p>
+
+          <p style="margin-top:8px"><span style="color:var(--red)">医疗行业60%</span> → 集中度风险 ← <span style="color:var(--amber)">5客户中4个</span></p>
+          <p style="margin-left:16px;font-size:13px">↳ 建议: 政务·金融多元化</p>
+
+          <p style="margin-top:8px"><span style="color:var(--cyan)">QBR目标:能力升级</span> → MDF使用84% ← <span style="color:var(--blue)">42条线索</span></p>
+          <p style="margin-left:16px;font-size:13px">↳ 产出: Pipeline¥8.5M · ROI 3.2x</p>
+        </div>
+      </div>
+
+      <div class="card card-emerald">
+        <p style="font-size:18px;font-weight:700;margin-bottom:10px;color:var(--emerald)">关键指标 × 理论解释</p>
+        <div style="font-size:15px;line-height:1.8;color:var(--muted)">
+          <p><span style="color:var(--blue)">赢单率68%</span> → RBV: 技术人才+客户信任=竞争壁垒</p>
+          <p><span style="color:var(--purple)">AI能力25分</span> → 动态能力: 感知到AI趋势但尚未抓住</p>
+          <p><span style="color:var(--emerald)">10年合作</span> → PLM: 从交易关系进化为战略共创</p>
+          <p><span style="color:var(--amber)">3个协作</span> → 结构洞: 枢纽位置但潜力未释放</p>
+          <p><span style="color:var(--red)">瑞金丢标</span> → 竞合: 互补者(AWS)变为竞争者</p>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center;border:1px solid var(--border)">
+        <div class="formula-box" style="font-size:16px;border:none">
+          <span style="color:var(--emerald)">网络价值 V ∝ n²</span><br>
+          当前 5² = 25 → 目标 8² = 64<br>
+          <span style="color:var(--blue)">预期增幅 +156%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p class="conclusion">
+      "理论的价值不在于<span style="color:var(--blue)">解释过去</span>，而在于<span style="color:var(--emerald)">塑造未来</span>。
+      将管理学和经济学经典理论转化为可操作、可量化、可追踪的工程实践，
+      构建能<span style="color:var(--purple)">自我进化</span>的渠道生态系统。"
+    </p>
+    <div style="text-align:right;flex-shrink:0">
+      <p style="font-size:18px;font-weight:700">PartnerNexus</p>
+      <p style="font-size:14px;color:var(--muted)">渠道管理理论模型</p>
+      <p style="font-size:13px;color:var(--muted);margin-top:4px">参考文献: Barney(1991) · Teece(2007) · Jap(2000)</p>
+      <p style="font-size:13px;color:var(--muted)">Burt(1992) · Brandenburger(1996) · Hughes(1994) · Metcalfe(1980)</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

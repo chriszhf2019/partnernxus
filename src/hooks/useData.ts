@@ -1,29 +1,31 @@
 import { useMemo, useRef } from 'react';
 import {
-  DEALS,
-  ACTIVITIES,
-  PARTNER_DETAILS,
-  DEAL_STATS,
-  DASHBOARD_STATS,
-  MDF_STATS,
-  MDF_MONTHLY_ACTIVITIES,
-  INCENTIVE_PROGRAMS,
-  INCENTIVE_STATS,
-  MATRIX_DATA,
-  NETWORK_NODES,
-  NETWORK_LINKS,
+  DEALS, ACTIVITIES, PARTNER_DETAILS, DEAL_STATS, DASHBOARD_STATS,
+  MDF_STATS, MDF_MONTHLY_ACTIVITIES, INCENTIVE_PROGRAMS, INCENTIVE_STATS,
+  MATRIX_DATA, NETWORK_NODES, NETWORK_LINKS,
 } from '../constants';
 import { IMPORTED_PARTNERS } from '../data/importedPartners';
 import { getMockCockpitData } from '../lib/mockGenerator';
 import type { CockpitData, Partner } from '../types';
 
 export function usePartners() {
-  const partnerListRef = useRef<Partner[]>(IMPORTED_PARTNERS);
+  const partnerListRef = useRef<Partner[]>([]);
+
+  const partners = useMemo(() => {
+    let local: Partner[] = [];
+    try {
+      local = JSON.parse(localStorage.getItem('localPartners') || '[]');
+    } catch { /* ignore */ }
+    const all = [...local, ...IMPORTED_PARTNERS];
+    partnerListRef.current = all;
+    return all;
+  }, []);
+
   return useMemo(() => ({
-    partners: IMPORTED_PARTNERS,
+    partners,
     partnerDetails: PARTNER_DETAILS,
     partnerListRef,
-  }), []);
+  }), [partners]);
 }
 
 export function useDeals() {

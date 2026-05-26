@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { CheckCircle2, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { AnimatePresence, motion } from 'motion/react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -43,23 +42,20 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     <ToastContext.Provider value={{ toast: addToast }}>
       {children}
       <div className="fixed bottom-4 right-4 z-[200] space-y-2">
-        <AnimatePresence>
-          {toasts.map((t) => {
-            const Icon = icons[t.type];
-            return (
-              <motion.div key={t.id} initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className={cn('flex items-center gap-2 px-4 py-3 rounded-xl border shadow-lg min-w-[300px] max-w-[420px]', colors[t.type])}>
-                <Icon className="w-4 h-4 shrink-0" />
-                <p className="text-sm font-medium flex-1">{t.message}</p>
-                <button onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-                  className="p-0.5 rounded hover:bg-black/5 dark:hover:bg-white/5">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+        {toasts.map((t) => {
+          const Icon = icons[t.type];
+          return (
+            <div key={t.id}
+              className={cn('flex items-center gap-2 px-4 py-3 rounded-xl border shadow-lg min-w-[300px] max-w-[420px] animate-in fade-in slide-in-from-right duration-200', colors[t.type])}>
+              <Icon className="w-4 h-4 shrink-0" />
+              <p className="text-sm font-medium flex-1">{t.message}</p>
+              <button onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
+                className="p-0.5 rounded hover:bg-black/5 dark:hover:bg-white/5">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </ToastContext.Provider>
   );

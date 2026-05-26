@@ -6,6 +6,26 @@
     <title>PartnerNexus - 合作伙伴管理系统</title>
     <meta name="description" content="PartnerNexus - 生态伙伴管理与数字化运营平台" />
     <meta name="theme-color" content="#00288e" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script>
+      // Auto-reload on chunk load failure (stale CDN cache)
+      window.__chunkReloaded = sessionStorage.getItem('__cr');
+      if (window.__chunkReloaded) {
+        sessionStorage.removeItem('__cr');
+      }
+      window.addEventListener('error', function(e) {
+        if (e.message && e.message.includes('dynamically imported module')) {
+          if (!sessionStorage.getItem('__cr')) {
+            sessionStorage.setItem('__cr', '1');
+            location.reload();
+          } else {
+            sessionStorage.removeItem('__cr');
+          }
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,10 +1,7 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { suppressKnownErrors } from './lib/errorSuppress';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+suppressKnownErrors();
+createRoot(document.getElementById('root')!).render(<App />);

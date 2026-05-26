@@ -10,20 +10,20 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  remountKey: number;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, remountKey: 0 };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, remountKey: 0 };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Structured logging for production monitoring
     const logEntry = {
       timestamp: new Date().toISOString(),
       error: {
@@ -39,7 +39,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState((prev) => ({
+      hasError: false,
+      error: null,
+      remountKey: prev.remountKey + 1,
+    }));
   };
 
   render() {
@@ -65,6 +69,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return <div key={this.state.remountKey}>{this.props.children}</div>;
   }
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wifi, WifiOff } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { WifiOff } from 'lucide-react';
 
 export const NetworkStatus = () => {
   const [online, setOnline] = useState(navigator.onLine);
@@ -16,21 +15,14 @@ export const NetworkStatus = () => {
     };
   }, []);
 
+  if (online) return null;
+
   return (
-    <AnimatePresence>
-      {!online && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="bg-amber-500 text-white overflow-hidden"
-        >
-          <div className="flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold">
-            <WifiOff className="w-4 h-4" />
-            You are offline. Some features may be unavailable.
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className="bg-amber-500 text-white">
+      <div className="flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold">
+        <WifiOff className="w-4 h-4" />
+        You are offline. Some features may be unavailable.
+      </div>
+    </div>
   );
 };

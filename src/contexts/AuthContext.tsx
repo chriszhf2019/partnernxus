@@ -13,7 +13,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const ROLE_HIERARCHY: Record<UserRole, number> = { admin: 3, editor: 2, viewer: 1 };
+const ROLE_HIERARCHY: Record<UserRole, number> = {
+  admin: 10,
+  channel_director: 8, marketing_director: 8, sales_director: 8,
+  channel_manager: 6, marketing_manager: 6, sales_manager: 6,
+  partner_admin: 4, partner_sales: 2, partner_engineer: 1,
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -48,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   }, []);
 
-  const role: UserRole = user ? authService.getUserRole(user.uid) : 'viewer';
+  const role: UserRole = user ? authService.getUserRole(user.uid) : 'partner_sales';
 
   const hasPermission = useCallback(
     (requiredRole: UserRole) => ROLE_HIERARCHY[role] >= ROLE_HIERARCHY[requiredRole],

@@ -1,15 +1,20 @@
 import { useState, useMemo, useDeferredValue, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Upload, Pencil, Trash2, MapPin, Phone } from 'lucide-react';
-import { Partner, PartnerStatus } from '../../types';
+import { Search, Upload, Pencil, Trash2, MapPin, Phone, CheckCircle2, XCircle, X, CheckSquare } from 'lucide-react';
+import { Partner, PartnerStatus, PartnerTier } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useConfig } from '../../contexts/ConfigContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../ui/Toast';
 import { ImportModal } from './ImportModal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 import { EmptyState } from '../ui/EmptyState';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { TIER_STYLES, TYPE_LABELS, STATUS_CONFIG } from '../../lib/partner-labels';
+import { partnerService } from '../../services/partner-service';
 import { cn } from '../../lib/utils';
 
 interface PartnerListProps {
@@ -23,6 +28,7 @@ const ITEMS_PER_PAGE = 10;
 export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerListProps) => {
   const { t } = useLanguage();
   const { config } = useConfig();
+  const { user, role } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearch = useDeferredValue(searchTerm);
@@ -32,18 +38,49 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
   const [showImport, setShowImport] = useState(false);
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [tab, setTab] = useState<'all' | 'pending'>('all');
+  const [approvePartner, setApprovePartner] = useState<Partner | null>(null);
+  const [approvalForm, setApprovalForm] = useState({ tier: 'Gold' as PartnerTier, status: 'Cooperating' as PartnerStatus, tags: '', manager: '' });
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [refreshing, setRefreshing] = useState(false);
+  const { toast } = useToast();
+
+  const isAdmin = role === 'admin';
+  const isInternal = ['admin', 'channel_director', 'channel_manager', 'marketing_director', 'marketing_manager', 'sales_director', 'sales_manager'].includes(role);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const result = await partnerService.list();
+      if (onImport) onImport(result.items, 'replace');
+    } catch { /* keep current state */ }
+    setRefreshing(false);
+  }, [onImport]);
+
+  const pendingCount = partners.filter((p) => p.status === 'Prospective').length;
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  };
+  const toggleAll = () => {
+    if (selected.size === pagedPartners.length) setSelected(new Set());
+    else setSelected(new Set(pagedPartners.map((p) => p.id)));
+  };
 
   const filteredPartners = useMemo(() => {
     let result = partners;
-    if (deferredSearch.trim()) {
-      const s = deferredSearch.toLowerCase();
-      result = result.filter((p) => p.name.toLowerCase().includes(s) || p.manager.toLowerCase().includes(s) || p.tags.some((t) => t.toLowerCase().includes(s)));
+    if (tab === 'pending') { result = result.filter((p) => p.status === 'Prospective'); }
+    else {
+      if (deferredSearch.trim()) {
+        const s = deferredSearch.toLowerCase();
+        result = result.filter((p) => p.name.toLowerCase().includes(s) || (p.manager || '').toLowerCase().includes(s) || (p.tags || []).some((t) => t.toLowerCase().includes(s)));
+      }
+      if (statusFilter !== 'All') result = result.filter((p) => p.status === statusFilter);
+      if (tierFilter !== 'All') result = result.filter((p) => p.tier === tierFilter);
+      if (typeFilter !== 'All') result = result.filter((p) => p.type === typeFilter);
     }
-    if (statusFilter !== 'All') result = result.filter((p) => p.status === statusFilter);
-    if (tierFilter !== 'All') result = result.filter((p) => p.tier === tierFilter);
-    if (typeFilter !== 'All') result = result.filter((p) => p.type === typeFilter);
     return result;
-  }, [partners, deferredSearch, statusFilter, tierFilter, typeFilter]);
+  }, [partners, deferredSearch, statusFilter, tierFilter, typeFilter, tab]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPartners.length / ITEMS_PER_PAGE));
   const pagedPartners = filteredPartners.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
@@ -54,6 +91,55 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
   const filterBtn = (active: boolean, onClick: () => void, label: string) => (
     <button onClick={onClick} className={cn('px-3 py-1.5 rounded-md text-xs font-medium transition-all', active ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800')}>{label}</button>
   );
+
+  // ── Approve / Reject / Delete handlers ─────────────────
+  const handleApprove = async () => {
+    if (!approvePartner) return;
+    try {
+      await partnerService.approve(approvePartner.id, {
+        tier: approvalForm.tier, status: approvalForm.status,
+        manager: approvalForm.manager,
+        tags: approvalForm.tags.split(',').map((s: string) => s.trim()).filter(Boolean),
+      }, user?.email || 'admin');
+      toast('success', `「${approvePartner.name}」已批复`);
+      setApprovePartner(null);
+      await refresh();
+    } catch (err: any) { toast('error', `批复失败: ${err.message}`); }
+  };
+  const handleReject = async (partner: Partner) => {
+    try {
+      await partnerService.reject(partner.id, user?.email || 'admin');
+      toast('success', `「${partner.name}」已驳回`);
+      await refresh();
+    } catch (err: any) { toast('error', `驳回失败: ${err.message}`); }
+  };
+  const handleDeletePartner = async () => {
+    if (!deleteId) return;
+    try {
+      await partnerService.delete(deleteId, user?.email || 'admin');
+      toast('success', '已删除');
+      setDeleteId(null);
+      await refresh();
+    } catch (err: any) { toast('error', `删除失败: ${err.message}`); }
+  };
+  const handleBatchApprove = async () => {
+    try {
+      await partnerService.batchApprove([...selected], {
+        tier: 'Gold', status: 'Cooperating', manager: '', tags: [],
+      }, user?.email || 'admin');
+      toast('success', `已批量批复 ${selected.size} 个合作伙伴`);
+      setSelected(new Set());
+      await refresh();
+    } catch (err: any) { toast('error', `批量批复失败: ${err.message}`); }
+  };
+  const handleBatchReject = async () => {
+    try {
+      await partnerService.batchReject([...selected], user?.email || 'admin');
+      toast('success', `已批量驳回 ${selected.size} 个合作伙伴`);
+      setSelected(new Set());
+      await refresh();
+    } catch (err: any) { toast('error', `批量驳回失败: ${err.message}`); }
+  };
 
   return (
     <div className="space-y-4">
@@ -81,6 +167,28 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-2">
+        <div className="flex bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5">
+          <button onClick={() => setTab('all')} className={cn('px-4 py-1.5 rounded-md text-xs font-medium transition-all', tab === 'all' ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500')}>全部</button>
+          <button onClick={() => setTab('pending')} className={cn('px-4 py-1.5 rounded-md text-xs font-medium transition-all', tab === 'pending' ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500')}>待批复 {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px]">{pendingCount}</span>}</button>
+        </div>
+      </div>
+
+      {/* Batch Actions */}
+      {selected.size > 0 && isInternal && (
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-xl">
+          <span className="text-sm font-medium text-brand-700 dark:text-brand-300">已选 {selected.size} 项</span>
+          {tab === 'pending' && (
+            <>
+              <Button variant="brand" size="sm" onClick={handleBatchApprove}><CheckCircle2 className="w-3.5 h-3.5" />批量批复</Button>
+              <Button variant="danger" size="sm" onClick={handleBatchReject}><XCircle className="w-3.5 h-3.5" />批量驳回</Button>
+            </>
+          )}
+          <button className="ml-auto text-xs text-neutral-400 hover:text-neutral-600" onClick={() => setSelected(new Set())}>取消选择</button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-4 p-3 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
         <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Status</span>
@@ -103,6 +211,7 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
             <table className="w-full">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50">
+                  {isInternal && <th className="px-4 py-3.5 w-10"><input type="checkbox" checked={selected.size === pagedPartners.length && pagedPartners.length > 0} onChange={toggleAll} className="rounded" /></th>}
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">合作伙伴名称</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">类型</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">等级</th>
@@ -114,13 +223,13 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
               </thead>
               <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
                 {pagedPartners.map((partner) => {
-                  const primary = partner.contacts.find((c) => c.isPrimary) || partner.contacts[0];
+                  const primary = (partner.contacts || []).find((c) => c.isPrimary) || (partner.contacts || [])[0];
                   const tierStyle = TIER_STYLES[partner.tier] || TIER_STYLES.Registered;
                   const statusCfg = STATUS_CONFIG[partner.status];
                   return (
-                    <tr key={partner.id} onClick={() => onSelectPartner(partner.id)}
-                      className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors cursor-pointer group">
-                      <td className="px-6 py-4">
+                    <tr key={partner.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors group">
+                      {isInternal && <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={selected.has(partner.id)} onChange={() => toggleSelect(partner.id)} className="rounded" /></td>}
+                      <td className="px-6 py-4 cursor-pointer" onClick={() => onSelectPartner(partner.id)}>
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-50 to-blue-100 dark:from-brand-900/30 dark:to-blue-900/30 flex items-center justify-center shrink-0 text-xs font-semibold text-brand-600 dark:text-brand-300">
                             {partner.name.charAt(0)}
@@ -147,8 +256,21 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                          <button onClick={() => onSelectPartner(partner.id)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-brand transition-colors" aria-label="Edit"><Pencil className="w-4 h-4" /></button>
-                          <button onClick={() => setDeleteId(partner.id)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-red-500 transition-colors" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>
+                          {tab === 'pending' && isInternal ? (
+                            <>
+                              <Button variant="brand" size="sm" onClick={() => { setApprovePartner(partner); setApprovalForm({ tier: 'Gold' as PartnerTier, status: 'Cooperating' as PartnerStatus, tags: '', manager: '' }); }}>
+                                <CheckCircle2 className="w-3.5 h-3.5" />批复
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleReject(partner)}>
+                                <XCircle className="w-3.5 h-3.5" />驳回
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => onSelectPartner(partner.id)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-brand transition-colors" aria-label="Edit"><Pencil className="w-4 h-4" /></button>
+                              {isAdmin && <button onClick={() => setDeleteId(partner.id)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-red-500 transition-colors" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>}
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -184,8 +306,32 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
 
       <ImportModal isOpen={showImport} onClose={() => setShowImport(false)}
         onImport={(imported, mode) => { onImport?.(imported, mode); setShowImport(false); }} />
-      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) setDeleteId(null); }}
+      <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDeletePartner}
         title="确认删除" description="确定要删除此合作伙伴吗？此操作不可撤销。" confirmLabel="删除" variant="danger" />
+
+      {/* ── Approval Modal ─────────────────── */}
+      {approvePartner && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setApprovePartner(null)}>
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">批复合作伙伴</h3>
+              <button onClick={() => setApprovePartner(null)} className="p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"><X className="w-5 h-5" /></button>
+            </div>
+            <p className="text-sm text-neutral-500 mb-4">批复「{approvePartner.name}」的申请</p>
+            <div className="space-y-3">
+              <Select label="合作伙伴等级" options={(config?.partnerTiers || ['Platinum','Gold','Silver','Registered']).map(v=>({value:v,label:v}))} value={approvalForm.tier} onChange={(e) => setApprovalForm({...approvalForm, tier: e.target.value as PartnerTier})} />
+              <Select label="合作伙伴状态" options={(config?.partnerStatuses || ['Cooperating','Inactive','Prospective']).map(v=>({value:v,label:v==='Cooperating'?'合作中':v==='Inactive'?'已过期':'潜在'}))} value={approvalForm.status} onChange={(e) => setApprovalForm({...approvalForm, status: e.target.value as PartnerStatus})} />
+              <Input label="渠道经理" value={approvalForm.manager} onChange={(e) => setApprovalForm({...approvalForm, manager: e.target.value})} placeholder="指派渠道经理" />
+              <Input label="标签（逗号分隔）" value={approvalForm.tags} onChange={(e) => setApprovalForm({...approvalForm, tags: e.target.value})} placeholder="如：信创,医疗,华北" />
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="secondary" onClick={() => setApprovePartner(null)}>取消</Button>
+              <Button variant="danger" size="sm" onClick={() => { setApprovePartner(null); handleReject(approvePartner); }}><XCircle className="w-4 h-4" />驳回</Button>
+              <Button variant="brand" size="sm" onClick={handleApprove}><CheckCircle2 className="w-4 h-4" />批复通过</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

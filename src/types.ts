@@ -30,7 +30,9 @@ export interface PartnerContact {
 export interface Partner {
   id: string;
   name: string;
+  englishName?: string;
   logo: string;
+  website?: string;
   tier: PartnerTier;
   status: PartnerStatus;
   type: PartnerType;
@@ -40,11 +42,12 @@ export interface Partner {
   province?: string;
   city?: string;
   district?: string;
-  startDate: string;
-  years: number;
+  startDate: string;       // 批复时间
+  applicationDate?: string; // 申请提交时间
+  years: number;            // 自动计算: 当前年份 - startDate年份
   prevTier: PartnerTier;
-  tags: string[];
-  winRate: number;
+  tags: string[];           // 批复时渠道经理添加
+  winRate: number;          // 自动计算: 赢单/报备
   contacts: PartnerContact[];
   unifiedSocialCreditCode?: string;
   industry?: string;
@@ -492,6 +495,10 @@ export interface GlobalConfig {
     mdfEfficiency: boolean;
   };
   partnerTiers: string[];
+  partnerTypes: string[];
+  partnerStatuses: string[];
+  partnerVendors: string[];
+  cooperationLevels: string[];
   salesStages: string[];
   industries: string[];
   regions: string[];

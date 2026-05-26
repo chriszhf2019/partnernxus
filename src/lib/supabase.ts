@@ -20,4 +20,5 @@ export const db = {
   mpGifts: () => supabase.from('mp_gifts'),
   mpOrders: () => supabase.from('mp_orders'),
   settings: () => supabase.from('settings'),
+  operationLogs: () => supabase.from('partner_operation_logs'),
 };
