@@ -8,13 +8,14 @@ import {
   MessageSquare, ThumbsUp, ThumbsDown, RefreshCw, Rocket, Crosshair, Compass,
   Radar, Flame, Bell, Mail,
 } from 'lucide-react';
-import { PartnerDetails, Activity as ActivityType, JBPFormData, PartnerContact } from '../../types';
+import { PartnerDetails, Activity as ActivityType, JBPFormData, PartnerContact, PartnerTimelineEvent } from '../../types';
 import { cn, formatCurrency } from '../../lib/utils';
 import { TIER_OPTIONS, TYPE_OPTIONS, STATUS_OPTIONS, INDUSTRY_OPTIONS, recordTypeLabel, TIER_LABELS } from '../../lib/partner-labels';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { debug } from '../../lib/debug';
 import { JBPMeetingForm } from './JBPMeetingForm';
+import { PartnerTimeline } from './PartnerTimeline';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card';
@@ -134,6 +135,89 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
   }, [partner, mdfPct]);
 
   // ═══════════════════════════════════════════════════════
+  // PARTNER CATEGORY INFO
+  // ═══════════════════════════════════════════════════════
+  const partnerCategoryInfo = useMemo(() => {
+    const category = partner.category || 'Champions';
+    const categories: Record<string, {
+      title: string;
+      description: string;
+      characteristics: string[];
+      strategy: string;
+      strategyLabel: string;
+      bgColor: string;
+      strategyBadgeColor: string;
+    }> = {
+      Champions: {
+        title: '战略核心型（The Champions / Strategic Partners）',
+        description: '这类合作伙伴是厂商的"压舱石"，活跃度极高且稳定。',
+        characteristics: [
+          '交易高频：每月甚至每周都有订单或项目报备',
+          '深度互动：主动参加厂商的所有培训、新品发布会和年度会议',
+          '资源投入：设有专门针对该品牌的销售和技术团队',
+          '市场联动：主动与厂商策划联合营销活动（Co-marketing）',
+        ],
+        strategy: '提供最高级别的折扣、返利、营销基金（MDF）及"绿色通道"支持；进行高层定期会晤，建立战略同盟。',
+        strategyLabel: '管理策略',
+        bgColor: 'bg-emerald-500',
+        strategyBadgeColor: 'text-emerald-600 bg-emerald-50',
+      },
+      RisingStars: {
+        title: '成长活跃型（The Rising Stars / Growth Partners）',
+        description: '这类合作伙伴处于上升期，虽然目前的业绩总量不是最高，但活跃趋势明显。',
+        characteristics: [
+          '响应速度快：对厂商的新政策、新产品响应积极',
+          '学习欲望强：频繁申请技术支持和人员培训',
+          '转化率高：虽然报备的项目数量不算巨大，但成功率（Win Rate）较高',
+        ],
+        strategy: '加大赋能力度（Enablement），重点提供技术指导和销售陪访，帮助其快速跨越规模门槛。',
+        strategyLabel: '管理策略',
+        bgColor: 'bg-blue-500',
+        strategyBadgeColor: 'text-blue-600 bg-blue-50',
+      },
+      Opportunists: {
+        title: '项目驱动型/机会型（The Opportunists / Tactical Partners）',
+        description: '这类伙伴属于"无事不登三宝殿"，活跃度呈阵发性、不连续。',
+        characteristics: [
+          '触发式活跃：只有当手中握有明确的项目（Lead）时，才会主动联系厂商',
+          '低粘性：平时不参加常规培训，对厂商的品牌忠诚度较低，容易因为价格或客户喜好转向竞品',
+          '交易间歇期长：两个项目之间可能有数月甚至一年的沉寂期',
+        ],
+        strategy: '建立标准化、自助式的支持流程（如在线门户），减少人工维护成本，但在其有大项目时提供针对性的竞争支持。',
+        strategyLabel: '管理策略',
+        bgColor: 'bg-amber-500',
+        strategyBadgeColor: 'text-amber-600 bg-amber-50',
+      },
+      Dormant: {
+        title: '沉默/睡眠型（The Dormant / Passive Partners）',
+        description: '这类伙伴已完成签约，但长期无实质产出，处于"名存实亡"的状态。',
+        characteristics: [
+          '零产出：过去6-12个月内没有订单或报备',
+          '联络困难：对厂商的邮件、电话沟通基本不予回应',
+          '由于策略调整：可能其业务重点已转型，不再覆盖该产品领域',
+        ],
+        strategy: '进行"唤醒"或"清退"。通过一次回访确认其现状，若无合作意向则清理出系统，释放渠道保护名额和管理精力。',
+        strategyLabel: '管理策略',
+        bgColor: 'bg-gray-500',
+        strategyBadgeColor: 'text-gray-600 bg-gray-100',
+      },
+      Newcomers: {
+        title: '新晋观察型（The Newcomers）',
+        description: '刚刚签约，处于磨合和导入期。',
+        characteristics: [
+          '高热度：初期的咨询和学习热情很高',
+          '不确定性：尚未建立起成熟的销售路径，活跃度能否转化为业绩尚待观察',
+        ],
+        strategy: '"扶上马，送一程"。设定90天的"激活期"，给予入职包、专项培训，并协助其完成"首单转化"。',
+        strategyLabel: '管理策略',
+        bgColor: 'bg-purple-500',
+        strategyBadgeColor: 'text-purple-600 bg-purple-50',
+      },
+    };
+    return categories[category] || categories.Champions;
+  }, [partner.category]);
+
+  // ═══════════════════════════════════════════════════════
   // BREAKTHROUGH OPPORTUNITIES
   // ═══════════════════════════════════════════════════════
   const breakthroughs = useMemo(() => {
@@ -225,17 +309,29 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
         status: c.status || ['在服', 'POC', '商务', '丢标'][Math.floor(Math.random() * 4)],
       }));
     }
-    const industries = ['医疗', '政务', '金融', '制造', '教育'];
-    const products = ['云原生平台', '大数据平台', 'AI 智算平台', '混合云方案', '数字化平台'];
-    return [0, 1, 2, 3, 4].map(i => ({
-      name: ['浙江省立医院', '苏州市卫健委', '上海瑞金医院', '北京协和医院', '杭州市养老平台'][i],
-      industry: industries[i],
-      product: products[i],
-      ourShare: [100, 70, 0, 50, 100][i],
-      competitor: ['-', '华为云', 'AWS', '阿里云', '-'][i],
-      value: [4500000, 2800000, 3200000, 6000000, 1200000][i],
-      status: ['在服', 'POC', '丢标', '商务', '在服'][i],
-    }));
+    // 根据合作伙伴行业生成相关客户
+    const industryCustomers: Record<string, { names: string[], products: string[] }> = {
+      '医疗': { names: ['浙江省立医院', '上海瑞金医院', '北京协和医院', '华山医院', '广东省人民医院'], products: ['云原生平台', '大数据平台', 'AI 智算平台', '混合云方案', '数字化平台'] },
+      '政务': { names: ['苏州市卫健委', '杭州市政府', '北京市政务服务中心', '深圳市政务数据局', '广东省人社厅'], products: ['数据平台', '混合云方案', '安全合规', '数字化平台', '政务云'] },
+      '金融': { names: ['某省农信', '招商银行', '平安保险', '中信证券', '浦发银行'], products: ['安全合规', '大数据平台', '混合云方案', '灾备解决方案', '云原生平台'] },
+      '制造': { names: ['华为技术', '比亚迪', '海尔集团', '格力电器', '美的集团'], products: ['工业互联网平台', '边缘计算', '云原生平台', '大数据平台', 'AI 智算平台'] },
+      '教育': { names: ['清华大学', '北京大学', '上海交大', '浙江大学', '复旦大学'], products: ['教育云平台', '混合云方案', '大数据平台', 'AI 智算平台', '数字化平台'] },
+      '零售': { names: ['阿里巴巴', '京东集团', '美团', '拼多多', '唯品会'], products: ['云原生平台', '大数据平台', '混合云方案', 'AI 智算平台', '安全合规'] },
+    };
+    const customerData = industryCustomers[partner.industry || '医疗'] || industryCustomers['医疗'];
+    const statusOptions = ['在服', 'POC', '商务', '丢标'];
+    return [0, 1, 2, 3, 4].map(i => {
+      const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+      return ({
+        name: customerData.names[i],
+        industry: partner.industry || '医疗',
+        product: customerData.products[i],
+        ourShare: status === '丢标' ? 0 : Math.floor(Math.random() * 50) + 50,
+        competitor: status === '丢标' ? ['AWS', '华为云', '阿里云'][Math.floor(Math.random() * 3)] : '-',
+        value: Math.floor(Math.random() * 5000000) + 500000,
+        status,
+      });
+    });
   }, [partner.customerPortfolio, partner.industry]);
 
   const ecosystemPartners = useMemo(() => {
@@ -249,12 +345,36 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
         deals: p.deals || Math.floor(Math.random() * 15) + 1,
       }));
     }
-    return [
-      { name: '昆仑联通', type: 'SI', relation: '联合打单', products: ['云原生平台', '备份存储'], volume: 4500000, deals: 5 },
-      { name: '精诚中国', type: 'Reseller', relation: '分销代理', products: ['安全合规', '数据平台'], volume: 2800000, deals: 12 },
-      { name: '上海智医', type: 'ISV', relation: '方案互补', products: ['AI 智算平台'], volume: 1200000, deals: 3 },
-    ];
-  }, [partner.ecosystemPartners]);
+    // 根据合作伙伴类型生成相关生态伙伴
+    const ecosystemData: Record<string, { partners: {name: string, type: string, relation: string, products: string[]}[] }> = {
+      'SI': { partners: [
+        { name: '精诚中国', type: 'Reseller', relation: '分销代理', products: ['安全合规', '数据平台'] },
+        { name: '上海智医', type: 'ISV', relation: '方案互补', products: ['AI 智算平台', '医疗解决方案'] },
+        { name: '神州数码', type: 'VAD', relation: '增值分销', products: ['全产品线'] },
+      ]},
+      'ISV': { partners: [
+        { name: '昆仑联通', type: 'SI', relation: '联合打单', products: ['云原生平台', '备份存储'] },
+        { name: '华胜天成', type: 'SI', relation: '实施交付', products: ['行业解决方案'] },
+        { name: '中软国际', type: 'SI', relation: '项目合作', products: ['定制开发'] },
+      ]},
+      'Reseller': { partners: [
+        { name: '紫光华山', type: 'VAD', relation: '上游分销', products: ['硬件产品'] },
+        { name: '锐捷网络', type: 'OEM', relation: '产品合作', products: ['网络设备'] },
+        { name: '深信服', type: 'ISV', relation: '方案集成', products: ['安全产品'] },
+      ]},
+      'OEM': { partners: [
+        { name: '新华三', type: 'SI', relation: '渠道合作', products: ['服务器'] },
+        { name: '浪潮信息', type: 'SI', relation: '联合方案', products: ['存储设备'] },
+        { name: '戴尔科技', type: 'Reseller', relation: '分销代理', products: ['整机方案'] },
+      ]},
+    };
+    const partnersData = ecosystemData[partner.type] || ecosystemData['SI'];
+    return partnersData.partners.map((p, i) => ({
+      ...p,
+      volume: Math.floor(Math.random() * 5000000) + 500000,
+      deals: Math.floor(Math.random() * 15) + 1,
+    }));
+  }, [partner.ecosystemPartners, partner.type]);
 
   const quarterlyReviews = useMemo(() => {
     if (partner.qbrRecords && partner.qbrRecords.length > 0) {
@@ -270,15 +390,44 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
     const now = new Date();
     const qs = ['Q4', 'Q1', 'Q2'];
     const years = [now.getFullYear() - 1, now.getFullYear(), now.getFullYear()];
+    const managerInitial = (partner.manager || '渠道经理').split('')[0];
+    const tierGoals: Record<string, { goals: string[], progresses: string[], keys: string[] }> = {
+      Diamond: { 
+        goals: ['年度战略目标达成', '生态合作深化', '标杆项目交付'], 
+        progresses: ['完成率 112%', '完成率 98%', '进行中'], 
+        keys: ['超额完成年度目标，战略客户续约率100%', '新增5个生态合作伙伴，联合方案发布', '工程师认证全覆盖，AI产品线落地中'] 
+      },
+      Platinum: { 
+        goals: ['营收增长目标', '行业拓展', '能力升级'], 
+        progresses: ['完成率 105%', '完成率 92%', '进行中'], 
+        keys: ['超额完成年度目标，签署3个新客户', `${partner.industry || '新'}行业实现首个标杆客户`, '工程师认证完成，新产品线POC启动'] 
+      },
+      Gold: { 
+        goals: ['业绩目标达成', '客户拓展', '能力建设'], 
+        progresses: ['完成率 98%', '完成率 85%', '进行中'], 
+        keys: ['基本完成年度目标', '新增2个行业客户', '技术认证推进中'] 
+      },
+      Silver: { 
+        goals: ['基础目标达成', '能力建设', '客户维护'], 
+        progresses: ['完成率 88%', '完成率 75%', '进行中'], 
+        keys: ['接近目标，需加大投入', '技术能力建设中', '客户满意度提升'] 
+      },
+      Registered: { 
+        goals: ['起步拓展', '能力入门', '首单突破'], 
+        progresses: ['完成率 70%', '完成率 65%', '进行中'], 
+        keys: ['正在起步阶段', '认证培训进行中', '首单努力突破中'] 
+      },
+    };
+    const tierData = tierGoals[partner.tier] || tierGoals['Gold'];
     return qs.map((q, i) => ({
       q: `${years[i]} ${q}`,
       date: ['2024-12-15', '2025-03-20', '2025-06-18'][i],
-      goal: ['年营收达标冲刺', '新行业拓展', '能力升级'][i],
-      progress: ['完成率 105%', '完成率 92%', '进行中'][i],
-      key: ['超额完成年度目标，签署3个新客户', '金融行业实现首个标杆客户，医疗Pipeline增长40%', '工程师认证完成，AI产品线POC启动'][i],
-      attendees: [partner.manager || '任志刚', partner.manager || '何妮', partner.manager || '吴忠奎'].map(n => n.split('')[0] + '经理'),
+      goal: tierData.goals[i],
+      progress: tierData.progresses[i],
+      key: tierData.keys[i],
+      attendees: [`${managerInitial}经理`, `${managerInitial}经理`, `${managerInitial}经理`],
     }));
-  }, [partner.qbrRecords, partner.manager]);
+  }, [partner.qbrRecords, partner.manager, partner.tier, partner.industry]);
 
   // Recent activity data (last 30 days)
   const recentActivity = useMemo(() => {
@@ -303,7 +452,8 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
   const tabItems = [
     { id: 'overview', label: t('profile.overview') }, { id: 'activity', label: t('profile.activity') },
     { id: 'performance', label: t('profile.performance') }, { id: 'opportunity', label: t('profile.opportunity') },
-    { id: 'staff', label: t('profile.staff') }, { id: 'profile', label: t('profile.profile') }, { id: 'network', label: t('profile.network') },
+    { id: 'timeline', label: '合作时间线' }, { id: 'staff', label: t('profile.staff') },
+    { id: 'profile', label: t('profile.profile') }, { id: 'network', label: t('profile.network') },
   ];
 
   return (
@@ -431,6 +581,44 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                 </Card>
               </div>
 
+              {/* Partner Category */}
+              <Card>
+                <CardHeader><CardTitle>合作伙伴分类</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {partnerCategoryInfo ? (
+                      <div className="border rounded-xl overflow-hidden">
+                        <div className={cn('px-4 py-2', partnerCategoryInfo.bgColor)}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-white">{partnerCategoryInfo.title}</span>
+                            <Badge className="bg-white/20 text-white text-xs">{partner.category || '未分类'}</Badge>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <p className="text-xs text-neutral-500 mb-3">{partnerCategoryInfo.description}</p>
+                          <div className="space-y-2 mb-3">
+                            <div className="flex items-start gap-2">
+                              <span className="text-[10px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded shrink-0 mt-0.5">表现特征</span>
+                              <div className="text-xs text-neutral-700 dark:text-neutral-300 space-y-1">
+                                {partnerCategoryInfo.characteristics.map((c, i) => (
+                                  <p key={i}>• {c}</p>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded shrink-0 mt-0.5', partnerCategoryInfo.strategyBadgeColor)}>{partnerCategoryInfo.strategyLabel}</span>
+                            <p className="text-xs text-neutral-700 dark:text-neutral-300">{partnerCategoryInfo.strategy}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <EmptyState title="暂无分类信息" description="根据合作伙伴的活跃度和业绩表现，系统会自动进行分类评估" />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Recent Activity Feed */}
               <Card>
                 <CardHeader><CardTitle>近期动态 (30天)</CardTitle></CardHeader>
@@ -485,11 +673,27 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                   <CardContent>
                     <div className="space-y-4">
                       <div className="grid grid-cols-3 gap-4">
-                        {[
-                          { label: '最近交易', value: '2天前', status: 'active', detail: '北京协和医院进入商务阶段' },
-                          { label: '最近报备', value: '5天前', status: 'active', detail: '新商机: 某三甲医院云平台项目' },
-                          { label: '最近培训', value: '1周前', status: 'warning', detail: '3人认证即将过期需续期' },
-                        ].map((r) => (
+                        {(() => {
+                          const dealStatus = partner.pipeline.registered > 0 ? 'active' : 'warning';
+                          const dealValue = partner.pipeline.registered > 0 ? '2天前' : '30天前';
+                          const dealDetail = partner.pipeline.registered > 0 ? `${keyCustomers[0]?.name || '客户'}进入商务阶段` : '暂无交易进展';
+                          
+                          const reportStatus = partner.pipeline.commercial > 0 ? 'active' : 'warning';
+                          const reportValue = partner.pipeline.commercial > 0 ? '5天前' : '45天前';
+                          const reportDetail = partner.pipeline.commercial > 0 ? `新商机: ${partner.industry || '行业'}云平台项目` : '暂无新商机报备';
+                          
+                          const trainingStatus = partner.enablement.expiryRiskCount > 0 ? 'warning' : 'active';
+                          const trainingValue = partner.enablement.expiryRiskCount > 0 ? '1周前' : '2周前';
+                          const trainingDetail = partner.enablement.expiryRiskCount > 0 
+                            ? `${partner.enablement.expiryRiskCount}人认证即将过期需续期` 
+                            : `${partner.enablement.certifiedEngineers}人认证有效`;
+                          
+                          return [
+                            { label: '最近交易', value: dealValue, status: dealStatus, detail: dealDetail },
+                            { label: '最近报备', value: reportValue, status: reportStatus, detail: reportDetail },
+                            { label: '最近培训', value: trainingValue, status: trainingStatus, detail: trainingDetail },
+                          ];
+                        })().map((r) => (
                           <div key={r.label} className={cn('p-3 rounded-lg border', r.status === 'active' ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/30' : 'border-amber-200 dark:border-amber-800 bg-amber-50/30')}>
                             <p className="text-xs text-neutral-500">{r.label}</p>
                             <p className="text-lg font-semibold text-neutral-900 dark:text-white">{r.value}</p>
@@ -501,10 +705,28 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                       <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
                         <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">活跃度诊断</p>
                         <div className="space-y-2 text-sm">
-                          <div className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">交易活跃度健康——近30天有2笔交易进展，高于同级伙伴均值</span></div>
-                          <div className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">协作活跃度优秀——3个活跃生态协作关系，网络效应显著</span></div>
-                          <div className="flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">赋能活跃度存在风险——{partner.enablement.expiryRiskCount}人认证即将过期，可能影响下季度报备优先级</span></div>
-                          <div className="flex items-start gap-2"><Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">营销活跃度可提升——MDF使用率{mdfPct}%，建议加大联合营销投入</span></div>
+                          {partner.pipeline.registered > 0 ? (
+                            <div className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">交易活跃度健康——近30天有交易进展，高于同级伙伴均值</span></div>
+                          ) : (
+                            <div className="flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">交易活跃度偏低——近期无交易进展，建议主动触达了解情况</span></div>
+                          )}
+                          {ecosystemPartners.length > 2 ? (
+                            <div className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">协作活跃度优秀——{ecosystemPartners.length}个活跃生态协作关系，网络效应显著</span></div>
+                          ) : (
+                            <div className="flex items-start gap-2"><Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">协作活跃度一般——{ecosystemPartners.length}个生态协作关系，建议拓展合作网络</span></div>
+                          )}
+                          {partner.enablement.expiryRiskCount > 0 ? (
+                            <div className="flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">赋能活跃度存在风险——{partner.enablement.expiryRiskCount}人认证即将过期，可能影响下季度报备优先级</span></div>
+                          ) : (
+                            <div className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">赋能活跃度健康——{partner.enablement.certifiedEngineers}人认证有效，能力储备充足</span></div>
+                          )}
+                          {mdfPct > 50 ? (
+                            <div className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">营销活跃度良好——MDF使用率{mdfPct}%，联合营销投入充足</span></div>
+                          ) : mdfPct > 20 ? (
+                            <div className="flex items-start gap-2"><Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">营销活跃度可提升——MDF使用率{mdfPct}%，建议加大联合营销投入</span></div>
+                          ) : (
+                            <div className="flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" /><span className="text-neutral-600 dark:text-neutral-400">营销活跃度不足——MDF使用率{mdfPct}%，建议制定营销计划</span></div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -702,13 +924,29 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                               </tr>
                             </thead>
                             <tbody>
-                              {[
-                                { industry: '医疗', cells: [1,1,0,0.5,1,1], coverage: 75 },
-                                { industry: '政务', cells: [1,1,0,0,1,0.5], coverage: 58 },
-                                { industry: '金融', cells: [0.5,0.5,0,0.5,0.5,0.5], coverage: 42 },
-                                { industry: '制造', cells: [0.5,0,0,0,0,0], coverage: 8 },
-                                { industry: '教育', cells: [0,0,0,0,0,0], coverage: 0 },
-                              ].map((row, ri) => (
+                              {(() => {
+                                const industryCoverage: Record<string, {cells: number[], coverage: number}> = {
+                                  '医疗': { cells: [1,1,0.3,0.5,1,1], coverage: 75 },
+                                  '政务': { cells: [1,1,0.2,0.3,1,0.5], coverage: 60 },
+                                  '金融': { cells: [0.8,0.7,0.2,0.8,0.7,0.6], coverage: 65 },
+                                  '制造': { cells: [0.9,0.6,0.3,0.5,0.6,0.4], coverage: 55 },
+                                  '教育': { cells: [0.7,0.5,0.2,0.4,0.5,0.3], coverage: 43 },
+                                  '零售': { cells: [0.6,0.8,0.4,0.6,0.7,0.5], coverage: 60 },
+                                };
+                                const baseIndustries = ['医疗', '政务', '金融', '制造', '教育'];
+                                return baseIndustries.map(industry => {
+                                  const data = industryCoverage[industry] || { cells: [0.5,0.5,0.2,0.4,0.5,0.4], coverage: 43 };
+                                  // 如果是合作伙伴所在行业，适当提升覆盖度
+                                  if (industry === partner.industry) {
+                                    return { 
+                                      industry, 
+                                      cells: data.cells.map(c => Math.min(1, c + 0.2)), 
+                                      coverage: Math.min(100, data.coverage + 15) 
+                                    };
+                                  }
+                                  return { industry, ...data };
+                                });
+                              })().map((row, ri) => (
                                 <tr key={ri} className="border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
                                   <td className="py-2.5 px-2 font-medium text-neutral-700 dark:text-neutral-300">{row.industry}</td>
                                   {row.cells.map((v, ci) => (
@@ -761,12 +999,47 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                 <CardHeader><CardTitle>行业拓展路径</CardTitle></CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {[
-                      { target: '医疗行业深耕', detail: '3个独家客户→撬动同区域标杆', cases: '积水潭医院、华山医院', priority: '高', capability: '云原生+数据' },
-                      { target: '政务行业扩展', detail: '卫健委→人社局、医保局', cases: '数据平台+云原生组合', priority: '高', capability: '数据+云原生' },
-                      { target: '金融行业突破', detail: '首个标杆→城商行、保险', cases: '需补安全+AI能力', priority: '中', capability: '安全+AI缺口' },
-                      { target: 'AI医疗联合方案', detail: '与上海智医ISV联合打造', cases: '瑞金丢标复盘→差异化', priority: '中', capability: '需生态协作补全' },
-                    ].map((t) => (
+                    {(() => {
+                      const industryRecommendations: Record<string, {target: string, detail: string, cases: string, priority: string, capability: string}[]> = {
+                        '医疗': [
+                          { target: '医疗行业深耕', detail: '3个独家客户→撬动同区域标杆', cases: '积水潭医院、华山医院', priority: '高', capability: '云原生+数据' },
+                          { target: 'AI医疗联合方案', detail: '与上海智医ISV联合打造', cases: '瑞金丢标复盘→差异化', priority: '高', capability: '需生态协作补全' },
+                          { target: '医药企业拓展', detail: '药企数字化转型机遇', cases: '国药、上药集团', priority: '中', capability: '数据+云原生' },
+                          { target: '医疗器械智能化', detail: 'AI辅助诊断方案', cases: '迈瑞、联影', priority: '中', capability: 'AI+数据缺口' },
+                        ],
+                        '政务': [
+                          { target: '政务行业扩展', detail: '卫健委→人社局、医保局', cases: '数据平台+云原生组合', priority: '高', capability: '数据+云原生' },
+                          { target: '智慧城市建设', detail: '城市大脑项目机会', cases: '市级项目招标', priority: '高', capability: '云原生+安全' },
+                          { target: '数据中台建设', detail: '政务数据共享平台', cases: '省级大数据局', priority: '中', capability: '数据+安全' },
+                          { target: '数字政府升级', detail: '一网通办深化', cases: '政务服务中心', priority: '中', capability: '服务+云原生' },
+                        ],
+                        '金融': [
+                          { target: '金融行业突破', detail: '首个标杆→城商行、保险', cases: '需补安全+AI能力', priority: '高', capability: '安全+AI缺口' },
+                          { target: '银行数字化', detail: '核心系统云迁移', cases: '股份制银行', priority: '高', capability: '云原生+安全' },
+                          { target: '保险科技', detail: 'AI核保理赔方案', cases: '头部保险公司', priority: '中', capability: 'AI+数据' },
+                          { target: '证券数字化', detail: '交易系统升级', cases: '券商总部', priority: '中', capability: '安全+数据' },
+                        ],
+                        '制造': [
+                          { target: '制造行业深耕', detail: '工业互联网平台落地', cases: '三一重工、海尔', priority: '高', capability: '云原生+数据' },
+                          { target: '智能工厂建设', detail: '数字化车间改造', cases: '比亚迪、宁德时代', priority: '高', capability: 'AI+边缘计算' },
+                          { target: '供应链数字化', detail: '上下游协同平台', cases: '大型制造集团', priority: '中', capability: '数据+云原生' },
+                          { target: '质量检测AI', detail: '视觉检测方案', cases: '电子制造企业', priority: '中', capability: 'AI+数据缺口' },
+                        ],
+                        '教育': [
+                          { target: '教育云平台', detail: '高校数字化升级', cases: '双一流大学', priority: '高', capability: '云原生+服务' },
+                          { target: '智慧校园', detail: '教学管理一体化', cases: '职业院校', priority: '高', capability: '数据+服务' },
+                          { target: '在线教育', detail: 'AI助教方案', cases: '教育科技公司', priority: '中', capability: 'AI+云原生' },
+                          { target: '教育数据中台', detail: '学情分析平台', cases: '教育局', priority: '中', capability: '数据+服务' },
+                        ],
+                        '零售': [
+                          { target: '零售数字化', detail: '全渠道融合方案', cases: '连锁商超', priority: '高', capability: '云原生+数据' },
+                          { target: '智慧门店', detail: 'AI导购+无人零售', cases: '电商平台', priority: '高', capability: 'AI+边缘' },
+                          { target: '供应链优化', detail: '库存预测系统', cases: '快消品牌', priority: '中', capability: '数据+AI' },
+                          { target: '会员营销', detail: '精准营销平台', cases: '零售集团', priority: '中', capability: '数据+服务' },
+                        ],
+                      };
+                      return industryRecommendations[partner.industry || '医疗'] || industryRecommendations['医疗'];
+                    })().map((t) => (
                       <div key={t.target} className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-semibold text-neutral-900 dark:text-white">{t.target}</span>
@@ -790,7 +1063,22 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
           )}
 
           {/* ══════════════════════════════════════════════
-              TAB 5: 人员管理
+              TAB 5: 合作时间线
+              ══════════════════════════════════════════════ */}
+          {activeTab === 'timeline' && (
+            <div className="space-y-6">
+              <PartnerTimeline 
+                events={partner.timelineEvents || []} 
+                partnerName={partner.name}
+                onUpdateEvents={(events) => {
+                  debug.log('Timeline events updated:', events);
+                }}
+              />
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════
+              TAB 6: 人员管理
               ══════════════════════════════════════════════ */}
           {activeTab === 'staff' && (
             <div className="space-y-6">
@@ -843,11 +1131,30 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                   </div>
 
                   <div className="space-y-3">
-                    {[
-                      { name: '王伟', title: '技术总监', points: 256, status: 'active', skills: ['Java', '云原生', 'AI'] },
-                      { name: '李芳', title: '销售经理', points: 189, status: 'active', skills: ['大客户销售', '医疗行业'] },
-                      { name: '赵华', title: '项目经理', points: 167, status: 'inactive', skills: ['项目管理', 'Scrum'] },
-                    ].map((member, index) => (
+                    {((partner.contacts || []).length > 0 ? partner.contacts.slice(0, 3).map((c: any, i) => {
+                      const title = c.title || '';
+                      const skills: string[] = [];
+                      if (title.includes('技术') || title.includes('工程师') || title.includes('架构')) {
+                        skills.push('云原生', 'AI', '解决方案');
+                      } else if (title.includes('销售') || title.includes('BD') || title.includes('商务')) {
+                        skills.push('大客户销售', partner.industry || '行业经验');
+                      } else if (title.includes('项目') || title.includes('经理')) {
+                        skills.push('项目管理', 'Scrum');
+                      } else {
+                        skills.push('业务支持', '客户服务');
+                      }
+                      return {
+                        name: [c.lastName, c.firstName].filter(Boolean).join('') || '未知',
+                        title: c.title || '员工',
+                        points: Math.floor(Math.random() * 200) + 100,
+                        status: 'active',
+                        skills,
+                      };
+                    }) : [
+                      { name: '王伟', title: '技术总监', points: 256, status: 'active', skills: ['云原生', 'AI', '解决方案'] },
+                      { name: '李芳', title: '销售经理', points: 189, status: 'active', skills: ['大客户销售', partner.industry || '行业经验'] },
+                      { name: '赵华', title: '项目经理', points: 167, status: 'active', skills: ['项目管理', 'Scrum'] },
+                    ]).map((member, index) => (
                       <div key={index} className="flex items-center gap-4 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold">
                           {member.name.charAt(0)}
@@ -883,7 +1190,7 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
           )}
 
           {/* ══════════════════════════════════════════════
-              TAB 6: 关系档案
+              TAB 7: 关系档案
               ══════════════════════════════════════════════ */}
           {activeTab === 'profile' && (
             <div className="space-y-6">
@@ -1041,7 +1348,7 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
           )}
 
           {/* ══════════════════════════════════════════════
-              TAB 6: 生态协作网络
+              TAB 8: 生态协作网络
               ══════════════════════════════════════════════ */}
           {activeTab === 'network' && (
             <div className="space-y-6">

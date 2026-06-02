@@ -1,6 +1,7 @@
 export type PartnerTier = 'Platinum' | 'Gold' | 'Silver' | 'Registered' | 'Diamond' | 'Premier' | 'Standard';
 export type PartnerStatus = 'Cooperating' | 'Inactive' | 'Prospective';
 export type PartnerType = 'Reseller' | 'ISV' | 'OEM' | 'Service' | 'VAD' | 'VAR' | 'SI';
+export type PartnerCategory = 'Champions' | 'RisingStars' | 'Opportunists' | 'Dormant' | 'Newcomers';
 
 export type DealLifecycleStage =
   | 'Registered'    // 已报备
@@ -226,6 +227,42 @@ export interface Activity {
   metadata?: Record<string, any>;
 }
 
+// ── Partner Timeline Event Types ─────────────────────
+export type TimelineEventType = 
+  | 'approved'           // 合作伙伴批复
+  | 'tier_upgrade'       // 级别提升
+  | 'tier_downgrade'     // 级别降级
+  | 'first_deal'         // 第一个商机报备
+  | 'first_order'        // 第一个订单下单
+  | 'manager_change'     // 主要负责人变更
+  | 'milestone'          // 合作里程碑
+  | 'contract_renewal'   // 合同续签
+  | 'contract_expiry'    // 合同到期
+  | 'certification'      // 认证获得
+  | 'mdf_approved'       // MDF审批通过
+  | 'award'              // 获得奖项
+  | 'custom';            // 自定义事件
+
+export interface PartnerTimelineEvent {
+  id: string;
+  type: TimelineEventType;
+  title: string;
+  description?: string;
+  date: string;
+  operator?: string;
+  metadata?: {
+    fromTier?: PartnerTier;
+    toTier?: PartnerTier;
+    dealId?: string;
+    dealTitle?: string;
+    fromManager?: string;
+    toManager?: string;
+    amount?: number;
+    certificationName?: string;
+    milestoneStage?: string;
+  };
+}
+
 // ── Partner Detail Types ─────────────────────────────
 export interface PartnerPipeline {
   registered: number;
@@ -315,6 +352,8 @@ export interface PartnerDetails extends Partner {
   customerPortfolio?: any[];
   ecosystemPartners?: any[];
   strategyRecommendations?: any[];
+  timelineEvents?: PartnerTimelineEvent[];
+  category?: PartnerCategory;
 }
 
 // ── MDF & Incentive Types ────────────────────────────
@@ -363,7 +402,7 @@ export interface IncentiveProgram {
   topPartners?: any[];
   currentMonthPerformance?: {
     target: number;
-    actual: number;
+    rate: number;
     growth: number;
   };
 }

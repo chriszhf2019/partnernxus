@@ -29,6 +29,8 @@ describe('formatCurrency', () => {
 
   it('formats JPY', () => {
     const result = formatCurrency(10000, 'JPY');
-    expect(result).toContain('¥');
+    // Intl.NumberFormat uses full-width yen sign ￥ (U+FFE5) for ja-JP locale
+    expect(result).toMatch(/[¥￥]/);
+    expect(result).toContain('10,000');
   });
 });

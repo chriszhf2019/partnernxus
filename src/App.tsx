@@ -16,6 +16,7 @@ import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ConfigProvider } from './contexts/ConfigContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { AuthGuard } from './components/auth/AuthGuard';
 import { LoginPage } from './components/auth/LoginPage';
 import type { PartnerDetails } from './types';
 import { retryableLazy } from './lib/retryableLazy';
@@ -342,7 +343,7 @@ export default function App() {
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="*" element={<AppLayout />} />
+                <Route path="*" element={<AuthGuard><AppLayout /></AuthGuard>} />
               </Routes>
             </BrowserRouter>
           </ToastProvider>

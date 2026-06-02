@@ -60,6 +60,20 @@ export function useDeals() {
         weekNew: items.filter(d => d.createdDate && new Date(d.createdDate) >= weekStart).length,
         rejected: items.filter(d => d.status === 'Rejected').length,
         closed: items.filter(d => d.status === 'Converted' || d.status === 'Closed Won').length,
+        totalPipelineValue: items.reduce((s, d) => s + Number(d.value || 0), 0),
+        avgCycleDays: items.filter(d => d.conversionMetrics?.totalCycleDays).length > 0
+          ? Math.round(items.reduce((s, d) => s + (d.conversionMetrics?.totalCycleDays || 0), 0) / items.filter(d => d.conversionMetrics?.totalCycleDays).length)
+          : DEAL_STATS.avgCycleDays,
+        conversionRate: items.length > 0
+          ? Math.round((items.filter(d => d.status === 'Converted' || d.status === 'Closed Won').length / items.length) * 100)
+          : DEAL_STATS.conversionRate,
+        stageDistribution: items.reduce((acc, d) => {
+          const stage = d.stage || 'Registered';
+          acc[stage] = (acc[stage] || 0) + 1;
+          return acc;
+        }, { ...DEAL_STATS.stageDistribution } as Record<string, number>),
+        conflictCount: items.filter(d => d.hasConflict).length,
+        overdueCount: items.filter(d => d.expectedCloseDate && new Date(d.expectedCloseDate) < now && d.status !== 'Closed Won' && d.status !== 'Closed Lost').length,
       });
     }).catch(() => {});
   }, []);

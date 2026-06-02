@@ -301,8 +301,8 @@ export const partnerService = {
 
   // ── Reject ───────────────────────────────────────────
   reject: async (id: string, operator?: string): Promise<void> => {
-    if (isLocalId(id)) { partnerService._localWrite(id, { status: 'Inactive' }); return; }
-    try { await db.partners().update({ status: 'Inactive' }).eq('id', id); await logOp(id, 'reject', operator || 'system', {}); } catch {}
+    if (isLocalId(id)) { partnerService._localWrite(id, { status: 'Prospective' }); return; }
+    try { await db.partners().update({ status: 'Prospective' }).eq('id', id); await logOp(id, 'reject', operator || 'system', {}); } catch {}
   },
 
   // ── Batch approve ────────────────────────────────────
@@ -319,10 +319,10 @@ export const partnerService = {
 
   // ── Batch reject ─────────────────────────────────────
   batchReject: async (ids: string[], operator?: string): Promise<void> => {
-    for (const id of ids) partnerService._localWrite(id, { status: 'Inactive' });
+    for (const id of ids) partnerService._localWrite(id, { status: 'Prospective' });
     try {
       const dbIds = ids.filter(id => !isLocalId(id));
-      if (dbIds.length > 0) { await db.partners().update({ status: 'Inactive' }).in('id', dbIds); for (const id of dbIds) await logOp(id, 'reject', operator || 'system', { batch: true }); }
+      if (dbIds.length > 0) { await db.partners().update({ status: 'Prospective' }).in('id', dbIds); for (const id of dbIds) await logOp(id, 'reject', operator || 'system', { batch: true }); }
     } catch { /* ok */ }
   },
 

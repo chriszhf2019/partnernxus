@@ -9,7 +9,7 @@ export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('admin@partnernxus.com');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -92,10 +92,6 @@ export const LoginPage = () => {
           </form>
         </Card>
 
-        <div className="text-center space-y-2">
-          <p className="text-xs text-neutral-400">演示账号: admin@partnernxus.com / admin123</p>
-          <p className="text-xs text-neutral-400">首次登录将自动创建账号并赋予管理员权限</p>
-        </div>
       </div>
     </div>
   );

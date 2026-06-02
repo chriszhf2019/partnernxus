@@ -18,6 +18,7 @@ export const dealService = {
       }
       return { items: deals, total: deals.length, page: 1, pageSize: deals.length };
     } catch {
+      if (import.meta.env.DEV) console.warn('[dealService] Supabase unavailable, falling back to mock deals');
       return { items: DEALS, total: DEALS.length, page: 1, pageSize: DEALS.length };
     }
   },
@@ -27,6 +28,7 @@ export const dealService = {
       const { data } = await db.deals().select('*').eq('id', id).single();
       return (data as Deal) || DEALS.find((d) => d.id === id) || null;
     } catch {
+      if (import.meta.env.DEV) console.warn(`[dealService] Supabase unavailable, falling back to mock deal for id=${id}`);
       return DEALS.find((d) => d.id === id) || null;
     }
   },

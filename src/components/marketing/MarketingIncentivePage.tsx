@@ -44,14 +44,18 @@ export const MarketingIncentivePage = () => {
   const handleCreateActivity = async () => {
     if (!newActivity.name || !newActivity.budget) return;
     setCreating(true);
-    await supabase.from('marketing_activities').insert({
-      name: newActivity.name, type: newActivity.type, event_date: newActivity.date || new Date().toISOString().split('T')[0],
-      status: 'Planning', budget: Number(newActivity.budget), actual_spend: 0, leads_generated: 0, progress: 0,
-    });
-    setShowCreate(false);
-    setNewActivity({ name: '', type: '线下峰会', date: '', budget: '' });
-    setCreating(false);
-    window.location.reload();
+    try {
+      await supabase.from('marketing_activities').insert({
+        name: newActivity.name, type: newActivity.type, event_date: newActivity.date || new Date().toISOString().split('T')[0],
+        status: 'Planning', budget: Number(newActivity.budget), actual_spend: 0, leads_generated: 0, progress: 0,
+      });
+      setShowCreate(false);
+      setNewActivity({ name: '', type: '线下峰会', date: '', budget: '' });
+    } catch (err) {
+      console.warn('Failed to create marketing activity:', err);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const PieSVG = ({ data, size = 50 }: { data: number[]; size?: number }) => {

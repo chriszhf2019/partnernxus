@@ -53,17 +53,23 @@ export const authService = {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(toAuthUser(session?.user || null)));
     return () => data.subscription.unsubscribe();
   },
-  getUserRole: (uid: string): UserRole => {
+  getUserRole: async (uid: string): Promise<UserRole> => {
+    // Read from Supabase session user_metadata first (authoritative source)
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user?.user_metadata?.role) {
+        const role = data.session.user.user_metadata.role;
+        if (Object.keys(ROLE_LABELS).includes(role)) return role as UserRole;
+      }
+    } catch { /* fall back to localStorage */ }
+    // Fall back to localStorage for backward compatibility
     const stored = localStorage.getItem(`role_${uid}`);
     if (stored && Object.keys(ROLE_LABELS).includes(stored)) return stored as UserRole;
     return 'partner_sales';
   },
-  setUserRole: (uid: string, role: UserRole): void => { localStorage.setItem(`role_${uid}`, role); },
-  ensureDemoUser: async (): Promise<void> => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      try { await supabase.auth.signInWithPassword({ email: 'admin@partnernxus.com', password: 'admin123' }); }
-      catch { try { await supabase.auth.signUp({ email: 'admin@partnernxus.com', password: 'admin123', options: { data: { display_name: 'Admin', role: 'admin' } } }); } catch { /* ok */ } }
-    }
+  setUserRole: async (uid: string, role: UserRole): Promise<void> => {
+    localStorage.setItem(`role_${uid}`, role);
+    // Also persist to Supabase user metadata (server-side enforcement)
+    try { await supabase.auth.updateUser({ data: { role } }); } catch { /* non-critical; server enforces separately */ }
   },
 };

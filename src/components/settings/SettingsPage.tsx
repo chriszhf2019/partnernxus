@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { User, Building2, Shield, Globe, Save, Plus, Trash2, Pencil, Check, X, Lock, Key, Clock, Smartphone, AlertTriangle, Mail, ToggleLeft, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { User, Building2, Shield, Globe, Save, Plus, Trash2, Pencil, Check, X, Lock, Key, Clock, Smartphone, AlertTriangle, Mail, ToggleLeft, ShieldCheck, ShieldAlert, BarChart3, TrendingUp, MessageSquare, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useConfig } from '../../contexts/ConfigContext';
@@ -268,20 +268,6 @@ export const SettingsPage = () => {
             </CardContent>
           </Card>
 
-          {/* System Display */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('settings.systemDisplay')}</CardTitle>
-              <CardDescription>{t('settings.systemDisplayDesc')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label={t('settings.ctaButton')} value={editingConfig.ctaButtonLabel || t('settings.defaultCtaButton')} onChange={(e) => setEditingConfig({ ...editingConfig, ctaButtonLabel: e.target.value })} placeholder={t('settings.ctaButtonPlaceholder')} />
-                <Input label={t('settings.partnerCenterUrl')} value={editingConfig.partnerCenterUrl || ''} onChange={(e) => setEditingConfig({ ...editingConfig, partnerCenterUrl: e.target.value })} placeholder={t('settings.partnerCenterUrlPlaceholder')} />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Global Config */}
           <Card>
             <CardHeader>
@@ -364,6 +350,167 @@ export const SettingsPage = () => {
                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">销售阶段</label>
                     <Input value={editingConfig.salesStages.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, salesStages: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="1. 需求发现, 2. 方案阶段, 3. 商务洽谈, 4. 合同签约, 5. 售后回访" />
                     <p className="text-xs text-neutral-500 mt-1">用于商机报备的销售阶段管理</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 合作伙伴时间线标签 */}
+              <div className="space-y-3 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-2">合作伙伴时间线标签</h4>
+                <p className="text-xs text-neutral-500 mb-3">配置合作伙伴时间线中显示的事件类型</p>
+                
+                <div className="bg-neutral-50/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700 rounded-xl p-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2">
+                    {[
+                      { key: 'approved', label: '合作伙伴批复' },
+                      { key: 'tier_upgrade', label: '级别提升' },
+                      { key: 'tier_downgrade', label: '级别降级' },
+                      { key: 'first_deal', label: '首个商机报备' },
+                      { key: 'first_order', label: '首个订单' },
+                      { key: 'manager_change', label: '负责人变更' },
+                      { key: 'milestone', label: '合作里程碑' },
+                      { key: 'contract_renewal', label: '合同续签' },
+                      { key: 'contract_expiry', label: '合同到期' },
+                      { key: 'certification', label: '获得认证' },
+                      { key: 'mdf_approved', label: 'MDF审批通过' },
+                      { key: 'award', label: '获得奖项' },
+                    ].map((event) => (
+                      <label key={event.key} className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-neutral-300" />
+                        <span>{event.label}</span>
+                      </label>
+                    ))}
+                    <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 rounded border-neutral-300" />
+                      <span>其他</span>
+                      <input type="text" placeholder="自定义" className="flex-1 max-w-xs ml-auto text-xs border rounded px-2 py-1 bg-white dark:bg-neutral-700" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* 合作伙伴活跃度指标 */}
+              <div className="space-y-2 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">合作伙伴活跃度指标</h4>
+                
+                <div className="bg-neutral-50/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700 rounded-xl p-3">
+                  {/* 交易指标 */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      <BarChart3 className="w-3 h-3 text-blue-600" />
+                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">交易</span>
+                    </div>
+                    <div className="flex flex-wrap gap-3 flex-1">
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>订单频次</span>
+                      </label>
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>项目报备数量</span>
+                      </label>
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>成单金额</span>
+                      </label>
+                    </div>
+                    <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                      <input type="checkbox" className="w-3 h-3 rounded border-neutral-300" />
+                      <span>其他</span>
+                      <input type="text" placeholder="自定义" className="w-16 text-xs border rounded px-1.5 py-0.5 bg-white dark:bg-neutral-700" />
+                    </label>
+                  </div>
+
+                  {/* 互动指标 */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center gap-1">
+                      <Users className="w-3 h-3 text-green-600" />
+                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">互动</span>
+                    </div>
+                    <div className="flex flex-wrap gap-3 flex-1">
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>渠道门户登录频次</span>
+                      </label>
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>参与培训</span>
+                      </label>
+                    </div>
+                    <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                      <input type="checkbox" className="w-3 h-3 rounded border-neutral-300" />
+                      <span>其他</span>
+                      <input type="text" placeholder="自定义" className="w-16 text-xs border rounded px-1.5 py-0.5 bg-white dark:bg-neutral-700" />
+                    </label>
+                  </div>
+
+                  {/* 市场指标 */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3 text-purple-600" />
+                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">市场</span>
+                    </div>
+                    <div className="flex flex-wrap gap-3 flex-1">
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>联合市场活动次数</span>
+                      </label>
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>商机线索跟进速度</span>
+                      </label>
+                    </div>
+                    <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                      <input type="checkbox" className="w-3 h-3 rounded border-neutral-300" />
+                      <span>其他</span>
+                      <input type="text" placeholder="自定义" className="w-16 text-xs border rounded px-1.5 py-0.5 bg-white dark:bg-neutral-700" />
+                    </label>
+                  </div>
+
+                  {/* 沟通指标 */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3 text-amber-600" />
+                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">沟通</span>
+                    </div>
+                    <div className="flex flex-wrap gap-3 flex-1">
+                      <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-3 h-3 rounded border-neutral-300" />
+                        <span>季度业务回顾（QBR）参与度</span>
+                      </label>
+                    </div>
+                    <label className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400 cursor-pointer">
+                      <input type="checkbox" className="w-3 h-3 rounded border-neutral-300" />
+                      <span>其他</span>
+                      <input type="text" placeholder="自定义" className="w-16 text-xs border rounded px-1.5 py-0.5 bg-white dark:bg-neutral-700" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+{/* 合作伙伴分类类型 */}
+              <div className="space-y-3 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">合作伙伴分类类型</h4>
+                <p className="text-xs text-neutral-500">基于活跃度和业绩表现自动对合作伙伴进行分类（分类结果在合作伙伴详情页显示）</p>
+                
+                <div className="bg-neutral-50/50 dark:bg-neutral-800/30 border border-neutral-200 dark:border-neutral-700 rounded-xl p-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {[
+                      { key: 'Champions', label: '战略核心型', description: '活跃度极高且稳定' },
+                      { key: 'RisingStars', label: '成长活跃型', description: '处于上升期，活跃趋势明显' },
+                      { key: 'Opportunists', label: '项目驱动型', description: '活跃度呈阵发性、不连续' },
+                      { key: 'Dormant', label: '沉默/睡眠型', description: '长期无实质产出' },
+                      { key: 'Newcomers', label: '新晋观察型', description: '刚签约，处于磨合期' },
+                    ].map((category) => (
+                      <label key={category.key} className="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-neutral-700/50 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 rounded border-neutral-300" />
+                        <div>
+                          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{category.label}</span>
+                          <p className="text-xs text-neutral-500">{category.description}</p>
+                        </div>
+                        <Badge variant="info" size="sm" className="ml-auto text-[10px]">{category.key}</Badge>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>

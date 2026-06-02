@@ -23,28 +23,27 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<UserRole>('partner_sales');
 
   useEffect(() => {
     const unsubscribe = authService.onAuthChange((authUser) => {
-      if (authUser) {
-        // Auto-assign admin role for demo user
-        if (authUser.email === 'admin@partnernxus.com') {
-          authService.setUserRole(authUser.uid, 'admin');
-        }
-      }
       setUser(authUser);
       setLoading(false);
     });
-    // Restore session
-    authService.ensureDemoUser().catch(() => { /* demo user creation is optional */ });
     return () => unsubscribe();
   }, []);
 
+  // Fetch role from Supabase session metadata (authoritative) on user change
+  useEffect(() => {
+    if (user) {
+      authService.getUserRole(user.uid).then(setRole).catch(() => setRole('partner_sales'));
+    } else {
+      setRole('partner_sales');
+    }
+  }, [user]);
+
   const login = useCallback(async (email: string, password: string) => {
     const authUser = await authService.login(email, password);
-    if (authUser.email === 'admin@partnernxus.com') {
-      authService.setUserRole(authUser.uid, 'admin');
-    }
     setUser(authUser);
   }, []);
 
@@ -52,8 +51,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await authService.logout();
     setUser(null);
   }, []);
-
-  const role: UserRole = user ? authService.getUserRole(user.uid) : 'partner_sales';
 
   const hasPermission = useCallback(
     (requiredRole: UserRole) => ROLE_HIERARCHY[role] >= ROLE_HIERARCHY[requiredRole],

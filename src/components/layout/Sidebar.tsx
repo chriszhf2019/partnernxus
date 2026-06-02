@@ -78,12 +78,14 @@ export const Sidebar = memo(() => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-auto">
-        {NAV_GROUPS.map((group, gi) => {
+        {NAV_GROUPS.map((group, gi, arr) => {
           const visibleItems = group.items.filter(isVisible);
           if (visibleItems.length === 0) return null;
+          // Only show separator if a previous group in the original array had visible items
+          const hasPreviousVisible = arr.slice(0, gi).some(g => g.items.some(isVisible));
           return (
             <div key={gi}>
-              {gi > 0 && <div className="mx-3 mb-2 h-px bg-neutral-200 dark:bg-neutral-800" />}
+              {hasPreviousVisible && <div className="mx-3 mb-2 h-px bg-neutral-200 dark:bg-neutral-800" />}
               <div className="space-y-0.5">
                 {visibleItems.map((item) => {
                   const active = isActive(item.path);
@@ -113,7 +115,7 @@ export const Sidebar = memo(() => {
       {/* CTA */}
       <div className="px-3 pb-2">
         <button
-          onClick={() => window.open(config.partnerCenterUrl || 'https://www.partner-center.com', '_blank')}
+          onClick={() => window.open(config.partnerCenterUrl || 'https://www.partner-center.com', '_blank', 'noopener,noreferrer')}
           className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
         >
           {config.ctaButtonLabel || '合作伙伴中心'}

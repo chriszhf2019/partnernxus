@@ -1,3 +1,7 @@
+// WARNING: Permissions stored in localStorage are for UI gating only.
+// Server-side enforcement (RLS policies, API middleware) is REQUIRED for
+// actual security. Client-side permission checks are trivially bypassable.
+
 import type { UserRole } from './auth-service';
 
 export type PermissionKey = 
