@@ -9,6 +9,17 @@ import { formatCurrency } from '../../lib/utils';
 
 const QUARTERS = ['Q1','Q2','Q3','Q4'];
 const QUARTER_LABELS: Record<string, string> = { Q1: 'Q1', Q2: 'Q2', Q3: 'Q3', Q4: 'Q4' };
+
+// 标准化季度名称，确保统一显示为 Q1/Q2/Q3/Q4 格式
+const normalizeQuarter = (quarter: string): string => {
+  const mapping: Record<string, string> = {
+    'Q1': 'Q1', 'q1': 'Q1', '第一季度': 'Q1', '1': 'Q1',
+    'Q2': 'Q2', 'q2': 'Q2', '第二季度': 'Q2', '2': 'Q2',
+    'Q3': 'Q3', 'q3': 'Q3', '第三季度': 'Q3', '3': 'Q3',
+    'Q4': 'Q4', 'q4': 'Q4', '第四季度': 'Q4', '4': 'Q4',
+  };
+  return mapping[quarter] || quarter;
+};
 const CATEGORIES = ['线下峰会','线下沙龙','Webinar','联合营销','渠道招募','行业大会','培训','其他'];
 const EXEC_STATUSES = ['Planning','In Progress','Completed','Cancelled'];
 const EXEC_LABELS: Record<string,string> = { Planning: '计划中', 'In Progress': '进行中', Completed: '已完成', Cancelled: '已取消' };
@@ -465,7 +476,7 @@ export const MarketingPlanPage = () => {
 
       {/* Quarterly Activity Plans */}
       {QUARTERS.map(q => {
-        const items = plan.filter((p: any) => p.quarter === q);
+        const items = plan.filter((p: any) => normalizeQuarter(p.quarter) === q);
         const qBudget = qBudgets[QUARTERS.indexOf(q)];
         const lineTotal = items.reduce((s: number, p: any) => s + Number(p.total_budget||0), 0);
         const approvedTotal = items.reduce((s: number, p: any) => s + Number(p.approved_amount||0), 0);
