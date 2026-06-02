@@ -270,6 +270,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'profile.opportunity': '合作机会',
     'profile.staff': '人员管理',
     'profile.network': '关联网络',
+    'profile.profile': '公司基本资料',
+    'profile.willingness': '意愿度',
+    'profile.capability': '能力度',
+    'profile.businessFit': '业务契合度',
+    'profile.compliance': '符合度',
     
     // Partner List
     'partners.all': '全部伙伴',
@@ -780,6 +785,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'profile.opportunity': 'Opportunities',
     'profile.staff': 'Staff',
     'profile.network': 'Network',
+    'profile.profile': 'Company Profile',
+    'profile.willingness': 'Willingness',
+    'profile.capability': 'Capability',
+    'profile.businessFit': 'Business Fit',
+    'profile.compliance': 'Compliance',
     
     // Partner List
     'partners.all': 'All Partners',

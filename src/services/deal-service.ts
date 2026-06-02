@@ -44,9 +44,7 @@ function normalizeDeal(row: any): Deal {
 function toSnakeDeal(deal: Partial<Deal>): Record<string, any> {
   const out: Record<string, any> = {};
   const map: Record<string, string> = {
-    customerId: 'customer_id',
-    customerName: 'customer_name',
-    customerIndustry: 'customer_industry',
+    customerName: 'customer',
     partnerId: 'partner_id',
     partnerName: 'partner_name',
     partnerType: 'partner_type',
@@ -108,6 +106,10 @@ export const dealService = {
     if (!snake.customer) snake.customer = deal.customerName || '';
     snake.created_date = snake.created_date || new Date().toISOString().split('T')[0];
     snake.lifecycle = snake.lifecycle || [];
+    // Remove any fields that don't exist in the database
+    delete snake.customer_name;
+    delete snake.customer_id;
+    delete snake.customer_industry;
     const { data, error } = await db.deals().insert(snake).select().single();
     if (error) throw new Error(error.message);
     return normalizeDeal(data);
@@ -115,6 +117,12 @@ export const dealService = {
 
   update: async (id: string, dealData: Partial<Deal>): Promise<void> => {
     const snake = toSnakeDeal(dealData);
+    // Ensure customer field is set correctly
+    if (dealData.customerName && !snake.customer) snake.customer = dealData.customerName;
+    // Remove any fields that don't exist in the database
+    delete snake.customer_name;
+    delete snake.customer_id;
+    delete snake.customer_industry;
     const { error } = await db.deals().update(snake).eq('id', id);
     if (error) throw new Error(error.message);
   },

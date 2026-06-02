@@ -86,9 +86,9 @@ export interface DealSourceInfo {
 export interface Deal {
   id: string;
   title: string;
-  customerId: string;
+  customerId?: string;
   customerName: string;
-  customerIndustry: string;
+  customerIndustry?: string;
   value: number;
   partnerId: string;
   partnerName: string;
@@ -354,6 +354,10 @@ export interface PartnerDetails extends Partner {
   strategyRecommendations?: any[];
   timelineEvents?: PartnerTimelineEvent[];
   category?: PartnerCategory;
+  marketingActivities?: number;
+  loginFrequency?: string;
+  ticketResponseTime?: string;
+  orderAmount?: number;
 }
 
 // ── MDF & Incentive Types ────────────────────────────

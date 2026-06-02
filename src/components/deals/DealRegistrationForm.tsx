@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronRight, CheckCircle2, ArrowLeft, Send, Search, X, Plus, Trash2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -47,12 +47,14 @@ export const DealRegistrationForm = () => {
   const { t } = useLanguage();
   const { config } = useConfig();
   const navigate = useNavigate();
+  const { id: routeId } = useParams<{ id?: string }>();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [partners, setPartners] = useState<Partner[]>([]);
   const [partnerSearch, setPartnerSearch] = useState('');
   const [showPartnerList, setShowPartnerList] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     partnerId: '', partnerName: '', customerId: '', customerName: '', customerIndustry: '', projectTitle: '',
     dealValue: '', closeDate: '', description: '',
@@ -62,7 +64,47 @@ export const DealRegistrationForm = () => {
 
   useEffect(() => {
     partnerService.list().then(r => setPartners(r.items || [])).catch(() => {});
-  }, []);
+    
+    // 从路由参数获取编辑ID
+    if (routeId) {
+      // 编辑模式：加载现有商机数据
+      setEditId(routeId);
+      dealService.getById(routeId).then((deal) => {
+        if (deal) {
+          setFormData({
+            partnerId: deal.partnerId,
+            partnerName: deal.partnerName,
+            customerId: deal.customerId || '',
+            customerName: deal.customerName,
+            customerIndustry: deal.customerIndustry || '',
+            projectTitle: deal.title,
+            dealValue: String(deal.value),
+            closeDate: deal.expectedCloseDate,
+            description: deal.description || '',
+            region: deal.region,
+            salesStage: deal.stage,
+            salesName: '',
+            salesTeam: '',
+          });
+        }
+      }).catch(() => {});
+      return;
+    }
+    
+    // 从URL参数获取合作伙伴信息（新建模式）
+    const params = new URLSearchParams(window.location.search);
+    const partnerId = params.get('partnerId');
+    const partnerName = params.get('partnerName');
+    
+    if (partnerId) {
+      // 新建模式：预填合作伙伴信息
+      setFormData(prev => ({
+        ...prev,
+        partnerId,
+        partnerName: partnerName || prev.partnerName,
+      }));
+    }
+  }, [routeId]);
 
   const update = (f: string, v: string) => setFormData(p => ({ ...p, [f]: v }));
 
@@ -91,27 +133,54 @@ export const DealRegistrationForm = () => {
     setError('');
     try {
       const productSummary = products.length > 0 ? products.map(p => `${p.name}×${p.qty}`).join('; ') : '';
-      await dealService.create({
-        partnerId: formData.partnerId,
-        partnerName: formData.partnerName,
-        partnerType: partners.find(p => p.id === formData.partnerId)?.type || 'Reseller',
-        title: formData.projectTitle,
-        customerId: formData.customerId || '',
-        customerName: formData.customerName,
-        customerIndustry: formData.customerIndustry || '',
-        value: Number(formData.dealValue),
-        region: formData.region,
-        productType: productSummary,
-        salesName: formData.salesName,
-        salesTeam: formData.salesTeam,
-        description: formData.description || `阶段: ${formData.salesStage}${productSummary ? ' | 产品: ' + productSummary : ''}`,
-        expectedCloseDate: formData.closeDate,
-        stage: 'Registered',
-        status: 'Pending',
-        createdDate: new Date().toISOString().split('T')[0],
-        lastActivityDate: new Date().toISOString().split('T')[0],
-        lifecycle: [{ stage: 'Registered', date: new Date().toISOString().split('T')[0], description: '合作伙伴提交报备', actor: formData.salesName || '系统' }],
-      });
+      
+      if (editId) {
+        // 编辑模式：先获取现有商机数据，然后更新
+        const existingDeal = await dealService.getById(editId);
+        const existingLifecycle = existingDeal?.lifecycle || [];
+        const updateRecord = {
+          stage: existingDeal?.stage || 'Registered',
+          date: new Date().toISOString().split('T')[0],
+          description: `修改商机信息: ${formData.projectTitle}`,
+          actor: '系统',
+        };
+        
+        await dealService.update(editId, {
+          partnerId: formData.partnerId,
+          partnerName: formData.partnerName,
+          partnerType: partners.find(p => p.id === formData.partnerId)?.type || 'Reseller',
+          title: formData.projectTitle,
+          customerName: formData.customerName,
+          value: Number(formData.dealValue),
+          region: formData.region,
+          productType: productSummary,
+          description: formData.description || `阶段: ${formData.salesStage}${productSummary ? ' | 产品: ' + productSummary : ''}`,
+          expectedCloseDate: formData.closeDate,
+          lastActivityDate: new Date().toISOString().split('T')[0],
+          lifecycle: [...existingLifecycle, updateRecord],
+        });
+      } else {
+        // 新建模式：创建新商机
+        await dealService.create({
+          partnerId: formData.partnerId,
+          partnerName: formData.partnerName,
+          partnerType: partners.find(p => p.id === formData.partnerId)?.type || 'Reseller',
+          title: formData.projectTitle,
+          customerName: formData.customerName,
+          value: Number(formData.dealValue),
+          region: formData.region,
+          productType: productSummary,
+          salesName: formData.salesName,
+          salesTeam: formData.salesTeam,
+          description: formData.description || `阶段: ${formData.salesStage}${productSummary ? ' | 产品: ' + productSummary : ''}`,
+          expectedCloseDate: formData.closeDate,
+          stage: 'Registered',
+          status: 'Pending',
+          createdDate: new Date().toISOString().split('T')[0],
+          lastActivityDate: new Date().toISOString().split('T')[0],
+          lifecycle: [{ stage: 'Registered', date: new Date().toISOString().split('T')[0], description: '合作伙伴提交报备', actor: formData.salesName || '系统' }],
+        });
+      }
       setStep(4); // success
     } catch (err: any) {
       setError(`提交失败: ${err.message}`);

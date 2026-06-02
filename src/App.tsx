@@ -28,12 +28,14 @@ const PartnerFormPage = retryableLazy(() => import('./components/partners/Partne
 const MarketingIncentivePage = retryableLazy(() => import('./components/marketing/MarketingIncentivePage').then(m => ({ default: m.MarketingIncentivePage })));
 const DealRegistrationPage = retryableLazy(() => import('./components/deals/DealRegistrationPage').then(m => ({ default: m.DealRegistrationPage })));
 const DealRegistrationForm = retryableLazy(() => import('./components/deals/DealRegistrationForm').then(m => ({ default: m.DealRegistrationForm })));
+const DealDetailPage = retryableLazy(() => import('./components/deals/DealDetailPage').then(m => ({ default: m.DealDetailPage })));
 const SettingsPage = retryableLazy(() => import('./components/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const IncentivesPage = retryableLazy(() => import('./components/marketing/IncentivesPage').then(m => ({ default: m.IncentivesPage })));
 const EnablementPage = retryableLazy(() => import('./components/marketing/EnablementPage').then(m => ({ default: m.EnablementPage })));
 const AnalyticsPage = retryableLazy(() => import('./components/marketing/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 const ChannelDashboard = retryableLazy(() => import('./components/marketing/ChannelDashboard').then(m => ({ default: m.ChannelDashboard })));
 const MarketingPlanPage = retryableLazy(() => import('./components/marketing/MarketingPlanPage').then(m => ({ default: m.MarketingPlanPage })));
+const InvitationPage = retryableLazy(() => import('./components/marketing/InvitationPage').then(m => ({ default: m.InvitationPage })));
 const PartnerStaffPage = retryableLazy(() => import('./components/partners/PartnerStaffPage').then(m => ({ default: m.PartnerStaffPage })));
 
 function EcosystemRoute() {
@@ -307,6 +309,8 @@ function AppLayout() {
               <Route path="/partners/:id/staff" element={<Suspense fallback={<PageLoader />}><PartnerStaffPage /></Suspense>} />
               <Route path="/deals" element={<DealsRoute />} />
               <Route path="/deals/new" element={<NewDealRoute />} />
+              <Route path="/deals/:id" element={<Suspense fallback={<PageLoader />}><DealDetailPage /></Suspense>} />
+              <Route path="/deals/:id/edit" element={<Suspense fallback={<PageLoader />}><DealRegistrationForm /></Suspense>} />
               <Route path="/marketing" element={<MarketingRoute />} />
               <Route path="/marketing/plan" element={<Suspense fallback={<PageLoader />}><MarketingPlanPage /></Suspense>} />
               <Route path="/incentives" element={<IncentivesRoute />} />
@@ -314,6 +318,7 @@ function AppLayout() {
               <Route path="/analytics" element={<AnalyticsRoute />} />
               <Route path="/settings" element={<SettingsRoute />} />
               <Route path="/channels" element={<Suspense fallback={<PageLoader />}><ChannelDashboard /></Suspense>} />
+              <Route path="/invitation/:code" element={<Suspense fallback={<PageLoader />}><InvitationPage /></Suspense>} />
             </Routes>
         </main>
 

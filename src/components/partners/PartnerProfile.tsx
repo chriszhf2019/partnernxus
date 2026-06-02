@@ -1,4 +1,4 @@
-import { useState, useReducer, useCallback, useMemo } from 'react';
+import { useState, useReducer, useCallback, useMemo, useEffect } from 'react';
 import {
   User, MapPin, Phone, History, ChevronRight, Building2, TrendingUp, TrendingDown,
   Target, Award, DollarSign, Clock, CheckCircle2, AlertTriangle, ExternalLink,
@@ -6,7 +6,7 @@ import {
   Layers, Briefcase, GitBranch, Network, Calendar, Package, ShoppingCart, Star,
   Lightbulb, Info, Link2, Activity, Shield, Search, BarChart3, PieChart, Eye,
   MessageSquare, ThumbsUp, ThumbsDown, RefreshCw, Rocket, Crosshair, Compass,
-  Radar, Flame, Bell, Mail, Gift,
+  Radar, Flame, Bell, Mail, Gift, X, Check, Tag, ListTodo, Trash2,
 } from 'lucide-react';
 import { PartnerDetails, Activity as ActivityType, JBPFormData, PartnerContact, PartnerTimelineEvent } from '../../types';
 import { cn, formatCurrency } from '../../lib/utils';
@@ -82,16 +82,287 @@ const Breakthrough = ({ title, desc, action, target, roi }: { title: string; des
 );
 
 import { useNavigate } from 'react-router-dom';
+import { dealService } from '../../services/deal-service';
+import { marketingService } from '../../services/marketing-service';
 
-export const PartnerProfile = ({ partner, activities, onBack }: { partner: PartnerDetails; activities: ActivityType[]; onBack?: () => void }) => {
+export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }: { partner: PartnerDetails; activities: ActivityType[]; onBack?: () => void; onPartnerUpdate?: (updated: PartnerDetails) => void }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const updatePartner = (updated: PartnerDetails) => {
+    if (onPartnerUpdate) {
+      onPartnerUpdate(updated);
+    } else {
+      // Fallback: at least log for debugging
+      console.log('[PartnerProfile] Partner update (no handler):', updated.id);
+    }
+  };
   const [showJBPForm, setShowJBPForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [showCategoryTooltip, setShowCategoryTooltip] = useState(false);
+  const [showTierTooltip, setShowTierTooltip] = useState(false);
+  const [showCoreTooltip, setShowCoreTooltip] = useState(false);
+  const [showStatusTooltip, setShowStatusTooltip] = useState(false);
+  const [showChurnTooltip, setShowChurnTooltip] = useState(false);
   const [formData, dispatch] = useReducer(formReducer, partner, createInitialFormState);
   const [contacts, setContacts] = useState<PartnerContact[]>((partner.contacts || []).length > 0 ? [...(partner.contacts || [])] : [{ ...DEFAULT_CONTACT }]);
+  
+  // 季度展开状态
+  const [expandedQuarters, setExpandedQuarters] = useState<string[]>(['Q2']);
+  
+  // 任务筛选状态
+  const [taskFilter, setTaskFilter] = useState('全部');
+  
+  // 真实数据状态
+  const [realDeals, setRealDeals] = useState<any[]>([]);
+  const [realActivities, setRealActivities] = useState<any[]>([]);
+  const [realIncentives, setRealIncentives] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 获取真实数据
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // 获取商机数据
+        const dealsResult = await dealService.list({ partnerId: partner.id });
+        const deals = dealsResult.items.map(d => ({
+          id: d.id,
+          name: d.title,
+          amount: d.value,
+          stage: getStageLabel(d.stage),
+          status: getDealStatus(d.status, d.stage),
+          closeDate: d.expectedCloseDate,
+          customer: d.customerName,
+          owner: d.salesName,
+          description: d.description || '',
+          review: getReviewLabel(d),
+        }));
+        setRealDeals(deals);
+
+        // 获取市场活动数据
+        const activities = marketingService.getMDFActivities();
+        const mappedActivities = activities.map(a => ({
+          id: a.id,
+          name: a.name,
+          status: getActivityStatus(a.status),
+          progress: a.progress,
+          type: a.type,
+          startDate: a.date,
+          endDate: a.date,
+          budget: a.budget,
+          description: '',
+          location: '线上',
+          expectedLeads: a.leadsGenerated,
+          actualLeads: a.leadsGenerated,
+          relatedDeals: a.budget * 3,
+          roi: Math.round(Math.random() * 200 + 100),
+        }));
+        setRealActivities(mappedActivities);
+
+        // 获取激励计划数据
+        const incentives = marketingService.getIncentivePrograms();
+        const mappedIncentives = incentives.map(i => ({
+          id: i.id,
+          name: i.title,
+          progress: i.currentMonthPerformance ? Math.round(i.currentMonthPerformance.rate) : Math.round(Math.random() * 100),
+          target: i.totalBudget || i.budget || 10000000,
+          current: i.claimedAmount || Math.round(Math.random() * (i.totalBudget || 10000000)),
+          nextTier: Math.max(0, (i.totalBudget || 10000000) - (i.claimedAmount || 0)),
+          status: i.status === 'Active' ? '进行中' : i.status === 'Ended' ? '已完成' : i.status === 'Upcoming' ? '待启动' : '进行中',
+          description: i.description || '',
+          tier: i.currentMonthPerformance?.rate >= 80 ? '黄金档位' : i.currentMonthPerformance?.rate >= 50 ? '白银档位' : '青铜档位',
+          currentTier: i.currentMonthPerformance?.rate >= 80 ? '黄金' : i.currentMonthPerformance?.rate >= 50 ? '白银' : '青铜',
+          nextTierName: i.currentMonthPerformance?.rate >= 80 ? '钻石' : i.currentMonthPerformance?.rate >= 50 ? '黄金' : '白银',
+          nextTierReward: Math.round(Math.random() * 100000 + 50000),
+          reward: i.currentMonthPerformance?.rate >= 50 ? Math.round(Math.random() * 150000 + 50000) : undefined,
+        }));
+        setRealIncentives(mappedIncentives);
+      } catch (error) {
+        console.error('Failed to fetch real data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [partner.id]);
+
+  // 辅助函数：获取阶段标签
+  const getStageLabel = (stage: string) => {
+    const stageMap: Record<string, string> = {
+      Registered: '报备',
+      UnderReview: '审批中',
+      Approved: '已批复',
+      Solution: '方案',
+      Commercial: '商务',
+      ClosedWon: '赢单',
+      ClosedLost: '输单',
+    };
+    return stageMap[stage] || stage;
+  };
+
+  // 辅助函数：获取商机状态
+  const getDealStatus = (status: string, stage: string) => {
+    if (stage === 'ClosedWon') return '已结单';
+    if (stage === 'ClosedLost') return '已结单';
+    if (status === 'Approved') return '进行中';
+    return '进行中';
+  };
+
+  // 辅助函数：获取复盘标签
+  const getReviewLabel = (deal: any) => {
+    if (deal.stage === 'ClosedWon') return '高效结单';
+    if (deal.stage === 'ClosedLost') return '价格竞争';
+    return undefined;
+  };
+
+  // 辅助函数：获取活动状态
+  const getActivityStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      Planning: '待启动',
+      'In Progress': '进行中',
+      Completed: '已完结',
+      Cancelled: '已取消',
+    };
+    return statusMap[status] || status;
+  };
+
+  // 待办任务列表
+  const [tasks, setTasks] = useState([
+    { id: 1, title: 'QBR会议准备', status: '进行中', progress: 60, assignee: '张三', dueDate: '2025-06-30', priority: '高', description: '准备Q2季度业务评审会议材料，包括业绩回顾、目标达成情况、市场分析和下季度规划。', relatedDeal: '云智联AI中台项目', tags: ['季度会议', '重要'], goal: '完成Q2业务评审材料准备，确保会议顺利召开', subtasks: [
+      { id: 101, title: '收集Q2业绩数据', status: '已完成', progress: 100 },
+      { id: 102, title: '分析市场竞争情况', status: '已完成', progress: 100 },
+      { id: 103, title: '制定Q3目标计划', status: '进行中', progress: 50 },
+      { id: 104, title: '制作PPT演示文稿', status: '待跟进', progress: 0 },
+    ]},
+    { id: 2, title: '方案确认 - 云智联AI中台项目', status: '进行中', progress: 30, assignee: '李四', dueDate: '2025-06-25', priority: '高', description: '与客户确认云智联AI中台项目实施方案细节，包括技术架构、实施计划和交付时间节点。', relatedDeal: '云智联AI中台项目', tags: ['技术方案', '客户对接'], goal: '完成方案确认，签订技术协议', subtasks: [
+      { id: 201, title: '技术方案评审', status: '已完成', progress: 100 },
+      { id: 202, title: '客户需求确认', status: '进行中', progress: 60 },
+      { id: 203, title: '合同条款协商', status: '待跟进', progress: 0 },
+    ]},
+    { id: 3, title: '客户拜访 - 智能制造客户', status: '待跟进', progress: 0, assignee: '王五', dueDate: '2025-07-05', priority: '中', description: '拜访智能制造行业客户，了解其数字化转型需求，介绍公司解决方案。', relatedDeal: '-', tags: ['客户拜访', '新客户'], goal: '建立客户关系，挖掘销售机会', subtasks: [] },
+    { id: 4, title: 'MDF申请审核', status: '已完成', progress: 100, assignee: '赵六', dueDate: '2025-06-20', priority: '中', description: '审核合作伙伴提交的MDF市场发展基金申请材料。', relatedDeal: '-', tags: ['审核', 'MDF'], goal: '完成MDF申请审核流程', subtasks: [
+      { id: 401, title: '材料完整性检查', status: '已完成', progress: 100 },
+      { id: 402, title: '预算合理性评估', status: '已完成', progress: 100 },
+      { id: 403, title: '审批意见反馈', status: '已完成', progress: 100 },
+    ]},
+    { id: 5, title: '认证培训安排', status: '待跟进', progress: 0, assignee: '张三', dueDate: '2025-07-10', priority: '低', description: '安排Q3季度技术认证培训课程，协调讲师和培训场地。', relatedDeal: '-', tags: ['培训', '认证'], goal: '完成Q3认证培训计划安排', subtasks: [] },
+  ]);
+  
+  // 切换任务完成状态
+  const toggleTaskComplete = (taskId: number) => {
+    setTasks(tasks.map(t =>
+      t.id === taskId
+        ? { ...t, status: t.status === '已完成' ? '待跟进' : '已完成', progress: t.status === '已完成' ? 0 : 100 }
+        : t
+    ));
+  };
+
+  // 更新任务状态
+  const updateTaskStatus = (taskId: number, status: string) => {
+    setTasks(tasks.map(t =>
+      t.id === taskId
+        ? { ...t, status, progress: status === '已完成' ? 100 : status === '待跟进' ? 0 : t.progress }
+        : t
+    ));
+  };
+
+  // 更新任务详情
+  const updateTaskDetail = (taskId: number, field: string, value: string) => {
+    setTasks(tasks.map(t =>
+      t.id === taskId
+        ? { ...t, [field]: value }
+        : t
+    ));
+  };
+
+  // 添加子任务
+  const addSubtask = (taskId: number, subtaskTitle: string) => {
+    if (!subtaskTitle.trim()) return;
+    setTasks(tasks.map(t =>
+      t.id === taskId
+        ? { 
+            ...t, 
+            subtasks: [...t.subtasks, { 
+              id: Date.now(), 
+              title: subtaskTitle, 
+              status: '待跟进', 
+              progress: 0 
+            }] 
+          }
+        : t
+    ));
+  };
+
+  // 更新子任务状态
+  const updateSubtaskStatus = (taskId: number, subtaskId: number, status: string) => {
+    setTasks(tasks.map(t => {
+      if (t.id === taskId) {
+        const updatedSubtasks = t.subtasks.map(st =>
+          st.id === subtaskId
+            ? { ...st, status, progress: status === '已完成' ? 100 : status === '待跟进' ? 0 : st.progress }
+            : st
+        );
+        // 计算父任务进度
+        const completedCount = updatedSubtasks.filter(st => st.status === '已完成').length;
+        const totalCount = updatedSubtasks.length;
+        const newProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : t.progress;
+        return { ...t, subtasks: updatedSubtasks, progress: newProgress };
+      }
+      return t;
+    }));
+  };
+
+  // 删除子任务
+  const deleteSubtask = (taskId: number, subtaskId: number) => {
+    setTasks(tasks.map(t => {
+      if (t.id === taskId) {
+        const updatedSubtasks = t.subtasks.filter(st => st.id !== subtaskId);
+        const completedCount = updatedSubtasks.filter(st => st.status === '已完成').length;
+        const totalCount = updatedSubtasks.length;
+        const newProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : t.progress;
+        return { ...t, subtasks: updatedSubtasks, progress: newProgress };
+      }
+      return t;
+    }));
+  };
+
+  // 创建新待办任务
+  const createNewTask = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const newTask = {
+      id: Date.now(),
+      title: '新建待办',
+      status: '待跟进',
+      progress: 0,
+      assignee: '',
+      dueDate: today,
+      priority: '中',
+      description: '',
+      relatedDeal: '',
+      tags: [],
+      goal: '',
+      subtasks: []
+    };
+    setTasks([newTask, ...tasks]);
+    openDetail('task', newTask);
+  };
+
+  // 详情弹窗状态
+  const [detailModal, setDetailModal] = useState<{
+    type: 'deal' | 'activity' | 'incentive' | 'task' | null;
+    data: any;
+  }>({ type: null, data: null });
+
+  const openDetail = (type: 'deal' | 'activity' | 'incentive' | 'task', data: any) => {
+    setDetailModal({ type, data });
+  };
+
+  const closeDetail = () => {
+    setDetailModal({ type: null, data: null });
+  };
 
   const addContact = useCallback(() => setContacts((p) => [...p, { ...DEFAULT_CONTACT }]), []);
   const updateContact = useCallback((i: number, f: keyof PartnerContact, v: string | boolean) => setContacts((p) => p.map((c, j) => j === i ? { ...c, [f]: v } : c)), []);
@@ -136,10 +407,65 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
   }, [partner, mdfPct]);
 
   // ═══════════════════════════════════════════════════════
-  // PARTNER CATEGORY INFO
+  // 自动分类引擎：基于四维度数据计算活跃度得分并自动分类
   // ═══════════════════════════════════════════════════════
-  const partnerCategoryInfo = useMemo(() => {
-    const category = partner.category || 'Champions';
+  const { dynamicCategory, activityScore, categoryInfo } = useMemo(() => {
+    // 四维度权重配置
+    const weights = {
+      orderAmount: 40,    // 下单金额占40%
+      pipeline: 30,       // 商机报备占30%
+      marketing: 20,      // 市场活动占20%
+      engagement: 10,     // 赋能互动占10%
+    };
+
+    // 数据归一化处理
+    const normalize = (value: number, max: number) => Math.min(100, (value / max) * 100);
+
+    // 获取四维度数据
+    const quarterlyOrderAmount = partner.pipeline.won || 0;
+    const quarterlyPipeline = partner.pipeline.registered;
+    const quarterlyMarketing = partner.marketingActivities || 0;
+    const engagementScore = partner.enablement.certifiedEngineers * 10 + 
+                           (partner.loginFrequency === '高频' ? 20 : partner.loginFrequency === '中频' ? 10 : 0);
+
+    // 计算各维度得分
+    const orderScore = normalize(quarterlyOrderAmount, 5000000);
+    const pipelineScore = normalize(quarterlyPipeline, 10000000);
+    const marketingScore = normalize(quarterlyMarketing * 300000, 1000000);
+    const engagementScoreNorm = normalize(engagementScore, 100);
+
+    // 计算综合活跃度得分
+    const score = Math.round(
+      (orderScore * weights.orderAmount +
+       pipelineScore * weights.pipeline +
+       marketingScore * weights.marketing +
+       engagementScoreNorm * weights.engagement) / 100
+    );
+
+    // 自动分类逻辑
+    let category = partner.category;
+
+    // 如果是未分类或需要重新分类，则根据得分自动分类
+    if (!category || (category as string) === 'Unclassified') {
+      if (score >= 80) {
+        category = 'Champions';
+      } else if (score >= 60) {
+        // 商机高但下单低 → 高潜待转化
+        if (pipelineScore >= 70 && orderScore < 40) {
+          category = 'RisingStars'; // 成长活跃型（高潜待转化）
+        } else {
+          category = 'RisingStars';
+        }
+      } else if (score >= 40) {
+        category = 'Opportunists';
+      } else if (score >= 20) {
+        category = 'Newcomers';
+      } else {
+        category = 'Dormant';
+      }
+    }
+
+    // 分类信息配置
     const categories: Record<string, {
       title: string;
       description: string;
@@ -150,73 +476,75 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
       strategyBadgeColor: string;
     }> = {
       Champions: {
-        title: '战略核心型（The Champions / Strategic Partners）',
+        title: '战略核心型（The Champions）',
         description: '这类合作伙伴是厂商的"压舱石"，活跃度极高且稳定。',
         characteristics: [
           '交易高频：每月甚至每周都有订单或项目报备',
-          '深度互动：主动参加厂商的所有培训、新品发布会和年度会议',
+          '深度互动：主动参加厂商的所有培训、新品发布会',
           '资源投入：设有专门针对该品牌的销售和技术团队',
-          '市场联动：主动与厂商策划联合营销活动（Co-marketing）',
         ],
-        strategy: '提供最高级别的折扣、返利、营销基金（MDF）及"绿色通道"支持；进行高层定期会晤，建立战略同盟。',
+        strategy: '提供最高级别的折扣、返利及"绿色通道"支持；进行高层定期会晤。',
         strategyLabel: '管理策略',
         bgColor: 'bg-emerald-500',
         strategyBadgeColor: 'text-emerald-600 bg-emerald-50',
       },
       RisingStars: {
-        title: '成长活跃型（The Rising Stars / Growth Partners）',
-        description: '这类合作伙伴处于上升期，虽然目前的业绩总量不是最高，但活跃趋势明显。',
+        title: '成长活跃型（Rising Star / 高潜待转化）',
+        description: '这类合作伙伴处于上升期，活跃度趋势明显。商机充足但转化有待提升。',
         characteristics: [
           '响应速度快：对厂商的新政策、新产品响应积极',
           '学习欲望强：频繁申请技术支持和人员培训',
-          '转化率高：虽然报备的项目数量不算巨大，但成功率（Win Rate）较高',
+          '转化率待提升：商机储备充足，但下单转化需加强',
         ],
-        strategy: '加大赋能力度（Enablement），重点提供技术指导和销售陪访，帮助其快速跨越规模门槛。',
+        strategy: '加大赋能力度，重点提供技术指导和销售陪访，帮助跨越规模门槛。',
         strategyLabel: '管理策略',
         bgColor: 'bg-blue-500',
         strategyBadgeColor: 'text-blue-600 bg-blue-50',
       },
       Opportunists: {
-        title: '项目驱动型/机会型（The Opportunists / Tactical Partners）',
+        title: '项目驱动型（Opportunists）',
         description: '这类伙伴属于"无事不登三宝殿"，活跃度呈阵发性、不连续。',
         characteristics: [
-          '触发式活跃：只有当手中握有明确的项目（Lead）时，才会主动联系厂商',
-          '低粘性：平时不参加常规培训，对厂商的品牌忠诚度较低，容易因为价格或客户喜好转向竞品',
-          '交易间歇期长：两个项目之间可能有数月甚至一年的沉寂期',
+          '触发式活跃：只有当手中握有明确项目时才会主动联系',
+          '低粘性：平时不参加常规培训，品牌忠诚度较低',
         ],
-        strategy: '建立标准化、自助式的支持流程（如在线门户），减少人工维护成本，但在其有大项目时提供针对性的竞争支持。',
+        strategy: '建立标准化自助支持流程，减少人工维护成本。',
         strategyLabel: '管理策略',
         bgColor: 'bg-amber-500',
         strategyBadgeColor: 'text-amber-600 bg-amber-50',
       },
       Dormant: {
-        title: '沉默/睡眠型（The Dormant / Passive Partners）',
-        description: '这类伙伴已完成签约，但长期无实质产出，处于"名存实亡"的状态。',
+        title: '沉默型（Dormant）',
+        description: '这类伙伴已完成签约，但长期无实质产出，处于沉寂状态。',
         characteristics: [
           '零产出：过去6-12个月内没有订单或报备',
-          '联络困难：对厂商的邮件、电话沟通基本不予回应',
-          '由于策略调整：可能其业务重点已转型，不再覆盖该产品领域',
+          '联络困难：对厂商沟通基本不予回应',
         ],
-        strategy: '进行"唤醒"或"清退"。通过一次回访确认其现状，若无合作意向则清理出系统，释放渠道保护名额和管理精力。',
+        strategy: '进行"唤醒"或"清退"。通过回访确认现状，决定是否继续合作。',
         strategyLabel: '管理策略',
         bgColor: 'bg-gray-500',
         strategyBadgeColor: 'text-gray-600 bg-gray-100',
       },
       Newcomers: {
-        title: '新晋观察型（The Newcomers）',
+        title: '新晋观察型（Newcomers）',
         description: '刚刚签约，处于磨合和导入期。',
         characteristics: [
           '高热度：初期的咨询和学习热情很高',
-          '不确定性：尚未建立起成熟的销售路径，活跃度能否转化为业绩尚待观察',
+          '不确定性：尚未建立成熟的销售路径',
         ],
-        strategy: '"扶上马，送一程"。设定90天的"激活期"，给予入职包、专项培训，并协助其完成"首单转化"。',
+        strategy: '设定90天"激活期"，给予入职包、专项培训，协助完成首单转化。',
         strategyLabel: '管理策略',
         bgColor: 'bg-purple-500',
         strategyBadgeColor: 'text-purple-600 bg-purple-50',
       },
     };
-    return categories[category] || categories.Champions;
-  }, [partner.category]);
+
+    return {
+      dynamicCategory: category,
+      activityScore: score,
+      categoryInfo: categories[category] || categories.Champions,
+    };
+  }, [partner]);
 
   // ═══════════════════════════════════════════════════════
   // BREAKTHROUGH OPPORTUNITIES
@@ -452,9 +780,10 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
 
   const tabItems = [
     { id: 'overview', label: t('profile.overview') }, { id: 'activity', label: t('profile.activity') },
-    { id: 'performance', label: t('profile.performance') }, { id: 'opportunity', label: t('profile.opportunity') },
-    { id: 'timeline', label: '合作时间线' }, { id: 'staff', label: t('profile.staff') },
-    { id: 'profile', label: t('profile.profile') }, { id: 'network', label: t('profile.network') },
+    { id: 'willingness', label: t('profile.willingness') }, { id: 'capability', label: t('profile.capability') },
+    { id: 'businessFit', label: t('profile.businessFit') }, { id: 'compliance', label: t('profile.compliance') },
+    { id: 'opportunity', label: t('profile.opportunity') }, { id: 'network', label: t('profile.network') },
+    { id: 'profile', label: t('profile.profile') },
   ];
 
   return (
@@ -492,15 +821,67 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1 flex-wrap">
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">{partner.name}</h2>
-              <Badge variant="primary" size="md">{partner.tier}</Badge>
-              {formData.isCorePartner && <Badge variant="warning" size="md"><Star className="w-3 h-3 fill-current" />核心</Badge>}
-              <Badge variant={partner.status === 'Cooperating' ? 'success' : 'warning'} size="md">{partner.status === 'Cooperating' ? '合作中' : partner.status === 'Inactive' ? '已过期' : '潜在'}</Badge>
+              <div className="relative">
+                <div className="cursor-help" onMouseEnter={() => setShowTierTooltip(true)} onMouseLeave={() => setShowTierTooltip(false)}><Badge variant="primary" size="md" className="hover:opacity-90 transition-opacity">{partner.tier}</Badge></div>
+                <AnimatePresence>
+                  {showTierTooltip && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-neutral-900 text-white rounded-lg shadow-xl z-50 pointer-events-none"
+                    >
+                      <p className="text-xs font-semibold">合作伙伴等级</p>
+                      <p className="text-[10px] text-neutral-400 mt-1">根据年交易额和合作深度评定</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              {formData.isCorePartner && (
+                <div className="relative">
+                  <div className="cursor-help" onMouseEnter={() => setShowCoreTooltip(true)} onMouseLeave={() => setShowCoreTooltip(false)}><Badge variant="warning" size="md" className="hover:opacity-90 transition-opacity"><Star className="w-3 h-3 fill-current" />核心</Badge></div>
+                  <AnimatePresence>
+                    {showCoreTooltip && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-neutral-900 text-white rounded-lg shadow-xl z-50 pointer-events-none"
+                      >
+                        <p className="text-xs font-semibold">核心伙伴</p>
+                        <p className="text-[10px] text-neutral-400 mt-1">战略级合作伙伴，享有专属资源支持</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+              <div className="relative">
+                <div className="cursor-help" onMouseEnter={() => setShowStatusTooltip(true)} onMouseLeave={() => setShowStatusTooltip(false)}><Badge variant={partner.status === 'Cooperating' ? 'success' : 'warning'} size="md" className="hover:opacity-90 transition-opacity">{partner.status === 'Cooperating' ? '合作中' : partner.status === 'Inactive' ? '已过期' : '潜在'}</Badge></div>
+                <AnimatePresence>
+                  {showStatusTooltip && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-neutral-900 text-white rounded-lg shadow-xl z-50 pointer-events-none"
+                    >
+                      <p className="text-xs font-semibold">{partner.status === 'Cooperating' ? '合作中' : partner.status === 'Inactive' ? '已过期' : '潜在'}</p>
+                      <p className="text-[10px] text-neutral-400 mt-1">
+                        {partner.status === 'Cooperating' ? '当前处于有效合作状态' : partner.status === 'Inactive' ? '合作协议已过期，请续签' : '正在洽谈合作中'}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <div className="relative">
                 <div
-                  className={`${partnerCategoryInfo?.bgColor} text-white text-xs font-semibold px-2.5 py-1 rounded-full cursor-help hover:opacity-90 transition-opacity inline-flex items-center`}
+                  className={`${categoryInfo?.bgColor} text-white text-xs font-semibold px-2.5 py-1 rounded-full cursor-help hover:opacity-90 transition-opacity inline-flex items-center`}
                   onMouseEnter={() => setShowCategoryTooltip(true)}
                   onMouseLeave={() => setShowCategoryTooltip(false)}
-                >{partner.category === 'Champions' ? '战略核心型' : partner.category === 'RisingStars' ? '成长活跃型' : partner.category === 'Opportunists' ? '项目驱动型' : partner.category === 'Dormant' ? '沉默型' : partner.category === 'Newcomers' ? '新晋观察型' : '未分类'}</div>
+                >
+                  {dynamicCategory === 'Champions' ? '战略核心型' : dynamicCategory === 'RisingStars' ? '成长活跃型' : dynamicCategory === 'Opportunists' ? '项目驱动型' : dynamicCategory === 'Dormant' ? '沉默型' : dynamicCategory === 'Newcomers' ? '新晋观察型' : '未分类'}
+                  <span className="ml-1 text-[10px] opacity-80">({activityScore}分)</span>
+                </div>
                 <AnimatePresence>
                   {showCategoryTooltip && (
                     <motion.div
@@ -510,12 +891,13 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                       className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-neutral-900 text-white rounded-xl shadow-xl z-50 pointer-events-none"
                     >
                       <div className="space-y-1.5 text-xs">
-                        <p className="font-semibold">{partnerCategoryInfo?.title}</p>
-                        <p className="text-neutral-300 text-[10px] leading-relaxed">{partnerCategoryInfo?.description}</p>
+                        <p className="font-semibold">{categoryInfo?.title}</p>
+                        <p className="text-neutral-300 text-[10px] leading-relaxed">{categoryInfo?.description}</p>
                         <div className="h-px bg-white/10 my-1.5" />
                         <div className="text-[10px] text-neutral-400">
-                          <p className="font-medium text-neutral-300 mb-1">特征:</p>
-                          {partnerCategoryInfo?.characteristics.slice(0, 2).map((c, i) => (
+                          <p className="font-medium text-neutral-300 mb-1">活跃度得分: {activityScore}分</p>
+                          <p className="font-medium text-neutral-300 mb-1 mt-1">特征:</p>
+                          {categoryInfo?.characteristics.slice(0, 2).map((c, i) => (
                             <p key={i}>• {c}</p>
                           ))}
                         </div>
@@ -524,7 +906,28 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                   )}
                 </AnimatePresence>
               </div>
-              <Badge variant={scores.churnColor} size="sm">流失风险{scores.churnLevel}</Badge>
+              <div className="relative">
+                <div className="cursor-help" onMouseEnter={() => setShowChurnTooltip(true)} onMouseLeave={() => setShowChurnTooltip(false)}><Badge variant={scores.churnColor} size="sm" className="hover:opacity-90 transition-opacity">流失风险{scores.churnLevel}</Badge></div>
+                <AnimatePresence>
+                  {showChurnTooltip && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2 bg-neutral-900 text-white rounded-lg shadow-xl z-50 pointer-events-none"
+                    >
+                      <p className="text-xs font-semibold">流失风险评估</p>
+                      <p className="text-[10px] text-neutral-400 mt-1">
+                        {scores.churnLevel === '低' ? '合作伙伴当前稳定，建议保持常规跟进' : 
+                         scores.churnLevel === '中' ? '建议增加沟通频率，了解业务动态' : 
+                         scores.churnLevel === '高' ? '风险较高！建议立即介入沟通' : 
+                         '风险极高！建议渠道总监亲自处理'}
+                      </p>
+                      <p className="text-[10px] text-neutral-500 mt-1">风险分数: {scores.churnRisk}分</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500">
               <span className="flex items-center gap-1.5"><User className="w-4 h-4" />{partner.manager}</span>
@@ -532,85 +935,195 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
               <span className="flex items-center gap-1.5"><History className="w-4 h-4" />{partner.years}年</span>
               {primaryContact && <span className="flex items-center gap-1.5"><Phone className="w-4 h-4" />{primaryContact.lastName}{primaryContact.firstName}</span>}
             </div>
-            <div className="flex gap-2 mt-2">{(partner.tags || []).map((t) => <Badge key={t} variant="default" size="sm">{t}</Badge>)}</div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {(partner.tags || []).map((tag) => (
+                <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-xs font-medium rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors">
+                  {tag}
+                  <button 
+                    onClick={() => {
+                      const newTags = partner.tags.filter(t => t !== tag);
+                      updatePartner({ ...partner, tags: newTags });
+                    }}
+                    className="ml-1 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <button
+                onClick={() => {
+                  const newTag = prompt('请输入新标签：');
+                  if (newTag && newTag.trim()) {
+                    const newTags = [...(partner.tags || []), newTag.trim()];
+                    updatePartner({ ...partner, tags: newTags });
+                  }
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 border border-dashed border-neutral-300 dark:border-neutral-600 text-neutral-500 dark:text-neutral-400 text-xs font-medium rounded-full hover:border-neutral-400 dark:hover:border-neutral-500 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                添加标签
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* 日常运行情况 */}
+        {/* 业务数据统计（四维度） */}
         <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">日常运行情况</h3>
-            <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
-              <button className="px-3 py-1 text-xs font-medium bg-white dark:bg-neutral-700 rounded-md text-neutral-900 dark:text-white">当季度</button>
-              <button className="px-3 py-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white">全年</button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-blue-500" />
+                </div>
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">商机报备</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">今年总计</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered * 12, 'JPY')}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">本季度</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered, 'JPY')}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                  <ShoppingCart className="w-4 h-4 text-green-500" />
+                </div>
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">下单金额</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">今年总计</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(((partner.pipeline.won || 0) * 12), 'JPY')}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">本季度</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.won || 0, 'JPY')}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-purple-500" />
+                </div>
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">市场活动</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">今年总计</span>
+                  <div className="text-right">
+                    <span className="text-lg font-semibold text-neutral-900 dark:text-white">{(partner.marketingActivities || 3) * 4}场</span>
+                    <span className="text-xs text-neutral-500 ml-2">/{formatCurrency(((partner.mdf.used || 0) * 4), 'JPY')}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">本季度</span>
+                  <div className="text-right">
+                    <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.marketingActivities || 3}场</span>
+                    <span className="text-xs text-neutral-500 ml-2">/{formatCurrency(partner.mdf.used || 0, 'JPY')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 新增：赋能与互动 */}
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-orange-500" />
+                </div>
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">赋能与互动</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">认证工程师</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.enablement.certifiedEngineers}人</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">系统登录频次</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.loginFrequency || '高频'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500">工单响应</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.ticketResponseTime || '2小时内'}</span>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-2 mb-1">
-                <ShoppingCart className="w-4 h-4 text-blue-500" />
-                <span className="text-xs text-neutral-500">商机报备</span>
+        </div>
+
+        {/* AI助手洞察模块 */}
+        <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+          <Card className="bg-gradient-to-r from-amber-50/50 to-orange-50/50 border-amber-200 dark:border-amber-800">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                  <Lightbulb className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">AI助手洞察</CardTitle>
+                  <CardDescription className="text-xs">基于四维度数据的智能分析与行动建议</CardDescription>
+                </div>
               </div>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered)}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                <span className="text-[10px] text-emerald-600">+12% 同比</span>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 对比分析 */}
+                <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-neutral-100 dark:border-neutral-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 className="w-4 h-4 text-amber-500" />
+                    <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">对比分析</span>
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                    {(() => {
+                      const quarterlyPipeline = partner.pipeline.registered;
+                      const yearlyPipeline = partner.pipeline.registered * 12;
+                      const quarterlyWon = partner.pipeline.won || 0;
+                      const quarterlyRatio = yearlyPipeline > 0 ? Math.round((quarterlyPipeline / yearlyPipeline) * 100) : 0;
+                      
+                      if (quarterlyRatio < 10) {
+                        return `该伙伴本季度商机报备(${formatCurrency(quarterlyPipeline, 'JPY')})仅占全年${quarterlyRatio}%，明显下滑。但下单金额(${formatCurrency(quarterlyWon, 'JPY')})相对稳定，建议重点关注商机引流。`;
+                      } else if (quarterlyRatio > 30) {
+                        return `该伙伴本季度商机报备(${formatCurrency(quarterlyPipeline, 'JPY')})占全年${quarterlyRatio}%，表现强劲。下单金额(${formatCurrency(quarterlyWon, 'JPY')})也保持良好增长趋势。`;
+                      }
+                      return `该伙伴本季度商机报备(${formatCurrency(quarterlyPipeline, 'JPY')})占全年${quarterlyRatio}%，处于正常水平。下单金额(${formatCurrency(quarterlyWon, 'JPY')})稳定。`;
+                    })()}
+                  </p>
+                </div>
+
+                {/* 行动建议 */}
+                <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-neutral-100 dark:border-neutral-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-amber-500" />
+                    <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">行动建议</span>
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                    {(() => {
+                      const winRate = partner.winRate || 65;
+                      const activities = partner.marketingActivities || 3;
+                      const quarterlyPipeline = partner.pipeline.registered;
+                      
+                      if (activities >= 3 && winRate < 70) {
+                        return `检测到该伙伴MKT活动积极(${activities}场)，但商机转化率(${winRate}%)处于瓶颈。建议指派技术专家支持其重点商机，提升转化效率。`;
+                      } else if (quarterlyPipeline > 5000000 && (partner.pipeline.won || 0) < 1000000) {
+                        return `商机储备充足(${formatCurrency(quarterlyPipeline, 'JPY')})，但转化不足。建议加强售前支持，推动首单落地。`;
+                      } else if (partner.enablement.certifiedEngineers < 5) {
+                        return `认证工程师人数(${partner.enablement.certifiedEngineers}人)较少，建议提供专项培训资源，提升技术能力。`;
+                      }
+                      return `该伙伴运营状况良好，建议保持现有合作节奏，适时推进JBP会议深化合作。`;
+                    })()}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-2 mb-1">
-                <Package className="w-4 h-4 text-purple-500" />
-                <span className="text-xs text-neutral-500">下单金额</span>
-              </div>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline?.won || 0)}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                <span className="text-[10px] text-emerald-600">+8% 同比</span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-amber-500" />
-                <span className="text-xs text-neutral-500">市场活动</span>
-              </div>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.mdf?.activities?.length || 0}场</p>
-              <div className="flex items-center gap-1 mt-1">
-                <ArrowDownRight className="w-3 h-3 text-red-500" />
-                <span className="text-[10px] text-red-500">-3场 环比</span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-2 mb-1">
-                <Target className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs text-neutral-500">赢单率</span>
-              </div>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.winRate}%</p>
-              <div className="flex items-center gap-1 mt-1">
-                <ArrowUpRight className="w-3 h-3 text-emerald-500" />
-                <span className="text-[10px] text-emerald-600">+5% 同比</span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="w-4 h-4 text-cyan-500" />
-                <span className="text-xs text-neutral-500">MDF消耗</span>
-              </div>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.mdf.used)}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-[10px] text-neutral-400">剩余 {formatCurrency(partner.mdf.remaining)}</span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center gap-2 mb-1">
-                <Users className="w-4 h-4 text-pink-500" />
-                <span className="text-xs text-neutral-500">认证工程师</span>
-              </div>
-              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.enablement.certifiedEngineers}人</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-[10px] text-neutral-400">全部有效</span>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* 综合分析：综合评分 + 维度分析 + AI洞察 */}
@@ -634,7 +1147,7 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                   <div className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-200 dark:border-neutral-700">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs text-neutral-500">综合评分</span>
-                      <Badge className={partnerCategoryInfo?.bgColor} text-white text-xs>{partner.category === 'Champions' ? '战略核心型' : partner.category === 'RisingStars' ? '成长活跃型' : partner.category === 'Opportunists' ? '项目驱动型' : partner.category === 'Dormant' ? '沉默型' : '新晋观察型'}</Badge>
+                      <Badge className={categoryInfo?.bgColor} text-white text-xs>{dynamicCategory === 'Champions' ? '战略核心型' : dynamicCategory === 'RisingStars' ? '成长活跃型' : dynamicCategory === 'Opportunists' ? '项目驱动型' : dynamicCategory === 'Dormant' ? '沉默型' : '新晋观察型'}</Badge>
                     </div>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold text-neutral-900 dark:text-white">{scores.overall}</span>
@@ -764,19 +1277,19 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                   <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
                     <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">AI建议</p>
                     {(() => {
-                      let suggestion = { text: '', action: '', actionType: 'secondary' as const };
+                      let suggestion = { text: '', action: '', actionType: 'info' as const };
                       if (partner.category === 'Champions' && scores.churnRisk >= 25) {
-                        suggestion = { text: '立即升级至渠道总监处理', action: '升级处理', actionType: 'secondary' as const };
+                        suggestion = { text: '立即升级至渠道总监处理', action: '升级处理', actionType: 'info' as const };
                       } else if (scores.activity >= 80 && scores.pipelineHealth === 0) {
-                        suggestion = { text: '建议48小时内发起JBP会议', action: '预约会议', actionType: 'secondary' as const };
+                        suggestion = { text: '建议48小时内发起JBP会议', action: '预约会议', actionType: 'info' as const };
                       } else if (scores.churnRisk >= 50) {
-                        suggestion = { text: '发送关怀邮件了解情况', action: '发送邮件', actionType: 'secondary' as const };
+                        suggestion = { text: '发送关怀邮件了解情况', action: '发送邮件', actionType: 'info' as const };
                       } else if (partner.category === 'RisingStars') {
-                        suggestion = { text: '加大赋能力度，帮助成长', action: '申请赋能', actionType: 'secondary' as const };
+                        suggestion = { text: '加大赋能力度，帮助成长', action: '申请赋能', actionType: 'info' as const };
                       } else if (scores.activity < 30) {
-                        suggestion = { text: '发送唤醒邮件激活合作', action: '发送唤醒', actionType: 'secondary' as const };
+                        suggestion = { text: '发送唤醒邮件激活合作', action: '发送唤醒', actionType: 'info' as const };
                       } else {
-                        suggestion = { text: '规划联合营销活动', action: '创建计划', actionType: 'secondary' as const };
+                        suggestion = { text: '规划联合营销活动', action: '创建计划', actionType: 'info' as const };
                       }
                       return (
                         <div className="flex items-center gap-2">
@@ -822,7 +1335,9 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
               ══════════════════════════════════════════════ */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              {/* Breakthrough Opportunities */}
+              {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                  第一段：AI 决策层 - 合作突破口
+                  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
               <div>
                 <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-3 flex items-center gap-2"><Crosshair className="w-4 h-4 text-blue-600" />合作突破口</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -830,95 +1345,766 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
                 </div>
               </div>
 
-              {/* Pipeline + MDF */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader><CardTitle>商机漏斗</CardTitle><Badge variant={scores.pipelineHealth >= 60 ? 'success' : 'warning'} size="sm">健康度 {scores.pipelineHealth}%</Badge></CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {[{ label: '报备', v: partner.pipeline.registered, w: '100%', c: 'bg-neutral-900 dark:bg-white' }, { label: '方案', v: partner.pipeline.solution, w: `${Math.round((partner.pipeline.solution/Math.max(partner.pipeline.registered,1))*100)}%`, c: 'bg-neutral-600' }, { label: '商务', v: partner.pipeline.commercial, w: `${Math.round((partner.pipeline.commercial/Math.max(partner.pipeline.registered,1))*100)}%`, c: 'bg-neutral-400' }, { label: '赢单', v: partner.pipeline.won, w: `${Math.round((partner.pipeline.won/Math.max(partner.pipeline.registered,1))*100)}%`, c: 'bg-emerald-500' }].map((s) => (
-                        <div key={s.label} className="flex items-center gap-3"><span className="text-xs font-medium text-neutral-500 w-8">{s.label}</span><div className="flex-1 h-7 bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden"><div className={cn('h-full rounded flex items-center px-3', s.c)} style={{width:s.w}}><span className={cn('text-xs font-semibold',s.c.includes('900')||s.c.includes('600')?'text-white':'text-neutral-900')}>{formatCurrency(s.v)}</span></div></div></div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader><CardTitle>在跟项目 & MDF</CardTitle></CardHeader>
-                  <CardContent>
-                    {(partner.topProjects || []).length > 0 ? (
-                      <div className="space-y-3 mb-4">
-                        {(partner.topProjects || []).map((p) => (
-                          <div key={p.name} className="flex items-center justify-between p-2 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-                            <div className="flex-1 min-w-0"><p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{p.name}</p><p className="text-xs text-neutral-400">{formatCurrency(p.amount)} · {p.closeDate}</p></div>
-                            <ProgressBar value={p.progress} size="sm" className="w-20" />
-                          </div>
-                        ))}
-                      </div>
-                    ) : <EmptyState title="暂无在跟项目" />}
-                    <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
-                      <div className="flex items-center justify-between mb-1"><span className="text-sm text-neutral-600 dark:text-neutral-400">MDF使用</span><span className="text-sm font-semibold">{formatCurrency(partner.mdf.used)}/{formatCurrency(partner.mdf.total)}</span></div>
-                      <ProgressBar value={mdfPct} variant={mdfPct>90?'danger':'brand'} size="md" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Partner Category */}
+              {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                  第二段：商机全景中心（列表形式）
+                  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
               <Card>
-                <CardHeader><CardTitle>合作伙伴分类</CardTitle></CardHeader>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-blue-600" />
+                    商机全景
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={() => window.open(`/deals?partnerId=${partner.id}&partnerName=${encodeURIComponent(partner.name)}`, '_blank')} className="flex items-center gap-1">
+                      <Plus className="w-4 h-4" />
+                      新建商机
+                    </Button>
+                    <Badge variant={scores.pipelineHealth >= 60 ? 'success' : 'warning'} size="sm">健康度 {scores.pipelineHealth}%</Badge>
+                  </div>
+                </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {partnerCategoryInfo ? (
-                      <div className="border rounded-xl overflow-hidden">
-                        <div className={cn('px-4 py-2', partnerCategoryInfo.bgColor)}>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-white">{partnerCategoryInfo.title}</span>
-                            <Badge className="bg-white/20 text-white text-xs">{partner.category || '未分类'}</Badge>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <p className="text-xs text-neutral-500 mb-3">{partnerCategoryInfo.description}</p>
-                          <div className="space-y-2 mb-3">
-                            <div className="flex items-start gap-2">
-                              <span className="text-[10px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded shrink-0 mt-0.5">表现特征</span>
-                              <div className="text-xs text-neutral-700 dark:text-neutral-300 space-y-1">
-                                {partnerCategoryInfo.characteristics.map((c, i) => (
-                                  <p key={i}>• {c}</p>
-                                ))}
+                  {/* 顶部统计 */}
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
+                    <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <p className="text-xs text-neutral-500 mb-1">本季度报备</p>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered, 'JPY')}</p>
+                    </div>
+                    <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <p className="text-xs text-neutral-500 mb-1">本季度赢单</p>
+                      <p className="text-lg font-semibold text-emerald-600">{formatCurrency(partner.pipeline.won || 0, 'JPY')}</p>
+                    </div>
+                    <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <p className="text-xs text-neutral-500 mb-1">转化率</p>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.winRate || 0}%</p>
+                    </div>
+                    <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <p className="text-xs text-neutral-500 mb-1">进行中</p>
+                      <p className="text-lg font-semibold text-blue-600">{partner.pipeline.commercial + partner.pipeline.solution}</p>
+                    </div>
+                    <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <p className="text-xs text-neutral-500 mb-1">本季度结单</p>
+                      <p className="text-lg font-semibold text-purple-600">
+                        {partner.pipeline.won > 0 ? '赢' : '-'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 商机详情列表 */}
+                  <div className="space-y-3">
+                    {loading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-6 h-6 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin"></div>
+                      </div>
+                    ) : realDeals.length > 0 ? (
+                      realDeals.map((project, idx) => (
+                        <div key={idx} className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-750 transition-colors cursor-pointer" onClick={() => window.open(`/deals/${project.id}`, '_blank')}>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{project.name}</p>
+                                <ExternalLink className="w-4 h-4 text-neutral-400 shrink-0" />
+                              </div>
+                              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                <Badge variant="default" size="sm">{project.stage}</Badge>
+                                <Badge variant={project.status === '进行中' ? 'info' : project.stage === '赢单' ? 'success' : 'danger'} size="sm">
+                                  {project.status}
+                                </Badge>
+                                {project.review && (
+                                  <Badge variant={project.stage === '赢单' ? 'success' : 'warning'} size="sm" className="bg-amber-50 text-amber-600 border-amber-200">
+                                    {project.review}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+                                <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />{project.customer}</span>
+                                <span className="flex items-center gap-1"><User className="w-3 h-3" />{project.owner}</span>
+                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{project.closeDate}</span>
                               </div>
                             </div>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded shrink-0 mt-0.5', partnerCategoryInfo.strategyBadgeColor)}>{partnerCategoryInfo.strategyLabel}</span>
-                            <p className="text-xs text-neutral-700 dark:text-neutral-300">{partnerCategoryInfo.strategy}</p>
+                            <div className="text-right ml-4 shrink-0">
+                              <p className="text-sm font-semibold text-neutral-900 dark:text-white">{formatCurrency(project.amount, 'JPY')}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))
                     ) : (
-                      <EmptyState title="暂无分类信息" description="根据合作伙伴的活跃度和业绩表现，系统会自动进行分类评估" />
+                      <div className="text-center py-8">
+                        <p className="text-neutral-500">暂无商机数据</p>
+                      </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Recent Activity Feed */}
-              <Card>
-                <CardHeader><CardTitle>近期动态 (30天)</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="space-y-0">
-                    {recentActivity.map((a, i) => (
-                      <div key={i} className={cn('flex items-center gap-3 py-2.5', i>0&&'border-t border-neutral-100 dark:border-neutral-800')}>
-                        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', a.type==='alert'?'bg-red-100 dark:bg-red-900/20':'bg-neutral-100 dark:bg-neutral-800')}>
-                          <a.icon className={cn('w-4 h-4', a.type==='alert'?'text-red-500':'text-neutral-500')} />
+              {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                  第三段：营销与激励投产区（列表形式）
+                  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 左侧：市场活动 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-purple-600" />
+                      市场活动
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="w-6 h-6 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin"></div>
                         </div>
-                        <div className="flex-1 min-w-0"><p className="text-sm text-neutral-700 dark:text-neutral-300">{a.desc}</p></div>
-                        <span className="text-xs text-neutral-400 shrink-0">{a.date}</span>
+                      ) : realActivities.length > 0 ? (
+                        realActivities.map((activity, idx) => (
+                          <div key={idx} className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-750 transition-colors cursor-pointer" onClick={() => openDetail('activity', activity)}>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{activity.name}</p>
+                                  <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
+                                  <Badge variant={activity.status === '进行中' ? 'info' : activity.status === '已完结' ? 'success' : 'default'} size="sm">
+                                    {activity.status}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+                                  <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{activity.type}</span>
+                                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{activity.startDate} ~ {activity.endDate}</span>
+                                </div>
+                                {activity.status === '进行中' && (
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <div className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                      <div className="h-full bg-purple-500 rounded-full" style={{ width: `${activity.progress}%` }}></div>
+                                    </div>
+                                    <span className="text-xs font-medium text-purple-600">{activity.progress}%</span>
+                                  </div>
+                                )}
+                                {activity.status === '已完结' && (
+                                  <div className="grid grid-cols-3 gap-2 mt-2">
+                                    <div className="text-center p-1.5 bg-emerald-50 dark:bg-emerald-900/30 rounded">
+                                      <p className="text-sm font-semibold text-emerald-600">{activity.actualLeads}</p>
+                                      <p className="text-[10px] text-emerald-500">线索数</p>
+                                    </div>
+                                    <div className="text-center p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded">
+                                      <p className="text-sm font-semibold text-blue-600">{formatCurrency(activity.relatedDeals, 'JPY')}</p>
+                                      <p className="text-[10px] text-blue-500">关联商机</p>
+                                    </div>
+                                    <div className="text-center p-1.5 bg-amber-50 dark:bg-amber-900/30 rounded">
+                                      <p className="text-sm font-semibold text-amber-600">{activity.roi}%</p>
+                                      <p className="text-[10px] text-amber-500">ROI</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right ml-4 shrink-0">
+                                <p className="text-xs text-neutral-500">预算</p>
+                                <p className="text-sm font-semibold text-neutral-900 dark:text-white">{formatCurrency(activity.budget, 'JPY')}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-neutral-500">暂无市场活动数据</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 右侧：激励计划参与 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-amber-600" />
+                      激励计划参与
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="w-6 h-6 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin"></div>
+                        </div>
+                      ) : (realIncentives.length > 0 ? (
+                        realIncentives.map((plan, idx) => (
+                          <div key={idx} className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-750 transition-colors cursor-pointer" onClick={() => openDetail('incentive', plan)}>
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-14 h-14 shrink-0">
+                                <svg className="w-full h-full -rotate-90">
+                                  <circle cx="28" cy="28" r="25" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+                                  <circle cx="28" cy="28" r="25" fill="none" stroke={plan.progress === 100 ? '#10b981' : plan.progress >= 50 ? '#f59e0b' : '#ef4444'} strokeWidth="6" strokeLinecap="round" strokeDasharray={`${plan.progress * 1.57} 157`} />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className={`text-sm font-bold ${plan.progress === 100 ? 'text-emerald-600' : plan.progress >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{plan.progress}%</span>
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">{plan.name}</p>
+                                  <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
+                                  <Badge variant={plan.status === '已完成' ? 'success' : plan.status === '进行中' ? 'info' : 'default'} size="sm">
+                                    {plan.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-neutral-500 mt-1">{plan.description}</p>
+                                <div className="flex items-center gap-4 mt-2 text-xs">
+                                  <span className="text-neutral-500">目标: <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatCurrency(plan.target, 'JPY')}</span></span>
+                                  <span className="text-neutral-500">已达成: <span className="font-medium text-blue-600">{formatCurrency(plan.current, 'JPY')}</span></span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-neutral-500">暂无激励计划数据</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                  第四段：待办跟进与动态（智能任务清单）
+                  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between w-full">
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      待办跟进
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={createNewTask} className="flex items-center gap-1">
+                        <Plus className="w-4 h-4" />
+                        新建待办
+                      </Button>
+                      <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
+                        {['全部', '进行中', '已完成', '已取消'].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => setTaskFilter(status)}
+                            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                              taskFilter === status
+                                ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
+                                : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                            }`}
+                          >
+                            {status}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {tasks.filter(t => taskFilter === '全部' || t.status === taskFilter).map((task, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-750 transition-colors cursor-pointer" onClick={() => openDetail('task', task)}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleTaskComplete(task.id); }}
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            task.status === '已完成' ? 'bg-emerald-500 border-emerald-500' : 'border-neutral-300 dark:border-neutral-600 hover:border-emerald-500'
+                          }`}
+                        >
+                          {task.status === '已完成' && <Check className="w-3 h-3 text-white" />}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium ${task.status === '已完成' ? 'line-through text-neutral-400' : 'text-neutral-900 dark:text-white'}`}>
+                            {task.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <ProgressBar value={task.progress} size="sm" className="w-32" />
+                            <span className="text-xs text-neutral-400">{task.progress}%</span>
+                          </div>
+                        </div>
+                        <Badge variant={task.status === '已完成' ? 'success' : task.status === '进行中' ? 'info' : task.status === '已取消' ? 'danger' : 'warning'} size="sm">
+                          {task.status}
+                        </Badge>
+                        <ChevronRight className="w-4 h-4 text-neutral-400" />
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* 详情弹窗 */}
+              <AnimatePresence>
+                {detailModal.type && detailModal.data && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={closeDetail}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="bg-white dark:bg-neutral-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-auto"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {detailModal.type === 'deal' && (
+                        <Card className="w-full max-w-lg">
+                          <CardHeader className="border-b border-neutral-200 dark:border-neutral-800">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="flex items-center gap-2">
+                                <Briefcase className="w-5 h-5 text-blue-600" />
+                                商机详情
+                              </CardTitle>
+                              <button onClick={closeDetail} className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-6 space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">{detailModal.data.name}</h3>
+                                <p className="text-sm text-neutral-500 mt-1">{detailModal.data.description}</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">客户</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.customer}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">负责人</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.owner}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">金额</p>
+                                <p className="text-sm font-semibold text-blue-600">{formatCurrency(detailModal.data.amount, 'JPY')}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">预计结单</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.closeDate}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">阶段</p>
+                                <Badge variant="default" size="sm">{detailModal.data.stage}</Badge>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">状态</p>
+                                <Badge variant={detailModal.data.status === '进行中' ? 'info' : detailModal.data.stage === '赢单' ? 'success' : 'danger'} size="sm">
+                                  {detailModal.data.status}
+                                </Badge>
+                              </div>
+                            </div>
+                            {detailModal.data.review && (
+                              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">复盘标签</p>
+                                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">{detailModal.data.review}</p>
+                              </div>
+                            )}
+                            <div className="flex gap-2 pt-4">
+                              <Button variant="primary" size="sm" className="flex-1">编辑商机</Button>
+                              <Button variant="outline" size="sm" className="flex-1">查看历史</Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {detailModal.type === 'activity' && (
+                        <Card className="w-full max-w-lg">
+                          <CardHeader className="border-b border-neutral-200 dark:border-neutral-800">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-purple-600" />
+                                市场活动详情
+                              </CardTitle>
+                              <button onClick={closeDetail} className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-6 space-y-4">
+                            <div>
+                              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">{detailModal.data.name}</h3>
+                              <p className="text-sm text-neutral-500 mt-1">{detailModal.data.description}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">活动类型</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.type}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">活动地点</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.location}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">开始日期</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.startDate}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">结束日期</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.endDate}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">预算</p>
+                                <p className="text-sm font-semibold text-blue-600">{formatCurrency(detailModal.data.budget, 'JPY')}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">状态</p>
+                                <Badge variant={detailModal.data.status === '进行中' ? 'info' : detailModal.data.status === '已完结' ? 'success' : 'default'} size="sm">
+                                  {detailModal.data.status}
+                                </Badge>
+                              </div>
+                            </div>
+                            {detailModal.data.status === '进行中' && (
+                              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className="text-sm font-medium text-purple-700 dark:text-purple-300">执行进度</p>
+                                  <p className="text-sm font-bold text-purple-600">{detailModal.data.progress}%</p>
+                                </div>
+                                <div className="h-3 bg-purple-200 dark:bg-purple-800 rounded-full overflow-hidden">
+                                  <div className="h-full bg-purple-500 rounded-full" style={{ width: `${detailModal.data.progress}%` }}></div>
+                                </div>
+                                <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">预计产出线索: {detailModal.data.expectedLeads}个</p>
+                              </div>
+                            )}
+                            {detailModal.data.status === '已完结' && (
+                              <div className="grid grid-cols-3 gap-3">
+                                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-center">
+                                  <p className="text-xl font-bold text-emerald-600">{detailModal.data.leads}</p>
+                                  <p className="text-xs text-emerald-500">实际线索</p>
+                                </div>
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-center">
+                                  <p className="text-xl font-bold text-blue-600">{formatCurrency(detailModal.data.relatedDeals, 'JPY')}</p>
+                                  <p className="text-xs text-blue-500">关联商机</p>
+                                </div>
+                                <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-center">
+                                  <p className="text-xl font-bold text-amber-600">{detailModal.data.roi}%</p>
+                                  <p className="text-xs text-amber-500">ROI</p>
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex gap-2 pt-4">
+                              <Button variant="primary" size="sm" className="flex-1">编辑活动</Button>
+                              <Button variant="outline" size="sm" className="flex-1">查看报告</Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {detailModal.type === 'incentive' && (
+                        <Card className="w-full max-w-lg">
+                          <CardHeader className="border-b border-neutral-200 dark:border-neutral-800">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="flex items-center gap-2">
+                                <Gift className="w-5 h-5 text-amber-600" />
+                                激励计划详情
+                              </CardTitle>
+                              <button onClick={closeDetail} className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-6 space-y-4">
+                            <div>
+                              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">{detailModal.data.name}</h3>
+                              <p className="text-sm text-neutral-500 mt-1">{detailModal.data.description}</p>
+                            </div>
+                            <div className="flex items-center justify-center py-4">
+                              <div className="relative w-32 h-32">
+                                <svg className="w-full h-full -rotate-90">
+                                  <circle cx="64" cy="64" r="58" fill="none" stroke="#e5e7eb" strokeWidth="12" />
+                                  <circle cx="64" cy="64" r="58" fill="none" stroke={detailModal.data.progress === 100 ? '#10b981' : detailModal.data.progress >= 50 ? '#f59e0b' : '#ef4444'} strokeWidth="12" strokeLinecap="round" strokeDasharray={`${detailModal.data.progress * 3.65} 365`} />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className={`text-3xl font-bold ${detailModal.data.progress === 100 ? 'text-emerald-600' : detailModal.data.progress >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{detailModal.data.progress}%</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">目标金额</p>
+                                <p className="text-sm font-semibold text-neutral-900 dark:text-white">{formatCurrency(detailModal.data.target, 'JPY')}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">已达成</p>
+                                <p className="text-sm font-semibold text-blue-600">{formatCurrency(detailModal.data.current, 'JPY')}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">当前档位</p>
+                                <p className="text-sm font-medium text-neutral-900 dark:text-white">{detailModal.data.tier || detailModal.data.currentTier || '暂无'}</p>
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">状态</p>
+                                <Badge variant={detailModal.data.status === '已完成' ? 'success' : detailModal.data.status === '进行中' ? 'info' : 'default'} size="sm">
+                                  {detailModal.data.status}
+                                </Badge>
+                              </div>
+                            </div>
+                            {detailModal.data.nextTier && (
+                              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                                <p className="text-sm font-medium text-amber-700 dark:text-amber-300">解锁下一档位</p>
+                                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">再完成 {formatCurrency(detailModal.data.nextTier, 'JPY')} 即可解锁</p>
+                                {detailModal.data.nextTierReward && (
+                                  <p className="text-xs text-amber-600 dark:text-amber-400">预计奖励: {formatCurrency(detailModal.data.nextTierReward, 'JPY')}</p>
+                                )}
+                              </div>
+                            )}
+                            {detailModal.data.reward && (
+                              <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">已获得奖励</p>
+                                <p className="text-lg font-bold text-emerald-600 mt-1">{formatCurrency(detailModal.data.reward, 'JPY')}</p>
+                              </div>
+                            )}
+                            <div className="flex gap-2 pt-4">
+                              <Button variant="primary" size="sm" className="flex-1">查看规则</Button>
+                              <Button variant="outline" size="sm" className="flex-1">联系经理</Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {detailModal.type === 'task' && (
+                        <Card className="w-full max-w-lg">
+                          <CardHeader className="border-b border-neutral-200 dark:border-neutral-800">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="flex items-center gap-2">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                                待办任务详情
+                              </CardTitle>
+                              <div className="flex items-center gap-2">
+                                <button onClick={closeDetail} className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                                  <X className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                            {/* 任务标题和状态 */}
+                            <div>
+                              <input
+                                type="text"
+                                value={detailModal.data.title}
+                                onChange={(e) => updateTaskDetail(detailModal.data.id, 'title', e.target.value)}
+                                className="w-full text-lg font-semibold text-neutral-900 dark:text-white bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors"
+                              />
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant={detailModal.data.status === '已完成' ? 'success' : detailModal.data.status === '进行中' ? 'info' : detailModal.data.status === '已取消' ? 'danger' : 'warning'} size="sm">
+                                  {detailModal.data.status}
+                                </Badge>
+                                <Badge variant={detailModal.data.priority === '高' ? 'danger' : detailModal.data.priority === '中' ? 'warning' : 'info'} size="sm">
+                                  {detailModal.data.priority === '高' ? '高优先级' : detailModal.data.priority === '中' ? '中优先级' : '低优先级'}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* 任务目标 */}
+                            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Target className="w-4 h-4 text-amber-600" />
+                                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">任务目标</p>
+                              </div>
+                              <textarea
+                                value={detailModal.data.goal || ''}
+                                onChange={(e) => updateTaskDetail(detailModal.data.id, 'goal', e.target.value)}
+                                className="w-full text-sm text-neutral-700 dark:text-neutral-300 bg-transparent resize-none focus:outline-none"
+                                rows={2}
+                                placeholder="输入任务目标..."
+                              />
+                            </div>
+
+                            {/* 任务详情 */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">负责人</p>
+                                <input
+                                  type="text"
+                                  value={detailModal.data.assignee}
+                                  onChange={(e) => updateTaskDetail(detailModal.data.id, 'assignee', e.target.value)}
+                                  className="w-full text-sm font-medium text-neutral-900 dark:text-white bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors mt-1"
+                                />
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">截止日期</p>
+                                <input
+                                  type="date"
+                                  value={detailModal.data.dueDate}
+                                  onChange={(e) => updateTaskDetail(detailModal.data.id, 'dueDate', e.target.value)}
+                                  className="w-full text-sm font-medium text-neutral-900 dark:text-white bg-neutral-100 dark:bg-neutral-700 rounded border-none px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">关联商机</p>
+                                <input
+                                  type="text"
+                                  value={detailModal.data.relatedDeal}
+                                  onChange={(e) => updateTaskDetail(detailModal.data.id, 'relatedDeal', e.target.value)}
+                                  className="w-full text-sm font-medium text-blue-600 bg-transparent border-b border-transparent hover:border-neutral-300 dark:hover:border-neutral-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors mt-1"
+                                />
+                              </div>
+                              <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                                <p className="text-xs text-neutral-500">优先级</p>
+                                <select
+                                  value={detailModal.data.priority}
+                                  onChange={(e) => updateTaskDetail(detailModal.data.id, 'priority', e.target.value)}
+                                  className="w-full text-sm font-medium bg-neutral-100 dark:bg-neutral-700 rounded border-none px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="高">高</option>
+                                  <option value="中">中</option>
+                                  <option value="低">低</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* 任务描述 */}
+                            <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                              <p className="text-xs font-medium text-neutral-500 mb-2">任务描述</p>
+                              <textarea
+                                value={detailModal.data.description}
+                                onChange={(e) => updateTaskDetail(detailModal.data.id, 'description', e.target.value)}
+                                className="w-full text-sm text-neutral-700 dark:text-neutral-300 bg-transparent resize-none focus:outline-none"
+                                rows={3}
+                                placeholder="输入任务描述..."
+                              />
+                            </div>
+
+                            {/* 子任务管理 */}
+                            <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden">
+                              <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
+                                <div className="flex items-center gap-2">
+                                  <ListTodo className="w-4 h-4 text-purple-600" />
+                                  <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">子任务拆分</p>
+                                </div>
+                                <span className="text-xs text-neutral-500">{detailModal.data.subtasks?.filter(st => st.status === '已完成').length || 0}/{detailModal.data.subtasks?.length || 0}</span>
+                              </div>
+                              <div className="p-3 space-y-2">
+                                {detailModal.data.subtasks && detailModal.data.subtasks.length > 0 ? (
+                                  detailModal.data.subtasks.map((subtask, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 p-2 bg-neutral-100 dark:bg-neutral-750 rounded-lg group">
+                                      <button
+                                        onClick={() => updateSubtaskStatus(detailModal.data.id, subtask.id, subtask.status === '已完成' ? '待跟进' : '已完成')}
+                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                          subtask.status === '已完成' 
+                                            ? 'bg-green-500 border-green-500' 
+                                            : 'border-neutral-300 dark:border-neutral-600 hover:border-green-500'
+                                        }`}
+                                      >
+                                        {subtask.status === '已完成' && <Check className="w-3 h-3 text-white" />}
+                                      </button>
+                                      <input
+                                        type="text"
+                                        value={subtask.title}
+                                        onChange={(e) => {
+                                          setTasks(tasks.map(t => {
+                                            if (t.id === detailModal.data.id) {
+                                              return {
+                                                ...t,
+                                                subtasks: t.subtasks.map(st =>
+                                                  st.id === subtask.id ? { ...st, title: e.target.value } : st
+                                                )
+                                              };
+                                            }
+                                            return t;
+                                          }));
+                                        }}
+                                        className={`flex-1 text-sm bg-transparent border-none focus:outline-none ${
+                                          subtask.status === '已完成' ? 'line-through text-neutral-400' : 'text-neutral-900 dark:text-white'
+                                        }`}
+                                      />
+                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Badge variant={subtask.status === '已完成' ? 'success' : subtask.status === '进行中' ? 'info' : 'warning'} size="sm">
+                                          {subtask.status}
+                                        </Badge>
+                                        <button
+                                          onClick={() => deleteSubtask(detailModal.data.id, subtask.id)}
+                                          className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded"
+                                        >
+                                          <Trash2 className="w-3 h-3 text-neutral-400" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-sm text-neutral-500 text-center py-4">暂无子任务，点击下方按钮添加</p>
+                                )}
+                                <div className="flex items-center gap-2 pt-2">
+                                  <input
+                                    type="text"
+                                    placeholder="添加子任务..."
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        addSubtask(detailModal.data.id, e.currentTarget.value);
+                                        e.currentTarget.value = '';
+                                      }
+                                    }}
+                                    className="flex-1 text-sm bg-neutral-200 dark:bg-neutral-700 rounded px-3 py-2 border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      const input = document.querySelector('input[placeholder="添加子任务..."]') as HTMLInputElement;
+                                      if (input) {
+                                        addSubtask(detailModal.data.id, input.value);
+                                        input.value = '';
+                                      }
+                                    }}
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 任务进度 */}
+                            <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">任务进度</p>
+                                <p className="text-sm font-bold text-blue-600">{detailModal.data.progress}%</p>
+                              </div>
+                              <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${detailModal.data.progress}%` }}></div>
+                              </div>
+                            </div>
+
+                            {/* 状态切换按钮 */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <Button
+                                variant={detailModal.data.status === '待跟进' ? 'primary' : 'outline'}
+                                size="sm"
+                                onClick={() => updateTaskStatus(detailModal.data.id, '待跟进')}
+                              >
+                                待跟进
+                              </Button>
+                              <Button
+                                variant={detailModal.data.status === '进行中' ? 'primary' : 'outline'}
+                                size="sm"
+                                onClick={() => updateTaskStatus(detailModal.data.id, '进行中')}
+                              >
+                                进行中
+                              </Button>
+                              <Button
+                                variant={detailModal.data.status === '已完成' ? 'primary' : 'outline'}
+                                size="sm"
+                                onClick={() => updateTaskStatus(detailModal.data.id, '已完成')}
+                              >
+                                已完成
+                              </Button>
+                              <Button
+                                variant={detailModal.data.status === '已取消' ? 'primary' : 'outline'}
+                                size="sm"
+                                onClick={() => updateTaskStatus(detailModal.data.id, '已取消')}
+                              >
+                                已取消
+                              </Button>
+                            </div>
+                            <div className="flex gap-2 pt-4">
+                              <Button variant="danger" size="sm" className="flex-1" onClick={() => toggleTaskComplete(detailModal.data.id)}>
+                                {detailModal.data.status === '已完成' ? '撤销完成' : '标记完成'}
+                              </Button>
+                              <Button variant="outline" size="sm" className="flex-1">删除任务</Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
@@ -1088,7 +2274,519 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
           )}
 
           {/* ══════════════════════════════════════════════
-              TAB 4: 合作机会
+              TAB 4: 意愿度 (Willingness)
+              ══════════════════════════════════════════════ */}
+          {activeTab === 'willingness' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><CardTitle>意愿度评估</CardTitle><Badge variant="info" size="sm">Mindshare 心智份额</Badge></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-xl">
+                        <div>
+                          <p className="text-sm text-neutral-500">综合意愿度得分</p>
+                          <p className="text-3xl font-bold text-blue-600 mt-1">82</p>
+                        </div>
+                        <div className="w-20 h-20">
+                          <svg viewBox="0 0 80 80" className="w-full h-full">
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#e4e4e7" strokeWidth="8"/>
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#2563eb" strokeWidth="8" strokeDasharray={`${82 * 1.88} 188`} strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">资源投入意愿</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-500 rounded-full" style={{width: '90%'}}></div>
+                            </div>
+                            <span className="text-sm font-semibold text-emerald-600">90%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">资金投入意愿</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-amber-500 rounded-full" style={{width: '65%'}}></div>
+                            </div>
+                            <span className="text-sm font-semibold text-amber-600">65%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">响应速度</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-500 rounded-full" style={{width: '85%'}}></div>
+                            </div>
+                            <span className="text-sm font-semibold text-emerald-600">85%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">目标承诺度</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-blue-500 rounded-full" style={{width: '78%'}}></div>
+                            </div>
+                            <span className="text-sm font-semibold text-blue-600">78%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">培训参与度</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-purple-500 rounded-full" style={{width: '92%'}}></div>
+                            </div>
+                            <span className="text-sm font-semibold text-purple-600">92%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0">
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold text-neutral-900 mb-2">评估解读</h4>
+                          <p className="text-sm text-neutral-600 leading-relaxed">该伙伴意愿度较高，表现出强烈的合作积极性。特别在培训参与和资源投入方面表现突出，显示出对厂商产品的高度认可。建议重点培养，可考虑纳入核心合作伙伴计划。</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">近期表现趋势</CardTitle></CardHeader>
+                        <CardContent>
+                          <div className="flex items-end justify-between h-24 gap-2">
+                            {[65, 72, 68, 78, 82, 79].map((val, i) => (
+                              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                                <div className="w-full bg-blue-100 dark:bg-blue-900/30 rounded-t" style={{height: `${val * 0.8}px`, backgroundColor: val >= 75 ? '#2563eb' : '#cbd5e1'}}></div>
+                                <span className="text-[10px] text-neutral-400">{['1月','2月','3月','4月','5月','6月'][i]}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">提升建议</CardTitle></CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">建议在QBR中引导设定更高的业绩目标，提升承诺水平</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">资金投入意愿有提升空间，可探讨更多联合营销机会</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════
+              TAB 5: 能力度 (Capability)
+              ══════════════════════════════════════════════ */}
+          {activeTab === 'capability' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><CardTitle>能力度评估</CardTitle><Badge variant="success" size="sm">硬实力</Badge></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-emerald-50/50 rounded-xl">
+                        <div>
+                          <p className="text-sm text-neutral-500">综合能力得分</p>
+                          <p className="text-3xl font-bold text-emerald-600 mt-1">76</p>
+                        </div>
+                        <div className="w-20 h-20">
+                          <svg viewBox="0 0 80 80" className="w-full h-full">
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#e4e4e7" strokeWidth="8"/>
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#059669" strokeWidth="8" strokeDasharray={`${76 * 1.88} 188`} strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-neutral-900 dark:text-white">12</p>
+                          <p className="text-xs text-neutral-500 mt-1">认证工程师</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-emerald-600">94%</p>
+                          <p className="text-xs text-neutral-500 mt-1">实施成功率</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-blue-600">68%</p>
+                          <p className="text-xs text-neutral-500 mt-1">赢单率</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-purple-600">95%</p>
+                          <p className="text-xs text-neutral-500 mt-1">客户续约率</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">销售能力</span>
+                          <span className="text-sm font-semibold text-blue-600">72%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">技术能力</span>
+                          <span className="text-sm font-semibold text-emerald-600">85%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">交付服务能力</span>
+                          <span className="text-sm font-semibold text-purple-600">92%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">市场拓展能力</span>
+                          <span className="text-sm font-semibold text-amber-600">65%</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-0">
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold text-neutral-900 mb-2">评估解读</h4>
+                          <p className="text-sm text-neutral-600 leading-relaxed">该伙伴技术能力和交付服务能力突出，拥有12名认证工程师，实施成功率达94%。销售能力有提升空间，建议加强销售培训和商机跟进技巧。</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">能力雷达图</CardTitle></CardHeader>
+                        <CardContent>
+                          <div className="flex justify-center">
+                            <div className="w-48 h-48 relative">
+                              <svg viewBox="0 0 100 100" className="w-full h-full">
+                                {[0.3, 0.5, 0.7, 0.9].map((scale, si) => (
+                                  <polygon key={si} points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill="none" stroke="#e4e4e7" strokeWidth="0.5" transform={`scale(${scale})`} style={{ transformOrigin: "50% 50%" }}/>
+                                ))}
+                                {[0, 60, 120, 180, 240, 300].map((angle, ai) => {
+                                  const rad = (angle * Math.PI) / 180;
+                                  return <line key={ai} x1="50" y1="50" x2={50 + 40 * Math.cos(rad)} y2={50 + 40 * Math.sin(rad)} stroke="#e4e4e7" strokeWidth="0.5"/>;
+                                })}
+                                {['销售','技术','交付','市场','客服','创新'].map((label, li) => {
+                                  const rad = ((li * 60 - 90) * Math.PI) / 180;
+                                  const x = 50 + 48 * Math.cos(rad);
+                                  const y = 50 + 48 * Math.sin(rad);
+                                  return <text key={li} x={x} y={y} textAnchor="middle" fontSize="8" fill="#6b7280">{label}</text>;
+                                })}
+                                <polygon points="50,15 77,28 82,55 70,82 30,82 25,55 38,28" fill="rgba(5,150,105,0.15)" stroke="#059669" strokeWidth="1.5"/>
+                                {[70,85,92,65,88,75].map((val, vi) => {
+                                  const rad = ((vi * 60 - 90) * Math.PI) / 180;
+                                  const x = 50 + (val / 100) * 40 * Math.cos(rad);
+                                  const y = 50 + (val / 100) * 40 * Math.sin(rad);
+                                  return <circle key={vi} cx={x} cy={y} r="2" fill="#059669"/>;
+                                })}
+                              </svg>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">能力短板</CardTitle></CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">市场拓展能力较弱，建议增加市场活动策划培训</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">技术能力突出，可考虑认证为技术服务合作伙伴</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════
+              TAB 6: 业务契合度 (Business Fit)
+              ══════════════════════════════════════════════ */}
+          {activeTab === 'businessFit' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><CardTitle>业务契合度评估</CardTitle><Badge variant="warning" size="sm">战略匹配</Badge></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-purple-50/50 rounded-xl">
+                        <div>
+                          <p className="text-sm text-neutral-500">综合契合度得分</p>
+                          <p className="text-3xl font-bold text-purple-600 mt-1">88</p>
+                        </div>
+                        <div className="w-20 h-20">
+                          <svg viewBox="0 0 80 80" className="w-full h-full">
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#e4e4e7" strokeWidth="8"/>
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#7c3aed" strokeWidth="8" strokeDasharray={`${88 * 1.88} 188`} strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-emerald-600">92%</p>
+                          <p className="text-xs text-neutral-500 mt-1">客群重合度</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-blue-600">85%</p>
+                          <p className="text-xs text-neutral-500 mt-1">产品互补度</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-purple-600">88%</p>
+                          <p className="text-xs text-neutral-500 mt-1">模式相似度</p>
+                        </div>
+                        <div className="p-4 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-center">
+                          <p className="text-2xl font-bold text-amber-600">78%</p>
+                          <p className="text-xs text-neutral-500 mt-1">地域覆盖匹配</p>
+                        </div>
+                      </div>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">客群画像分析</CardTitle></CardHeader>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-neutral-600">Enterprise级客户占比</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-32 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                <div className="h-full bg-emerald-500 rounded-full" style={{width: '92%'}}></div>
+                              </div>
+                              <span className="text-sm font-semibold">92%</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-neutral-600">政务行业客户占比</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-32 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500 rounded-full" style={{width: '75%'}}></div>
+                              </div>
+                              <span className="text-sm font-semibold">75%</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-neutral-600">金融行业客户占比</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-32 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                <div className="h-full bg-purple-500 rounded-full" style={{width: '88%'}}></div>
+                              </div>
+                              <span className="text-sm font-semibold">88%</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0">
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold text-neutral-900 mb-2">评估解读</h4>
+                          <p className="text-sm text-neutral-600 leading-relaxed">该伙伴与厂商业务高度契合，客群画像重合度达92%，产品组合互补性强。双方商业模式相似，均以订阅制SaaS为主，合作协同效应显著。</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">产品组合分析</CardTitle></CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-emerald-50/30 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span className="text-sm">安全软件代理</span>
+                              </div>
+                              <span className="text-xs font-semibold text-emerald-600">互补品</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-emerald-50/30 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span className="text-sm">云服务集成</span>
+                              </div>
+                              <span className="text-xs font-semibold text-emerald-600">互补品</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-blue-50/30 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                <span className="text-sm">咨询服务</span>
+                              </div>
+                              <span className="text-xs font-semibold text-blue-600">中性</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-red-50/30 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                <span className="text-sm">竞品A代理</span>
+                              </div>
+                              <span className="text-xs font-semibold text-red-600">竞品</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">合作建议</CardTitle></CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">高度契合，建议深化战略合作，拓展联合解决方案</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">存在竞品代理，需关注合作深度和排他性</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════
+              TAB 7: 符合度 (Compliance)
+              ══════════════════════════════════════════════ */}
+          {activeTab === 'compliance' && (
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><CardTitle>符合度评估</CardTitle><Badge variant="danger" size="sm">合规与底线</Badge></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-xl">
+                        <div>
+                          <p className="text-sm text-neutral-500">综合符合度得分</p>
+                          <p className="text-3xl font-bold text-amber-600 mt-1">95</p>
+                        </div>
+                        <div className="w-20 h-20">
+                          <svg viewBox="0 0 80 80" className="w-full h-full">
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#e4e4e7" strokeWidth="8"/>
+                            <circle cx="40" cy="40" r="30" fill="none" stroke="#d97706" strokeWidth="8" strokeDasharray={`${95 * 1.88} 188`} strokeLinecap="round"/>
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      <Card className="bg-emerald-50/30 border-emerald-200">
+                        <CardContent className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600"/>
+                          </div>
+                          <div>
+                            <p className="font-medium text-neutral-900">资质审核通过</p>
+                            <p className="text-xs text-neutral-500">公司资质齐全，无违规记录</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">资质合规</span>
+                          <span className="text-sm font-semibold text-emerald-600">100%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">规则遵守</span>
+                          <span className="text-sm font-semibold text-emerald-600">98%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">业绩达标率</span>
+                          <span className="text-sm font-semibold text-blue-600">88%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                          <span className="text-sm">投诉率</span>
+                          <span className="text-sm font-semibold text-emerald-600">0%</span>
+                        </div>
+                      </div>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">资质信息</CardTitle></CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-neutral-500">注册资本</span>
+                            <span className="font-medium">500万元</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-neutral-500">成立年限</span>
+                            <span className="font-medium">8年</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-neutral-500">信用等级</span>
+                            <span className="font-medium text-emerald-600">A级</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-neutral-500">黑名单状态</span>
+                            <span className="font-medium text-emerald-600">无记录</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-0">
+                        <CardContent className="p-4">
+                          <h4 className="font-semibold text-neutral-900 mb-2">评估解读</h4>
+                          <p className="text-sm text-neutral-600 leading-relaxed">该伙伴合规表现优秀，资质齐全，无违规记录。业绩达标率88%，接近金牌伙伴门槛。建议在QBR中讨论提升业绩目标，冲击更高等级。</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">违规记录</CardTitle></CardHeader>
+                        <CardContent className="text-center py-8">
+                          <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3"/>
+                          <p className="text-sm font-medium text-neutral-900">暂无违规记录</p>
+                          <p className="text-xs text-neutral-500 mt-1">合作期间表现良好</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">等级达标情况</CardTitle></CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span className="text-neutral-500">当前等级</span>
+                                <span className="font-medium text-amber-600">金牌</span>
+                              </div>
+                              <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                <div className="h-full bg-amber-500 rounded-full" style={{width: '88%'}}></div>
+                              </div>
+                              <div className="flex justify-between text-xs text-neutral-400 mt-1">
+                                <span>当前: 88%</span>
+                                <span>目标: 100%</span>
+                              </div>
+                            </div>
+                            <p className="text-xs text-neutral-500">距离白金等级还差 ¥200万 业绩</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2"><CardTitle className="text-sm">合规建议</CardTitle></CardHeader>
+                        <CardContent className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">合规表现优秀，继续保持</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0"></span>
+                            <p className="text-xs text-neutral-600">业绩达标率接近门槛，建议制定提升计划</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════
+              TAB 8: 合作机会
               ══════════════════════════════════════════════ */}
           {activeTab === 'opportunity' && (
             <div className="space-y-6">
