@@ -82,12 +82,25 @@ export const MarketingPlanPage = () => {
     supabase.from('marketing_activities').select('*').order('event_date').then(({ data }: any) => { if (data) setActivities(data); });
     supabase.from('partners').select('id, name, tier').order('name').then(({ data }: any) => { if (data) setPartners(data); });
     // Load global currency setting
-    supabase.from('global_settings').select('currency').eq('id', 'default').single().then(({ data }: any) => { 
-      if (data?.currency) setGlobalCurrency(data.currency as 'CNY' | 'USD' | 'JPY'); 
-    }).catch(() => {
-      // Fallback to localStorage or default
-      const saved = localStorage.getItem('global_currency');
-      if (saved) setGlobalCurrency(saved as 'CNY' | 'USD' | 'JPY');
+    supabase.from('global_settings').select('currency').eq('id', 'default').single().then(({ data, error }: any) => { 
+      if (error) {
+        console.warn('Failed to load global currency:', error);
+      }
+      if (data?.currency) {
+        console.log('Currency from DB:', data.currency);
+        setGlobalCurrency(data.currency as 'CNY' | 'USD' | 'JPY');
+      } else {
+        // Fallback to localStorage or default
+        const saved = localStorage.getItem('global_currency');
+        console.log('Currency from localStorage:', saved);
+        if (saved) {
+          setGlobalCurrency(saved as 'CNY' | 'USD' | 'JPY');
+        } else {
+          console.log('Using default currency: CNY');
+        }
+      }
+    }).catch((e: any) => {
+      console.error('Unexpected error loading currency:', e);
     });
   }, [currentYear]);
 
