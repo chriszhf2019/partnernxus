@@ -8,7 +8,6 @@ import { cn } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useConfig } from '../../contexts/ConfigContext';
-import { usePermission } from '../../hooks/usePermission';
 
 interface NavItem {
   path: string;
@@ -20,26 +19,26 @@ interface NavItem {
 const NAV_GROUPS: { items: NavItem[] }[] = [
   {
     items: [
-      { path: '/ecosystem', labelKey: 'nav.dashboard', icon: LayoutDashboard, permission: 'dashboard_view' },
+      { path: '/ecosystem', labelKey: 'nav.dashboard', icon: LayoutDashboard },
     ],
   },
   {
     items: [
-      { path: '/partners', labelKey: 'nav.partners', icon: Handshake, permission: 'partners_view' },
-      { path: '/deals', labelKey: 'nav.deals', icon: FileText, permission: 'deals_view' },
+      { path: '/partners', labelKey: 'nav.partners', icon: Handshake },
+      { path: '/deals', labelKey: 'nav.deals', icon: FileText },
     ],
   },
   {
     items: [
-      { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone, permission: 'marketing_view' },
-      { path: '/incentives', labelKey: 'nav.incentives', icon: Gift, permission: 'incentives_view' },
-      { path: '/enablement', labelKey: 'nav.enablement', icon: GraduationCap, permission: 'enablement_view' },
+      { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone },
+      { path: '/incentives', labelKey: 'nav.incentives', icon: Gift },
+      { path: '/enablement', labelKey: 'nav.enablement', icon: GraduationCap },
     ],
   },
   {
     items: [
-      { path: '/analytics', labelKey: 'nav.analytics', icon: BarChart3, permission: 'analytics_view' },
-      { path: '/settings', labelKey: 'nav.settings', icon: Settings, permission: 'settings_global' },
+      { path: '/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
+      { path: '/settings', labelKey: 'nav.settings', icon: Settings },
     ],
   },
 ];
@@ -48,17 +47,11 @@ export const Sidebar = memo(() => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { config } = useConfig();
-  const { hasPermission } = usePermission();
   const location = useLocation();
   const navigate = useNavigate();
 
   const isActive = (path: string) =>
     location.pathname === path || (path !== '/ecosystem' && location.pathname.startsWith(path));
-
-  const isVisible = (item: NavItem) => {
-    if (!item.permission) return true;
-    return hasPermission(item.permission as any);
-  };
 
   return (
     <aside
@@ -78,16 +71,12 @@ export const Sidebar = memo(() => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-auto">
-        {NAV_GROUPS.map((group, gi, arr) => {
-          const visibleItems = group.items.filter(isVisible);
-          if (visibleItems.length === 0) return null;
-          // Only show separator if a previous group in the original array had visible items
-          const hasPreviousVisible = arr.slice(0, gi).some(g => g.items.some(isVisible));
+        {NAV_GROUPS.map((group, gi) => {
           return (
             <div key={gi}>
-              {hasPreviousVisible && <div className="mx-3 mb-2 h-px bg-neutral-200 dark:bg-neutral-800" />}
+              {gi > 0 && <div className="mx-3 mb-2 h-px bg-neutral-200 dark:bg-neutral-800" />}
               <div className="space-y-0.5">
-                {visibleItems.map((item) => {
+                {group.items.map((item) => {
                   const active = isActive(item.path);
                   return (
                     <button
