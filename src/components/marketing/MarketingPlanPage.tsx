@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Save, Send, CheckCircle2, XCircle, TrendingUp, RefreshCw, History, DollarSign, PieChart, BarChart3, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Send, CheckCircle2, XCircle, TrendingUp, RefreshCw, History, DollarSign, PieChart, BarChart3, AlertCircle, CheckCircle, Users } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
@@ -130,8 +130,11 @@ export const MarketingPlanPage = () => {
   const totalPlans = plan.length;
   const completedPlans = plan.filter((p: any) => p.execution_status === 'Completed').length;
   const inProgressPlans = plan.filter((p: any) => p.execution_status === 'In Progress').length;
+  const pendingPlans = plan.filter((p: any) => p.execution_status === 'Planning').length;
   const totalBudgetRequested = plan.reduce((s: number, p: any) => s + Number(p.total_budget || 0), 0);
   const totalBudgetApproved = plan.reduce((s: number, p: any) => s + Number(p.approved_amount || 0), 0);
+  const totalExpectedAttendees = plan.reduce((s: number, p: any) => s + Number(p.expected_attendees || 0), 0);
+  const budgetUtilizationRate = annualBudget > 0 ? Math.round((totalActual / annualBudget) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -142,7 +145,7 @@ export const MarketingPlanPage = () => {
           <div>
             <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">年度营销预算规划</h1>
             <p className="text-sm text-neutral-500">
-              2025年度 ·
+              {currentYear}年度 ·
               <span className={`ml-1 px-2 py-0.5 rounded text-xs font-medium ${STATUS_BG[config.status]} ${STATUS_COLOR[config.status]}`}>{STATUS_LABEL[config.status]}</span>
               {isDraft && ' · 可编辑年度和季度预算'}
               {isPending && ' · 等待市场总监批复'}
@@ -169,7 +172,7 @@ export const MarketingPlanPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card>
           <div className="flex items-center gap-3 p-4">
             <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
@@ -187,8 +190,8 @@ export const MarketingPlanPage = () => {
               <BarChart3 className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-xs text-neutral-500">执行率</p>
-              <p className="text-lg font-semibold text-emerald-600">{executionRate}%</p>
+              <p className="text-xs text-neutral-500">预算执行率</p>
+              <p className="text-lg font-semibold text-emerald-600">{budgetUtilizationRate}%</p>
             </div>
           </div>
         </Card>
@@ -205,12 +208,34 @@ export const MarketingPlanPage = () => {
         </Card>
         <Card>
           <div className="flex items-center gap-3 p-4">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500">进行中</p>
+              <p className="text-lg font-semibold text-blue-600">{inProgressPlans} 项</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3 p-4">
             <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
               <CheckCircle className="w-5 h-5 text-purple-600" />
             </div>
             <div>
               <p className="text-xs text-neutral-500">已完成</p>
               <p className="text-lg font-semibold text-purple-600">{completedPlans} 项</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3 p-4">
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500">预计参会</p>
+              <p className="text-lg font-semibold text-indigo-600">{totalExpectedAttendees} 人</p>
             </div>
           </div>
         </Card>
@@ -346,24 +371,55 @@ export const MarketingPlanPage = () => {
 
       {/* Budget Distribution Chart */}
       <Card>
-        <CardHeader><CardTitle>预算分配与执行情况</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{currentYear}年度预算分配与执行情况</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row items-center gap-8">
             <PieSVG data={qBudgets} size={140} />
             <div className="flex-1">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {QUARTERS.map((q, i) => (
-                  <div key={q} className="p-3 rounded-lg" style={{ backgroundColor: `${QCOLORS[i]}15` }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full" style={{ background: QCOLORS[i] }} />
-                      <span className="text-xs font-medium">{q}</span>
+                {QUARTERS.map((q, i) => {
+                  const remaining = qBudgets[i] - actualSpendQ[i];
+                  const pct = qBudgets[i] > 0 ? Math.round((actualSpendQ[i] / qBudgets[i]) * 100) : 0;
+                  return (
+                    <div key={q} className="p-3 rounded-lg" style={{ backgroundColor: `${QCOLORS[i]}15` }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 rounded-full" style={{ background: QCOLORS[i] }} />
+                        <span className="text-xs font-medium">{q}</span>
+                      </div>
+                      <p className="text-lg font-bold" style={{ color: QCOLORS[i] }}>{fmtW(qBudgets[i])}</p>
+                      <p className="text-[10px] text-neutral-500">
+                        {actualSpendQ[i] > 0 ? (
+                          <span>
+                            已支出 {fmtW(actualSpendQ[i])} ({pct}%)
+                            {remaining >= 0 ? (
+                              <span className="text-emerald-600 ml-1">剩余 {fmtW(remaining)}</span>
+                            ) : (
+                              <span className="text-red-500 ml-1">超支 {fmtW(Math.abs(remaining))}</span>
+                            )}
+                          </span>
+                        ) : '暂未支出'}
+                      </p>
                     </div>
-                    <p className="text-lg font-bold" style={{ color: QCOLORS[i] }}>{fmtW(qBudgets[i])}</p>
-                    <p className="text-[10px] text-neutral-500">
-                      {actualSpendQ[i] > 0 ? `已支出 ${fmtW(actualSpendQ[i])}` : '暂未支出'}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neutral-600 dark:text-neutral-400">年度预算总计</span>
+                  <span className="font-bold text-blue-600">{fmtW(annualBudget)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs mt-1">
+                  <span className="text-neutral-600 dark:text-neutral-400">年度实际支出</span>
+                  <span className="font-bold text-emerald-600">{fmtW(totalActual)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs mt-1">
+                  <span className="text-neutral-600 dark:text-neutral-400">预算申请总额</span>
+                  <span className="font-bold text-amber-600">{fmtW(totalBudgetRequested)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs mt-1">
+                  <span className="text-neutral-600 dark:text-neutral-400">预算批复总额</span>
+                  <span className="font-bold text-purple-600">{fmtW(totalBudgetApproved)}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -378,7 +434,7 @@ export const MarketingPlanPage = () => {
         const approvedTotal = items.reduce((s: number, p: any) => s + Number(p.approved_amount||0), 0);
         const remaining = qBudget - approvedTotal;
         const updateRow = (id: string, f: string, v: any) => setPlan(prev => prev.map(p => p.id === id ? { ...p, [f]: v } : p));
-        const addRow = () => setPlan(prev => [...prev, { id: 'new-' + Date.now() + Math.random(), year: 2025, quarter: q, activity_type: 'Marketing', partner_id: '', partner_name: '', category: '线下峰会', region: '', city: '', expected_date: '', total_budget: 0, approved_amount: 0, expected_attendees: 0, expected_output: '', responsible_person: '', goal: '', execution_status: 'Planning', budget: 0, target_leads: 0, target_opps: 0, _new: true }]);
+        const addRow = () => setPlan(prev => [...prev, { id: 'new-' + Date.now() + Math.random(), year: currentYear, quarter: q, activity_type: 'Marketing', partner_id: '', partner_name: '', category: '线下峰会', region: '', city: '', expected_date: '', total_budget: 0, approved_amount: 0, expected_attendees: 0, expected_output: '', responsible_person: '', goal: '', execution_status: 'Planning', budget: 0, target_leads: 0, target_opps: 0, _new: true }]);
         const removeRow = (id: string) => setPlan(prev => prev.filter(p => p.id !== id));
         return (
           <Card key={q}>
