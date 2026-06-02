@@ -145,12 +145,12 @@ function PartnerProfileRoute() {
     );
   }
 
-  // Build pipeline from real deals
+  // Build pipeline from real deals — each stage maps to its corresponding deal lifecycle stage
   const dealPipeline = {
-    registered: relatedDeals.reduce((s: number, d: any) => s + Number(d.value || 0), 0),
-    solution: relatedDeals.filter((d: any) => d.status === 'Approved').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
-    commercial: relatedDeals.filter((d: any) => d.status === 'Pending').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
-    won: relatedDeals.filter((d: any) => d.status === 'Converted' || d.status === 'Closed Won').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+    registered: relatedDeals.filter((d: any) => d.stage === 'Registered' || !d.stage).reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+    solution: relatedDeals.filter((d: any) => d.stage === 'Solution' || d.status === 'Approved').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+    commercial: relatedDeals.filter((d: any) => d.stage === 'Commercial').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+    won: relatedDeals.filter((d: any) => d.stage === 'ClosedWon' || d.status === 'Converted' || d.status === 'Closed Won').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
   };
 
   // Merge pipeline data into partner details
