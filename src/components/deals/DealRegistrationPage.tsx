@@ -540,35 +540,35 @@ export const DealRegistrationPage = ({ stats, deals, onNewDeal, onDealUpdate }: 
                     {selectedDeal.stage === 'UnderReview' && (
                       <>
                         <Button variant="brand" size="sm" className="w-full"
-                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'Approved', lifecycle: [...selectedDeal.lifecycle, { stage: 'Approved', date: new Date().toISOString().split('T')[0], description: '渠道经理审批通过', actor: 'Alex Rivera', durationDays: 0 }] })}>
+                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'Approved', lifecycle: [...selectedDeal.lifecycle, { stage: 'Approved', date: new Date().toISOString().split('T')[0], description: '渠道经理审批通过', actor: '系统', durationDays: 0 }] })}>
                           <CheckCircle2 className="w-4 h-4" /> {t('deals.approve')}
                         </Button>
                         <Button variant="danger" size="sm" className="w-full"
-                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'ClosedLost', status: 'Closed Lost', lifecycle: [...selectedDeal.lifecycle, { stage: 'ClosedLost', date: new Date().toISOString().split('T')[0], description: '渠道经理拒绝报备', actor: 'Alex Rivera', durationDays: 0 }] })}>
+                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'ClosedLost', status: 'Closed Lost', lifecycle: [...selectedDeal.lifecycle, { stage: 'ClosedLost', date: new Date().toISOString().split('T')[0], description: '渠道经理拒绝报备', actor: '系统', durationDays: 0 }] })}>
                           <XCircle className="w-4 h-4" /> {t('deals.reject')}
                         </Button>
                       </>
                     )}
                     {selectedDeal.stage === 'Approved' && (
                       <Button variant="brand" size="sm" className="w-full"
-                        onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'Solution', lifecycle: [...selectedDeal.lifecycle, { stage: 'Solution', date: new Date().toISOString().split('T')[0], description: '进入方案跟进阶段', actor: 'Alex Rivera', durationDays: 0 }] })}>
+                        onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'Solution', lifecycle: [...selectedDeal.lifecycle, { stage: 'Solution', date: new Date().toISOString().split('T')[0], description: '进入方案跟进阶段', actor: '系统', durationDays: 0 }] })}>
                         <ArrowRight className="w-4 h-4" /> {t('deals.toSolution')}
                       </Button>
                     )}
                     {selectedDeal.stage === 'Solution' && (
                       <Button variant="brand" size="sm" className="w-full"
-                        onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'Commercial', lifecycle: [...selectedDeal.lifecycle, { stage: 'Commercial', date: new Date().toISOString().split('T')[0], description: '进入商务洽谈阶段', actor: 'Alex Rivera', durationDays: 0 }] })}>
+                        onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'Commercial', lifecycle: [...selectedDeal.lifecycle, { stage: 'Commercial', date: new Date().toISOString().split('T')[0], description: '进入商务洽谈阶段', actor: '系统', durationDays: 0 }] })}>
                         <ArrowRight className="w-4 h-4" /> {t('deals.toCommercial')}
                       </Button>
                     )}
                     {selectedDeal.stage === 'Commercial' && (
                       <>
                         <Button variant="brand" size="sm" className="w-full"
-                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'ClosedWon', status: 'Closed Won', actualCloseDate: new Date().toISOString().split('T')[0], lifecycle: [...selectedDeal.lifecycle, { stage: 'ClosedWon', date: new Date().toISOString().split('T')[0], description: '项目赢单', actor: 'Alex Rivera', durationDays: 0 }] })}>
+                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'ClosedWon', status: 'Closed Won', actualCloseDate: new Date().toISOString().split('T')[0], lifecycle: [...selectedDeal.lifecycle, { stage: 'ClosedWon', date: new Date().toISOString().split('T')[0], description: '项目赢单', actor: '系统', durationDays: 0 }] })}>
                           <TrendingUp className="w-4 h-4" /> {t('deals.markWon')}
                         </Button>
                         <Button variant="danger" size="sm" className="w-full"
-                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'ClosedLost', status: 'Closed Lost', lifecycle: [...selectedDeal.lifecycle, { stage: 'ClosedLost', date: new Date().toISOString().split('T')[0], description: '项目丢单', actor: 'Alex Rivera', durationDays: 0 }] })}>
+                          onClick={() => onDealUpdate?.({ ...selectedDeal, stage: 'ClosedLost', status: 'Closed Lost', lifecycle: [...selectedDeal.lifecycle, { stage: 'ClosedLost', date: new Date().toISOString().split('T')[0], description: '项目丢单', actor: '系统', durationDays: 0 }] })}>
                           <XCircle className="w-4 h-4" /> {t('deals.markLost')}
                         </Button>
                       </>

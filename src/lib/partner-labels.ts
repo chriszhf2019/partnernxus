@@ -20,10 +20,11 @@ export const TYPE_LABELS: Record<PartnerType, string> = {
   VAD: '总分销', VAR: '增值分销', SI: '系统集成商',
 };
 
-export const STATUS_CONFIG: Record<PartnerStatus, { label: string; variant: 'success' | 'warning' | 'info' }> = {
+export const STATUS_CONFIG: Record<PartnerStatus, { label: string; variant: 'success' | 'warning' | 'info' | 'danger' }> = {
   Cooperating: { label: '合作中', variant: 'success' },
   Inactive: { label: '已过期', variant: 'warning' },
   Prospective: { label: '潜在', variant: 'info' },
+  Rejected: { label: '已驳回', variant: 'danger' },
 };
 
 export const INDUSTRY_OPTIONS = [

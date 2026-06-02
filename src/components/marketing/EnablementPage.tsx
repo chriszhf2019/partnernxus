@@ -12,10 +12,21 @@ export const EnablementPage = () => {
   const [programs, setPrograms] = useState<any[]>([]);
   const [certifications, setCertifications] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('certification_programs').select('*').order('level').then(({ data }: any) => { if (data) setPrograms(data); });
-    supabase.from('partner_certifications').select('*').order('expiry_count', { ascending: false }).then(({ data }: any) => { if (data) setCertifications(data); });
+    setLoading(true);
+    Promise.all([
+      supabase.from('certification_programs').select('*').order('level'),
+      supabase.from('partner_certifications').select('*').order('expiry_count', { ascending: false }),
+    ]).then(([progRes, certRes]: any[]) => {
+      if (progRes.data) setPrograms(progRes.data);
+      if (certRes.data) setCertifications(certRes.data);
+    }).catch((err) => {
+      console.warn('Failed to load enablement data:', err);
+    }).finally(() => {
+      setLoading(false);
+    });
   }, []);
 
   // Stats computed from real data

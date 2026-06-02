@@ -1,5 +1,5 @@
 export type PartnerTier = 'Platinum' | 'Gold' | 'Silver' | 'Registered' | 'Diamond' | 'Premier' | 'Standard';
-export type PartnerStatus = 'Cooperating' | 'Inactive' | 'Prospective';
+export type PartnerStatus = 'Cooperating' | 'Inactive' | 'Prospective' | 'Rejected';
 export type PartnerType = 'Reseller' | 'ISV' | 'OEM' | 'Service' | 'VAD' | 'VAR' | 'SI';
 export type PartnerCategory = 'Champions' | 'RisingStars' | 'Opportunists' | 'Dormant' | 'Newcomers';
 

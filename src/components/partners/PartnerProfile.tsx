@@ -253,7 +253,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
   
   // 切换任务完成状态
   const toggleTaskComplete = (taskId: number) => {
-    setTasks(tasks.map(t =>
+    setTasks((prevTasks: any[]) => prevTasks.map(t =>
       t.id === taskId
         ? { ...t, status: t.status === '已完成' ? '待跟进' : '已完成', progress: t.status === '已完成' ? 0 : 100 }
         : t
@@ -262,7 +262,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
 
   // 更新任务状态
   const updateTaskStatus = (taskId: number, status: string) => {
-    setTasks(tasks.map(t =>
+    setTasks((prevTasks: any[]) => prevTasks.map((t: any) =>
       t.id === taskId
         ? { ...t, status, progress: status === '已完成' ? 100 : status === '待跟进' ? 0 : t.progress }
         : t
@@ -271,7 +271,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
 
   // 更新任务详情
   const updateTaskDetail = (taskId: number, field: string, value: string) => {
-    setTasks(tasks.map(t =>
+    setTasks((prevTasks: any[]) => prevTasks.map((t: any) =>
       t.id === taskId
         ? { ...t, [field]: value }
         : t
@@ -281,7 +281,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
   // 添加子任务
   const addSubtask = (taskId: number, subtaskTitle: string) => {
     if (!subtaskTitle.trim()) return;
-    setTasks(tasks.map(t =>
+    setTasks((prevTasks: any[]) => prevTasks.map((t: any) =>
       t.id === taskId
         ? { 
             ...t, 
@@ -298,7 +298,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
 
   // 更新子任务状态
   const updateSubtaskStatus = (taskId: number, subtaskId: number, status: string) => {
-    setTasks(tasks.map(t => {
+    setTasks((prevTasks: any[]) => prevTasks.map((t: any) => {
       if (t.id === taskId) {
         const updatedSubtasks = t.subtasks.map(st =>
           st.id === subtaskId
@@ -317,7 +317,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
 
   // 删除子任务
   const deleteSubtask = (taskId: number, subtaskId: number) => {
-    setTasks(tasks.map(t => {
+    setTasks((prevTasks: any[]) => prevTasks.map((t: any) => {
       if (t.id === taskId) {
         const updatedSubtasks = t.subtasks.filter(st => st.id !== subtaskId);
         const completedCount = updatedSubtasks.filter(st => st.status === '已完成').length;
@@ -391,15 +391,16 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
       partner.years * 10 + (partner.tier === 'Platinum' ? 40 : partner.tier === 'Diamond' ? 35 : partner.tier === 'Gold' ? 25 : 10)
     ));
     const pipelineHealth = partner.pipeline.registered > 0 ? Math.round((partner.pipeline.won / partner.pipeline.registered) * 100) : 0;
+    // NOTE: growth formula uses estimated prior period (70% of current). Replace with actual previous-period data when available.
     const growth = Math.round(((partner.pipeline.registered - (partner.pipeline.registered * 0.7)) / (partner.pipeline.registered * 0.7 || 1)) * 100);
     const overall = Math.round((activity * 0.25 + capability * 0.25 + loyalty * 0.15 + pipelineHealth * 0.2 + Math.max(0, growth) * 0.15));
-    const churnRisk = (
+    const churnRisk = Math.min(100, Math.round(
       (partner.status !== 'Cooperating' ? 35 : 0) +
       (partner.enablement.expiryRiskCount > 2 ? 20 : 0) +
       (partner.pipeline.registered < 1000000 ? 20 : 0) +
       (partner.winRate < 40 ? 15 : 0) +
       (mdfPct < 30 ? 10 : 0)
-    );
+    ));
     return { activity, capability, loyalty, pipelineHealth, growth, overall, churnRisk,
       churnLevel: churnRisk >= 50 ? '高' as const : churnRisk >= 25 ? '中' as const : '低' as const,
       churnColor: churnRisk >= 50 ? 'danger' as const : churnRisk >= 25 ? 'warning' as const : 'success' as const,
@@ -783,7 +784,8 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
     { id: 'willingness', label: t('profile.willingness') }, { id: 'capability', label: t('profile.capability') },
     { id: 'businessFit', label: t('profile.businessFit') }, { id: 'compliance', label: t('profile.compliance') },
     { id: 'opportunity', label: t('profile.opportunity') }, { id: 'network', label: t('profile.network') },
-    { id: 'profile', label: t('profile.profile') },
+    { id: 'profile', label: t('profile.profile') }, { id: 'performance', label: t('profile.performance') },
+    { id: 'timeline', label: t('profile.timeline') }, { id: 'staff', label: t('profile.staff') },
   ];
 
   return (
@@ -999,7 +1001,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">今年总计</span>
-                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(((partner.pipeline.won || 0) * 12), 'JPY')}</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(((partner.pipeline.won || 0) * 4), 'CNY')}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">本季度</span>
@@ -1256,15 +1258,15 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                 <div className="space-y-3">
                   <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${partner.category === 'Champions' && scores.churnRisk >= 25 ? 'bg-red-100 text-red-600' : scores.activity >= 80 && scores.pipelineHealth === 0 ? 'bg-amber-100 text-amber-600' : scores.churnRisk >= 50 ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                        {partner.category === 'Champions' && scores.churnRisk >= 25 ? <AlertTriangle className="w-3 h-3" /> : scores.activity >= 80 && scores.pipelineHealth === 0 ? <AlertTriangle className="w-3 h-3" /> : scores.churnRisk >= 50 ? <Bell className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${dynamicCategory === 'Champions' && scores.churnRisk >= 25 ? 'bg-red-100 text-red-600' : scores.activity >= 80 && scores.pipelineHealth === 0 ? 'bg-amber-100 text-amber-600' : scores.churnRisk >= 50 ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                        {dynamicCategory === 'Champions' && scores.churnRisk >= 25 ? <AlertTriangle className="w-3 h-3" /> : scores.activity >= 80 && scores.pipelineHealth === 0 ? <AlertTriangle className="w-3 h-3" /> : scores.churnRisk >= 50 ? <Bell className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
                       </div>
                       <span className="text-xs font-semibold text-neutral-900 dark:text-white">
-                        {partner.category === 'Champions' && scores.churnRisk >= 25 ? '风险告警' : scores.activity >= 80 && scores.pipelineHealth === 0 ? '高热情低产出' : scores.churnRisk >= 50 ? '流失风险高' : '健康发展'}
+                        {dynamicCategory === 'Champions' && scores.churnRisk >= 25 ? '风险告警' : scores.activity >= 80 && scores.pipelineHealth === 0 ? '高热情低产出' : scores.churnRisk >= 50 ? '流失风险高' : '健康发展'}
                       </span>
                     </div>
                     <p className="text-[10px] text-neutral-500 leading-relaxed">
-                      {partner.category === 'Champions' && scores.churnRisk >= 25
+                      {dynamicCategory === 'Champions' && scores.churnRisk >= 25
                         ? `战略核心型伙伴流失风险上升至${scores.churnRisk}分！建议渠道总监立即介入。`
                         : scores.activity >= 80 && scores.pipelineHealth === 0
                           ? `活跃度${scores.activity}分，但Pipeline健康度为0%，建议48小时内发起JBP会议。`
@@ -1278,13 +1280,13 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                     <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">AI建议</p>
                     {(() => {
                       let suggestion = { text: '', action: '', actionType: 'info' as const };
-                      if (partner.category === 'Champions' && scores.churnRisk >= 25) {
+                      if (dynamicCategory === 'Champions' && scores.churnRisk >= 25) {
                         suggestion = { text: '立即升级至渠道总监处理', action: '升级处理', actionType: 'info' as const };
                       } else if (scores.activity >= 80 && scores.pipelineHealth === 0) {
                         suggestion = { text: '建议48小时内发起JBP会议', action: '预约会议', actionType: 'info' as const };
                       } else if (scores.churnRisk >= 50) {
                         suggestion = { text: '发送关怀邮件了解情况', action: '发送邮件', actionType: 'info' as const };
-                      } else if (partner.category === 'RisingStars') {
+                      } else if (dynamicCategory === 'RisingStars') {
                         suggestion = { text: '加大赋能力度，帮助成长', action: '申请赋能', actionType: 'info' as const };
                       } else if (scores.activity < 30) {
                         suggestion = { text: '发送唤醒邮件激活合作', action: '发送唤醒', actionType: 'info' as const };
@@ -1768,7 +1770,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                             {detailModal.data.status === '已完结' && (
                               <div className="grid grid-cols-3 gap-3">
                                 <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-center">
-                                  <p className="text-xl font-bold text-emerald-600">{detailModal.data.leads}</p>
+                                  <p className="text-xl font-bold text-emerald-600">{detailModal.data.actualLeads}</p>
                                   <p className="text-xs text-emerald-500">实际线索</p>
                                 </div>
                                 <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-center">
