@@ -8,17 +8,17 @@ import { SearchableSelect } from '../ui/SearchableSelect';
 import { formatCurrency } from '../../lib/utils';
 
 const QUARTERS = ['Q1','Q2','Q3','Q4'];
+const QUARTER_LABELS: Record<string, string> = { Q1: 'Q1', Q2: 'Q2', Q3: 'Q3', Q4: 'Q4' };
 const CATEGORIES = ['线下峰会','线下沙龙','Webinar','联合营销','渠道招募','行业大会','培训','其他'];
 const EXEC_STATUSES = ['Planning','In Progress','Completed','Cancelled'];
 const EXEC_LABELS: Record<string,string> = { Planning: '计划中', 'In Progress': '进行中', Completed: '已完成', Cancelled: '已取消' };
 const QCOLORS = ['#2563eb','#059669','#d97706','#7c3aed'];
-const fmtW = (v: number) => formatCurrency(v, 'CNY');
 
 const STATUS_LABEL: Record<string, string> = { draft: '草稿', pending: '待批复', approved: '已批复' };
 const STATUS_COLOR: Record<string, string> = { draft: 'text-neutral-500', pending: 'text-amber-600', approved: 'text-emerald-600' };
 const STATUS_BG: Record<string, string> = { draft: 'bg-neutral-100 dark:bg-neutral-800', pending: 'bg-amber-50 dark:bg-amber-900/20', approved: 'bg-emerald-50 dark:bg-emerald-900/20' };
 
-const PieSVG = ({ data, size = 120 }: { data: number[]; size?: number }) => {
+const PieSVG = ({ data, size = 120, currency = 'CNY' }: { data: number[]; size?: number; currency?: string }) => {
   const total = data.reduce((s, v) => s + v, 0) || 1;
   const cx = size / 2, cy = size / 2, r = size / 2 - 4;
   let angle = -Math.PI / 2;
@@ -39,7 +39,7 @@ const PieSVG = ({ data, size = 120 }: { data: number[]; size?: number }) => {
       })}
       <circle cx={cx} cy={cy} r={r * 0.5} fill="white" className="dark:fill-neutral-900" />
       <text x={cx} y={cy - 4} textAnchor="middle" className="text-[10px] fill-neutral-400">总预算</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" className="text-xs font-bold fill-neutral-900 dark:fill-white">{fmtW(total)}</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" className="text-xs font-bold fill-neutral-900 dark:fill-white">{formatCurrency(total, currency as any)}</text>
     </svg>
   );
 };
@@ -54,6 +54,9 @@ export const MarketingPlanPage = () => {
   const [changeLog, setChangeLog] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
   const [showAdjust, setShowAdjust] = useState(false);
+  const [globalCurrency, setGlobalCurrency] = useState<'CNY' | 'USD' | 'JPY'>('CNY');
+  
+  const fmtW = (v: number) => formatCurrency(v, globalCurrency);
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
@@ -65,6 +68,14 @@ export const MarketingPlanPage = () => {
     supabase.from('budget_change_log').select('*').eq('config_id', 'current').order('created_at', { ascending: false }).limit(10).then(({ data }: any) => { if (data) setChangeLog(data); });
     supabase.from('marketing_activities').select('*').order('event_date').then(({ data }: any) => { if (data) setActivities(data); });
     supabase.from('partners').select('id, name, tier').order('name').then(({ data }: any) => { if (data) setPartners(data); });
+    // Load global currency setting
+    supabase.from('global_settings').select('currency').eq('id', 'default').single().then(({ data }: any) => { 
+      if (data?.currency) setGlobalCurrency(data.currency as 'CNY' | 'USD' | 'JPY'); 
+    }).catch(() => {
+      // Fallback to localStorage or default
+      const saved = localStorage.getItem('global_currency');
+      if (saved) setGlobalCurrency(saved as 'CNY' | 'USD' | 'JPY');
+    });
   }, [currentYear]);
 
   const actualSpendQ = [0, 0, 0, 0];
@@ -255,7 +266,7 @@ export const MarketingPlanPage = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {QUARTERS.map((q, i) => (
                 <div key={q}>
-                  <label className="text-xs text-neutral-500">{q} 原预算 ¥{((Number(config[`q${i+1}_budget`]||0)) / 10000).toFixed(0)}万</label>
+                  <label className="text-xs text-neutral-500">{q} 原预算 {fmtW(Number(config[`q${i+1}_budget`]||0))}</label>
                   <input type="number" className="w-full h-10 px-3 mt-1 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20" value={config[`q${i+1}_adjust`] || ''} onChange={e => setConfig((prev: any) => ({ ...prev, [`q${i+1}_adjust`]: Number(e.target.value) }))} placeholder="调整金额" />
                 </div>
               ))}
@@ -280,7 +291,7 @@ export const MarketingPlanPage = () => {
                     <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${log.action === '批复通过' ? 'bg-emerald-500' : log.action?.includes('重新批复') ? 'bg-amber-500' : 'bg-blue-500'}`} />
                     <div className="flex-1">
                       <p className="text-xs font-medium">{log.action}</p>
-                      <p className="text-[10px] text-neutral-400">Q1: ¥{(Number(log.q1_budget||0)/10000).toFixed(0)}万 · Q2: ¥{(Number(log.q2_budget||0)/10000).toFixed(0)}万 · Q3: ¥{(Number(log.q3_budget||0)/10000).toFixed(0)}万 · Q4: ¥{(Number(log.q4_budget||0)/10000).toFixed(0)}万</p>
+                      <p className="text-[10px] text-neutral-400">Q1: {fmtW(Number(log.q1_budget||0))} · Q2: {fmtW(Number(log.q2_budget||0))} · Q3: {fmtW(Number(log.q3_budget||0))} · Q4: {fmtW(Number(log.q4_budget||0))}</p>
                       <p className="text-[10px] text-neutral-400">{new Date(log.created_at).toLocaleString('zh-CN')}</p>
                     </div>
                   </div>
@@ -374,7 +385,7 @@ export const MarketingPlanPage = () => {
         <CardHeader><CardTitle>{currentYear}年度预算分配与执行情况</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row items-center gap-8">
-            <PieSVG data={qBudgets} size={140} />
+            <PieSVG data={qBudgets} size={140} currency={globalCurrency} />
             <div className="flex-1">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {QUARTERS.map((q, i) => {
