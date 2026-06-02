@@ -165,7 +165,7 @@ export const MarketingPlanPage = () => {
             <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">年度营销预算规划</h1>
             <p className="text-sm text-neutral-500">
               {new Date().getFullYear()}年度 ·
-              <span className={`ml-1 px-2 py-0.5 rounded text-xs font-medium ${STATUS_BG[config.status]} ${STATUS_COLOR[config.status]}`}>{STATUS_LABEL[config.status]}</span>
+              <span className={`ml-1 px-2 py-0.5 rounded text-xs font-medium ${STATUS_BG[config.status] || STATUS_BG['draft']} ${STATUS_COLOR[config.status] || STATUS_COLOR['draft']}`}>{STATUS_LABEL[config.status] || STATUS_LABEL['draft']}</span>
               {isDraft && ' · 可编辑年度和季度预算'}
               {isPending && ' · 等待市场总监批复'}
               {isApproved && ' · 已锁定，可申请调整预算'}
