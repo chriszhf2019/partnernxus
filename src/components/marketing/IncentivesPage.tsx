@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useConfig } from '../../contexts/ConfigContext';
 import { useMarketingData } from '../../hooks/useData';
 import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -13,13 +14,14 @@ import { cn } from '../../lib/utils';
 
 export const IncentivesPage = () => {
   const { t } = useLanguage();
+  const { config } = useConfig();
   const navigate = useNavigate();
   const { incentivePrograms, incentiveStats } = useMarketingData();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ title: '', trigger_type: 'Pipeline Gap', payout_type: 'Cash', total_budget: '', description: '', start_date: '', end_date: '' });
   const [creating, setCreating] = useState(false);
 
-  const cur = (v: number) => formatCurrency(v, 'CNY');
+  const cur = (v: number) => formatCurrency(v, config?.currency || 'CNY');
 
   const handleCreate = async () => {
     if (!form.title || !form.total_budget) return;

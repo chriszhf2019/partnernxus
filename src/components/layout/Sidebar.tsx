@@ -114,13 +114,16 @@ export const Sidebar = memo(() => {
       {/* Footer */}
       <div className="px-3 pb-3 border-t border-neutral-200 dark:border-neutral-800 pt-3">
         {/* Company Info */}
-        <div className="mb-3 px-2 py-2 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+        <div className="mb-3 px-2 py-2 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg space-y-0.5">
           <p className="text-[10px] text-neutral-400 uppercase tracking-wider mb-0.5">所属公司</p>
           <p className="text-[12px] font-medium text-neutral-700 dark:text-neutral-300 truncate">
             {config.companyName || '未设置'}
           </p>
+          {config.companyAddress && <p className="text-[10px] text-neutral-400 truncate">{config.companyAddress}</p>}
+          {config.companyPhone && <p className="text-[10px] text-neutral-400 truncate">{config.companyPhone}</p>}
+          {config.companyEmail && <p className="text-[10px] text-neutral-400 truncate">{config.companyEmail}</p>}
         </div>
-        
+
         <div className="flex items-center justify-between mb-2.5">
           <button
             onClick={toggleTheme}

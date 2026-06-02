@@ -90,11 +90,12 @@ export function buildPartnerDetails(partner: Partner): PartnerDetails {
     activities: [] as any[],
   };
 
-  // Enablement: from DB columns, or derived from real contacts, or 0
-  const certifiedEngineers = (partner as any).certified_engineers ?? (contactCount > 0 ? Math.max(1, Math.round(contactCount * 0.4)) : 0);
-  const specialists = (partner as any).specialists_count ?? (contactCount > 3 ? Math.round(contactCount * 0.15) : 0);
-  const expiryRiskCount = (partner as any).expiry_risk_count ?? 0;
-  const expiryDays = (partner as any).expiry_days ?? 0;
+  // Enablement: ONLY from real DB data (partner_certifications aggregation).
+  // No more fake formulas derived from contact count.
+  const certifiedEngineers = Number((partner as any).certified_engineers || 0);
+  const specialists = Number((partner as any).specialists_count || 0);
+  const expiryRiskCount = Number((partner as any).expiry_risk_count || 0);
+  const expiryDays = Number((partner as any).expiry_days || 0);
 
   // Follow-ups: derived from real partner status indicators
   const followUps: any[] = [];
@@ -141,7 +142,73 @@ export function buildPartnerDetails(partner: Partner): PartnerDetails {
   const qbrRecords = (partner as any).qbr_records || [];
   const cooperationPlans = (partner as any).cooperation_plans || [];
   const activitiesLog = (partner as any).activities_log || [];
-  const timelineEvents = (partner as any).timelineEvents || [];
+  const dbTimelineEvents = (partner as any).timelineEvents || [];
+
+  // Build timeline events from REAL partner data
+  // Each event maps to the settings "合作伙伴时间线标签" checkboxes
+  const generatedTimeline: any[] = [];
+  const today = new Date().toISOString().split('T')[0];
+
+  // 1. 合作伙伴批复 (approved) — always the first milestone
+  if (partner.startDate) {
+    generatedTimeline.push({
+      id: `${partner.id}-tl-approved`,
+      type: 'approved',
+      title: `${partner.name} 正式成为合作伙伴`,
+      description: `${partner.tier} 级别合作伙伴批复通过`,
+      date: partner.startDate,
+      operator: partner.manager || '系统管理员',
+      metadata: { toTier: partner.tier },
+    });
+  } else if (partner.status === 'Prospective') {
+    // Partner application submitted but not yet approved
+    generatedTimeline.push({
+      id: `${partner.id}-tl-applied`,
+      type: 'approved',
+      title: `${partner.name} 提交合作申请`,
+      description: '等待渠道经理审核批复',
+      date: partner.applicationDate || today,
+      operator: partner.manager || '系统管理员',
+      metadata: { toTier: partner.tier },
+    });
+  }
+
+  // 2. 级别提升/降级 (tier_upgrade / tier_downgrade) — from tierHistory
+  const tierHistoryData = (partner as any).tierHistory || [];
+  if (Array.isArray(tierHistoryData) && tierHistoryData.length > 0) {
+    tierHistoryData.forEach((th: any, i: number) => {
+      if (th.fromTier && th.toTier && th.date) {
+        generatedTimeline.push({
+          id: `${partner.id}-tl-tier${i}`,
+          type: th.toTier > th.fromTier ? 'tier_upgrade' : 'tier_downgrade',
+          title: th.toTier > th.fromTier
+            ? `${th.fromTier} → ${th.toTier} 级别提升`
+            : `${th.fromTier} → ${th.toTier} 级别调整`,
+          description: th.reason || '',
+          date: th.date,
+          operator: th.operator || '系统',
+          metadata: { fromTier: th.fromTier, toTier: th.toTier },
+        });
+      }
+    });
+  } else if (partner.prevTier && partner.prevTier !== partner.tier && partner.tier !== 'Registered') {
+    // Auto-detect tier change from prevTier → current tier
+    generatedTimeline.push({
+      id: `${partner.id}-tl-autotier`,
+      type: 'tier_upgrade',
+      title: `${partner.prevTier} → ${partner.tier} 级别提升`,
+      date: partner.startDate || today,
+      operator: '系统',
+      metadata: { fromTier: partner.prevTier, toTier: partner.tier },
+    });
+  }
+
+  // 3. Merge with DB-stored events (DB takes precedence by date)
+  const dbEventIds = new Set(dbTimelineEvents.map((e: any) => e.id));
+  const mergedTimeline = [
+    ...dbTimelineEvents,
+    ...generatedTimeline.filter(e => !dbEventIds.has(e.id)),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return {
     ...partner,
@@ -163,6 +230,6 @@ export function buildPartnerDetails(partner: Partner): PartnerDetails {
     ecosystemPartners: ecosystemPartnersData,
     subPartners: subPartnersData,
     strategyRecommendations,
-    timelineEvents,
+    timelineEvents: mergedTimeline,
   };
 }

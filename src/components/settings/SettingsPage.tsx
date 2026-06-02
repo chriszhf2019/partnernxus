@@ -17,7 +17,7 @@ import { EmptyState } from '../ui/EmptyState';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import type { GlobalConfig } from '../../types';
 
-interface SystemUser { id: string; name: string; email: string; role: UserRole; department: string; phone: string; status: 'active' | 'inactive'; lastLogin: string; source: 'admin' | 'partner'; }
+interface SystemUser { id: string; name: string; email: string; role: UserRole; department: string; phone: string; status: 'active' | 'inactive'; lastLogin: string; source: 'admin' | 'partner'; partnerId?: string; partnerName?: string; }
 interface OperationLog { id: string; userId: string; userName: string; action: 'create' | 'update' | 'status_change'; field?: string; oldValue?: string; newValue?: string; timestamp: string; operator: string; }
 interface CompanyInfo { nameCN: string; nameEN: string; logo: string; address: string; phone: string; email: string; website: string; businessModel: string; annualTarget: string; quarterlyTarget: string; partnerTarget: string; channelRegions: string; coreBusiness: string; }
 
@@ -59,7 +59,7 @@ const defaultCompany: CompanyInfo = {
 
 export const SettingsPage = () => {
   const { t, language, setLanguage } = useLanguage();
-  const { config, updateConfig } = useConfig();
+  const { config, updateConfig, isLoading } = useConfig();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('company');
   const [saving, setSaving] = useState(false);
@@ -82,13 +82,80 @@ export const SettingsPage = () => {
   });
 
   // ── User management state ───────────────────────────
-  const [users, setUsers] = useState<SystemUser[]>(defaultUsers);
+  const [users, setUsers] = useState<SystemUser[]>([]);
+  const [partnerUsers, setPartnerUsers] = useState<SystemUser[]>([]);
   const [editUser, setEditUser] = useState<SystemUser | null>(null);
   const [showUserForm, setShowUserForm] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [userForm, setUserForm] = useState<SystemUser>({ id: '', name: '', email: '', role: 'channel_manager', department: '渠道部', phone: '', status: 'active', lastLogin: '-', source: 'admin' });
   const [logs, setLogs] = useState<OperationLog[]>(defaultLogs);
   const [activeUserTab, setActiveUserTab] = useState<'all' | 'internal' | 'partner'>('all');
+
+  // Load real internal users from Supabase Auth + localStorage
+  useEffect(() => {
+    // Load from localStorage first (user-created internal users)
+    const saved = localStorage.getItem('internal_users');
+    if (saved) {
+      try { setUsers(JSON.parse(saved)); } catch {}
+    } else {
+      // Initialize with just the admin user (matches Supabase Auth)
+      setUsers([{
+        id: 'b176c7fe-7e59-4f8b-8534-d22b223c2808',
+        name: '系统管理员',
+        email: 'admin@partnernxus.com',
+        role: 'admin' as UserRole,
+        department: '管理层',
+        phone: '',
+        status: 'active' as const,
+        lastLogin: '2026-06-02',
+        source: 'admin' as const,
+      }]);
+    }
+  }, []);
+
+  // Persist internal users to localStorage on changes
+  useEffect(() => {
+    const internalUsers = users.filter(u => u.source === 'admin');
+    if (internalUsers.length > 0) {
+      localStorage.setItem('internal_users', JSON.stringify(internalUsers));
+    }
+  }, [users]);
+
+  // Load partner contacts from Supabase → display as partner users
+  useEffect(() => {
+    import('../../lib/supabase').then(({ supabase }) => {
+      supabase.from('partner_contacts').select('*').order('partner_id').then(({ data }: any) => {
+        if (data?.length) {
+          // Also get partner names
+          supabase.from('partners').select('id,name').then(({ data: partners }: any) => {
+            const partnerMap: Record<string, string> = {};
+            (partners || []).forEach((p: any) => { partnerMap[p.id] = p.name; });
+            const mapped: SystemUser[] = data.map((c: any) => ({
+              id: c.id,
+              name: [c.last_name, c.first_name].filter(Boolean).join('') || c.email || '-',
+              email: c.email || '',
+              role: 'partner_sales' as UserRole,
+              department: c.title || '合作伙伴',
+              phone: c.mobile || c.phone || '',
+              status: 'active' as const,
+              lastLogin: '-',
+              source: 'partner' as const,
+              partnerId: c.partner_id,
+              partnerName: partnerMap[c.partner_id] || c.partner_id,
+            }));
+            setPartnerUsers(mapped);
+          });
+        }
+      });
+    }).catch(() => {});
+  }, []);
+
+  // Merge internal + partner users for display
+  const allUsers = useMemo(() => {
+    const internalIds = new Set(users.map(u => u.id));
+    const newPartnerUsers = partnerUsers.filter(pu => !internalIds.has(pu.id));
+    return [...users, ...newPartnerUsers];
+  }, [users, partnerUsers]);
 
   const addLog = (action: OperationLog['action'], user: SystemUser, field?: string, oldValue?: string, newValue?: string) => {
     const newLog: OperationLog = {
@@ -140,10 +207,10 @@ export const SettingsPage = () => {
   };
 
   const filteredUsers = useMemo(() => {
-    if (activeUserTab === 'internal') return users.filter((u) => u.source === 'admin');
-    if (activeUserTab === 'partner') return users.filter((u) => u.source === 'partner');
-    return users;
-  }, [users, activeUserTab]);
+    if (activeUserTab === 'internal') return allUsers.filter((u) => u.source === 'admin');
+    if (activeUserTab === 'partner') return allUsers.filter((u) => u.source === 'partner');
+    return allUsers;
+  }, [allUsers, activeUserTab]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -220,6 +287,11 @@ export const SettingsPage = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {isLoading && (
+        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-600">
+          正在从服务器加载配置...
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div><h1 className="text-xl font-semibold text-neutral-900 dark:text-white">{t('settings.title')}</h1><p className="text-sm text-neutral-500 mt-1">{t('settings.subtitle')}</p></div>
         <Button variant="brand" size="sm" onClick={handleSave} loading={saving}><Save className="w-4 h-4" />{t('settings.save')}</Button>
@@ -272,84 +344,62 @@ export const SettingsPage = () => {
           <Card>
             <CardHeader>
               <CardTitle>全局配置</CardTitle>
-              <CardDescription>配置系统核心数据字典，影响合作伙伴管理、商机报备等多个模块</CardDescription>
+              <CardDescription>配置系统核心数据字典，影响合作伙伴管理、商机报备等多个模块。界面语言请在左下角侧边栏切换</CardDescription>
             </CardHeader>
             <CardContent>
-              {/* 基础设置 */}
-              <div className="space-y-4 mb-6">
-                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-2">基础设置</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">结算币种</label>
-                    <Select options={currencyOptions} value={editingConfig.currency} onChange={(e) => setEditingConfig({ ...editingConfig, currency: e.target.value as GlobalConfig['currency'] })} />
-                    <p className="text-xs text-neutral-500 mt-1">用于商机金额、业绩报表等金额显示</p>
+              {/* 结算币种 — 影响全系统所有金额显示 */}
+              <div className="mb-6 p-4 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">结算币种</label>
+                    <p className="text-xs text-neutral-500">影响商机金额、Pipeline、MDF、激励计划、Dashboard 等所有金额显示</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">界面语言</label>
-                    <div className="flex gap-2">
-                      <button onClick={() => setLanguage('zh')} className={cn('flex-1 py-2 rounded-lg border text-sm font-medium transition-all', language === 'zh' ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border-neutral-900' : 'border-neutral-200 dark:border-neutral-700 text-neutral-500')}>中文</button>
-                      <button onClick={() => setLanguage('en')} className={cn('flex-1 py-2 rounded-lg border text-sm font-medium transition-all', language === 'en' ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border-neutral-900' : 'border-neutral-200 dark:border-neutral-700 text-neutral-500')}>English</button>
-                    </div>
-                    <p className="text-xs text-neutral-500 mt-1">系统界面显示语言</p>
-                  </div>
+                  <Select options={currencyOptions} value={editingConfig.currency} onChange={(e) => setEditingConfig({ ...editingConfig, currency: e.target.value as GlobalConfig['currency'] })} />
                 </div>
               </div>
 
-              {/* 合作伙伴数据字典 */}
+              {/* 合作伙伴数据字典 — 与合作伙伴模块紧密关联 */}
               <div className="space-y-4 mb-6">
                 <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-2">合作伙伴数据字典</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">伙伴等级 <span className="text-neutral-400">(英文标识)</span></label>
-                    <Input value={editingConfig.partnerTiers.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, partnerTiers: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="Platinum, Gold, Silver, Registered" />
-                    <p className="text-xs text-neutral-500 mt-1">用于合作伙伴等级划分，影响筛选和统计</p>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">伙伴等级 <span className="text-neutral-400">(PartnerList筛选/批复)</span></label>
+                    <Input value={editingConfig.partnerTiers.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, partnerTiers: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="Diamond, Platinum, Gold, Silver, Registered" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">伙伴类型 <span className="text-neutral-400">(英文标识)</span></label>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">伙伴类型 <span className="text-neutral-400">(PartnerList/PartnerForm)</span></label>
                     <Input value={(editingConfig.partnerTypes || []).join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, partnerTypes: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="Reseller, ISV, SI, Service, VAD, VAR, OEM" />
-                    <p className="text-xs text-neutral-500 mt-1">用于合作伙伴类型分类</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">伙伴状态 <span className="text-neutral-400">(英文标识)</span></label>
-                    <Input value={(editingConfig.partnerStatuses || []).join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, partnerStatuses: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="Cooperating, Inactive, Prospective" />
-                    <p className="text-xs text-neutral-500 mt-1">用于筛选待批复、合作中、已过期伙伴</p>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">伙伴状态 <span className="text-neutral-400">(PartnerList 状态筛选)</span></label>
+                    <Input value={(editingConfig.partnerStatuses || []).join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, partnerStatuses: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="Cooperating, Inactive, Prospective, Rejected" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">合作级别</label>
-                    <Input value={(editingConfig.cooperationLevels || []).join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, cooperationLevels: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="战略级, 金牌代理, 银牌代理, 认证代理, 注册代理" />
-                    <p className="text-xs text-neutral-500 mt-1">用于合作伙伴授权级别管理</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">合作厂商</label>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">合作厂商 <span className="text-neutral-400">(PartnerForm 厂商选择)</span></label>
                     <Input value={(editingConfig.partnerVendors || []).join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, partnerVendors: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="华为, 浪潮, 联想, Oracle, AWS" />
-                    <p className="text-xs text-neutral-500 mt-1">用于合作伙伴产品/技术厂商关联</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">产品类型</label>
-                    <Input value={(editingConfig.productTypes || []).join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, productTypes: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="云原生平台, 大数据平台, AI 智算平台" />
-                    <p className="text-xs text-neutral-500 mt-1">用于商机报备时选择产品类型</p>
                   </div>
                 </div>
               </div>
 
-              {/* 业务数据字典 */}
+              {/* 业务数据字典 — 与商机、区域、行业关联 */}
               <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-2">业务数据字典</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">区域设定</label>
-                    <Input value={editingConfig.regions.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, regions: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="华北, 华东, 华南, 西部" />
-                    <p className="text-xs text-neutral-500 mt-1">用于合作伙伴地域分布和商机区域筛选</p>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">产品类型 <span className="text-neutral-400">(DealForm 产品选择)</span></label>
+                    <Input value={(editingConfig.productTypes || []).join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, productTypes: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="云原生平台, 大数据平台, AI 智算平台" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">行业设定</label>
-                    <Input value={editingConfig.industries.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, industries: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="金融, 医疗, 政务, 制造, 教育" />
-                    <p className="text-xs text-neutral-500 mt-1">用于合作伙伴行业分类和商机行业筛选</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">销售阶段</label>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">销售阶段 <span className="text-neutral-400">(DealForm 阶段选择)</span></label>
                     <Input value={editingConfig.salesStages.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, salesStages: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="1. 需求发现, 2. 方案阶段, 3. 商务洽谈, 4. 合同签约, 5. 售后回访" />
-                    <p className="text-xs text-neutral-500 mt-1">用于商机报备的销售阶段管理</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">区域设定 <span className="text-neutral-400">(Partner/Deal 筛选 + Dashboard)</span></label>
+                    <Input value={editingConfig.regions.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, regions: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="华北, 华东, 华南, 西部, 华中" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">行业设定 <span className="text-neutral-400">(Partner/Deal 筛选 + Dashboard)</span></label>
+                    <Input value={editingConfig.industries.join(', ')} onChange={(e) => setEditingConfig({ ...editingConfig, industries: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })} placeholder="金融, 医疗, 政务, 制造, 教育" />
                   </div>
                 </div>
               </div>
@@ -525,21 +575,21 @@ export const SettingsPage = () => {
           <Card padding={false}>
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
               <CardTitle>系统用户</CardTitle>
-              <Button variant="brand" size="sm" onClick={openNewUser}><Plus className="w-4 h-4" />添加用户</Button>
+              {activeUserTab !== 'partner' && <Button variant="brand" size="sm" onClick={openNewUser}><Plus className="w-4 h-4" />添加用户</Button>}
             </div>
-            
+
             {/* 用户分类标签 */}
             <div className="px-6 py-3 border-b border-neutral-100 dark:border-neutral-800">
               <div className="flex gap-2">
-                <button onClick={() => setActiveUserTab('all')} className={cn('px-4 py-1.5 rounded-lg text-sm font-medium transition-all', activeUserTab === 'all' ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800')}>全部 ({users.length})</button>
-                <button onClick={() => setActiveUserTab('internal')} className={cn('px-4 py-1.5 rounded-lg text-sm font-medium transition-all', activeUserTab === 'internal' ? 'bg-blue-600 text-white' : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800')}>本公司 ({users.filter(u => u.source === 'admin').length})</button>
-                <button onClick={() => setActiveUserTab('partner')} className={cn('px-4 py-1.5 rounded-lg text-sm font-medium transition-all', activeUserTab === 'partner' ? 'bg-emerald-600 text-white' : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800')}>合作伙伴 ({users.filter(u => u.source === 'partner').length})</button>
+                <button onClick={() => setActiveUserTab('all')} className={cn('px-4 py-1.5 rounded-lg text-sm font-medium transition-all', activeUserTab === 'all' ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900' : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800')}>全部 ({allUsers.length})</button>
+                <button onClick={() => setActiveUserTab('internal')} className={cn('px-4 py-1.5 rounded-lg text-sm font-medium transition-all', activeUserTab === 'internal' ? 'bg-blue-600 text-white' : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800')}>本公司 ({allUsers.filter(u => u.source === 'admin').length})</button>
+                <button onClick={() => setActiveUserTab('partner')} className={cn('px-4 py-1.5 rounded-lg text-sm font-medium transition-all', activeUserTab === 'partner' ? 'bg-emerald-600 text-white' : 'text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800')}>合作伙伴 ({allUsers.filter(u => u.source === 'partner').length})</button>
               </div>
             </div>
 
             {filteredUsers.length === 0 ? (
               <div className="py-16">
-                <EmptyState title="暂无用户" description={activeUserTab === 'internal' ? '本公司用户由管理员添加' : activeUserTab === 'partner' ? '合作伙伴用户需通过合作伙伴中心申请' : '点击添加按钮创建系统用户'} />
+                <EmptyState title="暂无用户" description={activeUserTab === 'internal' ? '本公司用户由管理员添加' : activeUserTab === 'partner' ? '合作伙伴用户来自合作伙伴联系人数据，通过合作伙伴中心申请' : '点击添加按钮创建系统用户'} />
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -548,8 +598,9 @@ export const SettingsPage = () => {
                     <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/30">
                       <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">用户</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">来源</th>
+                      {activeUserTab === 'partner' && <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">所属伙伴</th>}
                       <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">角色</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">部门</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">部门/职位</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">状态</th>
                       <th className="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase">最近登录</th>
                       <th className="px-6 py-3 text-right text-xs font-semibold text-neutral-500 uppercase">操作</th>
@@ -569,6 +620,11 @@ export const SettingsPage = () => {
                             {u.source === 'admin' ? '管理员添加' : '合作伙伴申请'}
                           </Badge>
                         </td>
+                        {activeUserTab === 'partner' && (
+                          <td className="px-6 py-3">
+                            <span className="text-sm text-neutral-600 dark:text-neutral-400">{u.partnerName || '-'}</span>
+                          </td>
+                        )}
                         <td className="px-6 py-3">
                           <Badge variant={u.role === 'admin' ? 'primary' : isInternalRole(u.role) ? 'info' : 'default'} size="sm">
                             {ROLE_LABELS[u.role] || u.role}
@@ -585,12 +641,18 @@ export const SettingsPage = () => {
                         <td className="px-6 py-3 text-xs text-neutral-400">{u.lastLogin}</td>
                         <td className="px-6 py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <button onClick={() => openEditUser(u)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-blue-500" title="编辑">
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button className="p-1.5 rounded-lg text-neutral-300 cursor-not-allowed" title="禁止删除" disabled>
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {u.source === 'admin' ? (
+                              <>
+                                <button onClick={() => openEditUser(u)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-blue-500" title="编辑">
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button className="p-1.5 rounded-lg text-neutral-300 cursor-not-allowed" title="禁止删除" disabled>
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-xs text-neutral-400">由合作伙伴中心管理</span>
+                            )}
                           </div>
                         </td>
                       </tr>

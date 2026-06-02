@@ -13,6 +13,7 @@ import { cn, formatCurrency } from '../../lib/utils';
 import { TIER_OPTIONS, TYPE_OPTIONS, STATUS_OPTIONS, INDUSTRY_OPTIONS, recordTypeLabel, TIER_LABELS } from '../../lib/partner-labels';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useConfig } from '../../contexts/ConfigContext';
 import { debug } from '../../lib/debug';
 import { JBPMeetingForm } from './JBPMeetingForm';
 import { PartnerTimeline } from './PartnerTimeline';
@@ -87,6 +88,8 @@ import { marketingService } from '../../services/marketing-service';
 
 export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }: { partner: PartnerDetails; activities: ActivityType[]; onBack?: () => void; onPartnerUpdate?: (updated: PartnerDetails) => void }) => {
   const { t } = useLanguage();
+  const { config } = useConfig();
+  const cur = (v: number) => formatCurrency(v, config.currency);
   const navigate = useNavigate();
 
   const updatePartner = (updated: PartnerDetails) => {
@@ -559,11 +562,11 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
       ops.push({ title: '认证续期窗口', desc: `${partner.enablement.expiryRiskCount}人认证${partner.enablement.expiryDays}天内过期——一旦过期将失去对应产品的报备资格。这是当前最紧急的事项。`, action: `在${partner.enablement.expiryDays}天内完成续证考试安排`, target: '组织架构', roi: '紧急' });
     }
     if (mdfPct < 70) {
-      ops.push({ title: 'MDF 激活机会', desc: `MDF使用率仅${mdfPct}%，剩余${formatCurrency(partner.mdf.remaining)}未使用。MDF是撬动联合营销最有效的杠杆——每投入1元MDF平均产生3.2元Pipeline。`, action: 'Q3前提交至少2个联合营销活动方案', target: '季度沟通', roi: '3.2x' });
+      ops.push({ title: 'MDF 激活机会', desc: `MDF使用率仅${mdfPct}%，剩余${cur(partner.mdf.remaining)}未使用。MDF是撬动联合营销最有效的杠杆——每投入1元MDF平均产生3.2元Pipeline。`, action: 'Q3前提交至少2个联合营销活动方案', target: '季度沟通', roi: '3.2x' });
     }
-    ops.push({ title: '生态协作放大', desc: `该伙伴处于SI-ISV-Reseller网络枢纽位置，但当前仅3个活跃协作关系。推动与昆仑联通(SI)的联合打单数量从5个增至10个，预计可带来${formatCurrency(2800000)}增量营收。`, action: '发起SI+ISV联合方案 workshop', target: '合作生态', roi: '2.4x' });
+    ops.push({ title: '生态协作放大', desc: `该伙伴处于SI-ISV-Reseller网络枢纽位置，但当前仅3个活跃协作关系。推动与昆仑联通(SI)的联合打单数量从5个增至10个，预计可带来${cur(2800000)}增量营收。`, action: '发起SI+ISV联合方案 workshop', target: '合作生态', roi: '2.4x' });
     if (partner.winRate < 60) {
-      ops.push({ title: '赢单率提升', desc: `当前赢单率${partner.winRate}%，低于白金伙伴均值72%。每个百分点的提升对应约${formatCurrency(partner.pipeline.registered * 0.01)}的增量营收。`, action: '复盘近3个丢标项目，识别共性失败原因', target: '商机销售', roi: '5x' });
+      ops.push({ title: '赢单率提升', desc: `当前赢单率${partner.winRate}%，低于白金伙伴均值72%。每个百分点的提升对应约${cur(partner.pipeline.registered * 0.01)}的增量营收。`, action: '复盘近3个丢标项目，识别共性失败原因', target: '商机销售', roi: '5x' });
     }
     return ops.slice(0, 4);
   }, [partner, mdfPct]);
@@ -807,8 +810,8 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
 
       {/* ═══ STATS CARDS ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={ShoppingCart} label="商机总额" value={formatCurrency(partner.pipeline.registered, 'CNY')} sub={`赢单 ${formatCurrency(partner.pipeline.won, 'CNY')}`} trend={partner.winRate > 50 ? 12 : -3} color="text-blue-600" />
-        <StatCard icon={Target} label="MDF 使用率" value={`${mdfPct}%`} sub={`剩余 ${formatCurrency(partner.mdf.remaining, 'CNY')}`} color="text-emerald-600" />
+        <StatCard icon={ShoppingCart} label="商机总额" value={cur(partner.pipeline.registered)} sub={`赢单 ${cur(partner.pipeline.won)}`} trend={partner.winRate > 50 ? 12 : -3} color="text-blue-600" />
+        <StatCard icon={Target} label="MDF 使用率" value={`${mdfPct}%`} sub={`剩余 ${cur(partner.mdf.remaining)}`} color="text-emerald-600" />
         <StatCard icon={Award} label="认证工程师" value={String(partner.enablement.certifiedEngineers)} sub={partner.enablement.expiryRiskCount > 0 ? `${partner.enablement.expiryRiskCount}人将过期` : '全部有效'} color={partner.enablement.expiryRiskCount > 0 ? 'text-red-500' : 'text-emerald-600'} />
         <StatCard icon={TrendingUp} label="赢单率" value={`${partner.winRate || 0}%`} sub={partner.pipeline.registered > 0 ? 'Pipeline运行中' : '暂无数据'} color="text-purple-600" />
       </div>
@@ -982,11 +985,11 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">今年总计</span>
-                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered * 12, 'JPY')}</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{cur(partner.pipeline.registered * 12)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">本季度</span>
-                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered, 'JPY')}</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{cur(partner.pipeline.registered)}</span>
                 </div>
               </div>
             </div>
@@ -1001,11 +1004,11 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">今年总计</span>
-                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(((partner.pipeline.won || 0) * 4), 'CNY')}</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{cur(((partner.pipeline.won || 0) * 4))}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">本季度</span>
-                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.won || 0, 'JPY')}</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{cur(partner.pipeline.won || 0)}</span>
                 </div>
               </div>
             </div>
@@ -1021,15 +1024,15 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">今年总计</span>
                   <div className="text-right">
-                    <span className="text-lg font-semibold text-neutral-900 dark:text-white">{(partner.marketingActivities || 3) * 4}场</span>
-                    <span className="text-xs text-neutral-500 ml-2">/{formatCurrency(((partner.mdf.used || 0) * 4), 'JPY')}</span>
+                    <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.marketingActivities || 0}场</span>
+                    <span className="text-xs text-neutral-500 ml-2">/{cur(((partner.mdf.used || 0) * 4))}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">本季度</span>
                   <div className="text-right">
-                    <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.marketingActivities || 3}场</span>
-                    <span className="text-xs text-neutral-500 ml-2">/{formatCurrency(partner.mdf.used || 0, 'JPY')}</span>
+                    <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.marketingActivities || 0}场</span>
+                    <span className="text-xs text-neutral-500 ml-2">/{cur(partner.mdf.used || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -1050,11 +1053,11 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">系统登录频次</span>
-                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.loginFrequency || '高频'}</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.loginFrequency || '-'}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-neutral-500">工单响应</span>
-                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.ticketResponseTime || '2小时内'}</span>
+                  <span className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.ticketResponseTime || '-'}</span>
                 </div>
               </div>
             </div>
@@ -1091,11 +1094,11 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                       const quarterlyRatio = yearlyPipeline > 0 ? Math.round((quarterlyPipeline / yearlyPipeline) * 100) : 0;
                       
                       if (quarterlyRatio < 10) {
-                        return `该伙伴本季度商机报备(${formatCurrency(quarterlyPipeline, 'JPY')})仅占全年${quarterlyRatio}%，明显下滑。但下单金额(${formatCurrency(quarterlyWon, 'JPY')})相对稳定，建议重点关注商机引流。`;
+                        return `该伙伴本季度商机报备(${cur(quarterlyPipeline)})仅占全年${quarterlyRatio}%，明显下滑。但下单金额(${cur(quarterlyWon)})相对稳定，建议重点关注商机引流。`;
                       } else if (quarterlyRatio > 30) {
-                        return `该伙伴本季度商机报备(${formatCurrency(quarterlyPipeline, 'JPY')})占全年${quarterlyRatio}%，表现强劲。下单金额(${formatCurrency(quarterlyWon, 'JPY')})也保持良好增长趋势。`;
+                        return `该伙伴本季度商机报备(${cur(quarterlyPipeline)})占全年${quarterlyRatio}%，表现强劲。下单金额(${cur(quarterlyWon)})也保持良好增长趋势。`;
                       }
-                      return `该伙伴本季度商机报备(${formatCurrency(quarterlyPipeline, 'JPY')})占全年${quarterlyRatio}%，处于正常水平。下单金额(${formatCurrency(quarterlyWon, 'JPY')})稳定。`;
+                      return `该伙伴本季度商机报备(${cur(quarterlyPipeline)})占全年${quarterlyRatio}%，处于正常水平。下单金额(${cur(quarterlyWon)})稳定。`;
                     })()}
                   </p>
                 </div>
@@ -1109,13 +1112,13 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
                     {(() => {
                       const winRate = partner.winRate || 65;
-                      const activities = partner.marketingActivities || 3;
+                      const activities = partner.marketingActivities || 0;
                       const quarterlyPipeline = partner.pipeline.registered;
                       
                       if (activities >= 3 && winRate < 70) {
                         return `检测到该伙伴MKT活动积极(${activities}场)，但商机转化率(${winRate}%)处于瓶颈。建议指派技术专家支持其重点商机，提升转化效率。`;
                       } else if (quarterlyPipeline > 5000000 && (partner.pipeline.won || 0) < 1000000) {
-                        return `商机储备充足(${formatCurrency(quarterlyPipeline, 'JPY')})，但转化不足。建议加强售前支持，推动首单落地。`;
+                        return `商机储备充足(${cur(quarterlyPipeline)})，但转化不足。建议加强售前支持，推动首单落地。`;
                       } else if (partner.enablement.certifiedEngineers < 5) {
                         return `认证工程师人数(${partner.enablement.certifiedEngineers}人)较少，建议提供专项培训资源，提升技术能力。`;
                       }
@@ -1369,11 +1372,11 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
                     <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                       <p className="text-xs text-neutral-500 mb-1">本季度报备</p>
-                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered, 'JPY')}</p>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{cur(partner.pipeline.registered)}</p>
                     </div>
                     <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                       <p className="text-xs text-neutral-500 mb-1">本季度赢单</p>
-                      <p className="text-lg font-semibold text-emerald-600">{formatCurrency(partner.pipeline.won || 0, 'JPY')}</p>
+                      <p className="text-lg font-semibold text-emerald-600">{cur(partner.pipeline.won || 0)}</p>
                     </div>
                     <div className="text-center p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                       <p className="text-xs text-neutral-500 mb-1">转化率</p>
@@ -1424,7 +1427,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                               </div>
                             </div>
                             <div className="text-right ml-4 shrink-0">
-                              <p className="text-sm font-semibold text-neutral-900 dark:text-white">{formatCurrency(project.amount, 'JPY')}</p>
+                              <p className="text-sm font-semibold text-neutral-900 dark:text-white">{cur(project.amount)}</p>
                             </div>
                           </div>
                         </div>
@@ -1487,7 +1490,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                                       <p className="text-[10px] text-emerald-500">线索数</p>
                                     </div>
                                     <div className="text-center p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded">
-                                      <p className="text-sm font-semibold text-blue-600">{formatCurrency(activity.relatedDeals, 'JPY')}</p>
+                                      <p className="text-sm font-semibold text-blue-600">{cur(activity.relatedDeals)}</p>
                                       <p className="text-[10px] text-blue-500">关联商机</p>
                                     </div>
                                     <div className="text-center p-1.5 bg-amber-50 dark:bg-amber-900/30 rounded">
@@ -1499,7 +1502,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                               </div>
                               <div className="text-right ml-4 shrink-0">
                                 <p className="text-xs text-neutral-500">预算</p>
-                                <p className="text-sm font-semibold text-neutral-900 dark:text-white">{formatCurrency(activity.budget, 'JPY')}</p>
+                                <p className="text-sm font-semibold text-neutral-900 dark:text-white">{cur(activity.budget)}</p>
                               </div>
                             </div>
                           </div>
@@ -1550,8 +1553,8 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                                 </div>
                                 <p className="text-xs text-neutral-500 mt-1">{plan.description}</p>
                                 <div className="flex items-center gap-4 mt-2 text-xs">
-                                  <span className="text-neutral-500">目标: <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatCurrency(plan.target, 'JPY')}</span></span>
-                                  <span className="text-neutral-500">已达成: <span className="font-medium text-blue-600">{formatCurrency(plan.current, 'JPY')}</span></span>
+                                  <span className="text-neutral-500">目标: <span className="font-medium text-neutral-700 dark:text-neutral-300">{cur(plan.target)}</span></span>
+                                  <span className="text-neutral-500">已达成: <span className="font-medium text-blue-600">{cur(plan.current)}</span></span>
                                 </div>
                               </div>
                             </div>
@@ -1679,7 +1682,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                               </div>
                               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                                 <p className="text-xs text-neutral-500">金额</p>
-                                <p className="text-sm font-semibold text-blue-600">{formatCurrency(detailModal.data.amount, 'JPY')}</p>
+                                <p className="text-sm font-semibold text-blue-600">{cur(detailModal.data.amount)}</p>
                               </div>
                               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                                 <p className="text-xs text-neutral-500">预计结单</p>
@@ -1746,7 +1749,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                               </div>
                               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                                 <p className="text-xs text-neutral-500">预算</p>
-                                <p className="text-sm font-semibold text-blue-600">{formatCurrency(detailModal.data.budget, 'JPY')}</p>
+                                <p className="text-sm font-semibold text-blue-600">{cur(detailModal.data.budget)}</p>
                               </div>
                               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                                 <p className="text-xs text-neutral-500">状态</p>
@@ -1774,7 +1777,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                                   <p className="text-xs text-emerald-500">实际线索</p>
                                 </div>
                                 <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-center">
-                                  <p className="text-xl font-bold text-blue-600">{formatCurrency(detailModal.data.relatedDeals, 'JPY')}</p>
+                                  <p className="text-xl font-bold text-blue-600">{cur(detailModal.data.relatedDeals)}</p>
                                   <p className="text-xs text-blue-500">关联商机</p>
                                 </div>
                                 <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-center">
@@ -1822,11 +1825,11 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                             <div className="grid grid-cols-2 gap-4">
                               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                                 <p className="text-xs text-neutral-500">目标金额</p>
-                                <p className="text-sm font-semibold text-neutral-900 dark:text-white">{formatCurrency(detailModal.data.target, 'JPY')}</p>
+                                <p className="text-sm font-semibold text-neutral-900 dark:text-white">{cur(detailModal.data.target)}</p>
                               </div>
                               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                                 <p className="text-xs text-neutral-500">已达成</p>
-                                <p className="text-sm font-semibold text-blue-600">{formatCurrency(detailModal.data.current, 'JPY')}</p>
+                                <p className="text-sm font-semibold text-blue-600">{cur(detailModal.data.current)}</p>
                               </div>
                               <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
                                 <p className="text-xs text-neutral-500">当前档位</p>
@@ -1842,16 +1845,16 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                             {detailModal.data.nextTier && (
                               <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
                                 <p className="text-sm font-medium text-amber-700 dark:text-amber-300">解锁下一档位</p>
-                                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">再完成 {formatCurrency(detailModal.data.nextTier, 'JPY')} 即可解锁</p>
+                                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">再完成 {cur(detailModal.data.nextTier)} 即可解锁</p>
                                 {detailModal.data.nextTierReward && (
-                                  <p className="text-xs text-amber-600 dark:text-amber-400">预计奖励: {formatCurrency(detailModal.data.nextTierReward, 'JPY')}</p>
+                                  <p className="text-xs text-amber-600 dark:text-amber-400">预计奖励: {cur(detailModal.data.nextTierReward)}</p>
                                 )}
                               </div>
                             )}
                             {detailModal.data.reward && (
                               <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
                                 <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">已获得奖励</p>
-                                <p className="text-lg font-bold text-emerald-600 mt-1">{formatCurrency(detailModal.data.reward, 'JPY')}</p>
+                                <p className="text-lg font-bold text-emerald-600 mt-1">{cur(detailModal.data.reward)}</p>
                               </div>
                             )}
                             <div className="flex gap-2 pt-4">
@@ -3302,7 +3305,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                             <td className="py-2.5 px-3 text-neutral-500">{c.product}</td>
                             <td className="py-2.5 px-3 text-center">{c.ourShare===0?<Badge variant="danger" size="sm">丢标</Badge>:c.ourShare<100?<div className="flex items-center gap-2"><ProgressBar value={c.ourShare} size="sm" className="w-12"/><span className="text-xs">{c.ourShare}%</span></div>:<Badge variant="success" size="sm">独家</Badge>}</td>
                             <td className="py-2.5 px-3">{c.competitor==='-'?<span className="text-xs text-neutral-400">-</span>:<span className="text-xs font-medium text-amber-600">{c.competitor}</span>}</td>
-                            <td className="py-2.5 px-3 text-right font-medium">{formatCurrency(c.value)}</td>
+                            <td className="py-2.5 px-3 text-right font-medium">{cur(c.value)}</td>
                             <td className="py-2.5 px-3 text-center"><Badge variant={c.status==='在服'?'success':c.status==='POC'?'info':c.status==='商务'?'warning':'danger'} size="sm">{c.status}</Badge></td>
                           </tr>
                         ))}
@@ -3454,7 +3457,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                                 <span className="text-xs font-medium">{ep.deals>=8?'强':ep.deals>=4?'中':'弱'}</span>
                               </div>
                             </td>
-                            <td className="py-4 px-4 text-right font-semibold">{formatCurrency(ep.volume)}</td>
+                            <td className="py-4 px-4 text-right font-semibold">{cur(ep.volume)}</td>
                             <td className="py-4 px-4 text-center">{ep.deals} 个</td>
                             <td className="py-4 px-4 max-w-[220px]"><p className="text-xs text-neutral-500 leading-relaxed">{ep.logic}</p></td>
                             <td className="py-4 px-4 max-w-[200px]"><p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">{ep.amplify}</p></td>
@@ -3543,7 +3546,7 @@ export const PartnerProfile = ({ partner, activities, onBack, onPartnerUpdate }:
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { label: '网络规模', value: '5节点', sub: '3生态+2子伙伴' },
-                      { label: '协作营收', value: formatCurrency(ecosystemPartners.reduce((s,e)=>s+e.volume,0)), sub: '占总营收60%' },
+                      { label: '协作营收', value: cur(ecosystemPartners.reduce((s,e)=>s+e.volume,0)), sub: '占总营收60%' },
                       { label: '网络位置', value: '枢纽', sub: '星型拓扑中心' },
                       { label: '协作评分', value: '79分', sub: '白金前25%' },
                     ].map((m) => (
