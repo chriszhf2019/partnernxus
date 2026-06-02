@@ -63,7 +63,15 @@ export const MarketingPlanPage = () => {
   }, []);
 
   useEffect(() => {
-    supabase.from('marketing_budget_config').select('*').eq('id', 'current').single().then(({ data }: any) => { if (data) setConfig(data); });
+    supabase.from('marketing_budget_config').select('*').eq('id', 'current').single().then(({ data, error }: any) => { 
+      if (error) {
+        console.warn('Failed to load budget config:', error);
+      }
+      if (data) {
+        setConfig(data);
+        console.log('Loaded budget config:', data);
+      }
+    });
     supabase.from('marketing_plan').select('*').eq('year', currentYear).order('quarter').then(({ data }: any) => { if (data?.length) setPlan(data); });
     supabase.from('budget_change_log').select('*').eq('config_id', 'current').order('created_at', { ascending: false }).limit(10).then(({ data }: any) => { if (data) setChangeLog(data); });
     supabase.from('marketing_activities').select('*').order('event_date').then(({ data }: any) => { if (data) setActivities(data); });
