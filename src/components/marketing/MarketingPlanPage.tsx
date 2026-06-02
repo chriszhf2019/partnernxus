@@ -70,7 +70,12 @@ export const MarketingPlanPage = () => {
       if (data) {
         setConfig(data);
         console.log('Loaded budget config:', data);
+        console.log('Status value:', data.status, '| Type:', typeof data.status);
+      } else {
+        console.log('No data returned from marketing_budget_config');
       }
+    }).catch((e: any) => {
+      console.error('Unexpected error:', e);
     });
     supabase.from('marketing_plan').select('*').eq('year', currentYear).order('quarter').then(({ data }: any) => { if (data?.length) setPlan(data); });
     supabase.from('budget_change_log').select('*').eq('config_id', 'current').order('created_at', { ascending: false }).limit(10).then(({ data }: any) => { if (data) setChangeLog(data); });
