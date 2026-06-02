@@ -6,7 +6,7 @@ import {
   Layers, Briefcase, GitBranch, Network, Calendar, Package, ShoppingCart, Star,
   Lightbulb, Info, Link2, Activity, Shield, Search, BarChart3, PieChart, Eye,
   MessageSquare, ThumbsUp, ThumbsDown, RefreshCw, Rocket, Crosshair, Compass,
-  Radar, Flame, Bell, Mail,
+  Radar, Flame, Bell, Mail, Gift,
 } from 'lucide-react';
 import { PartnerDetails, Activity as ActivityType, JBPFormData, PartnerContact, PartnerTimelineEvent } from '../../types';
 import { cn, formatCurrency } from '../../lib/utils';
@@ -89,6 +89,7 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
   const [showJBPForm, setShowJBPForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showCategoryTooltip, setShowCategoryTooltip] = useState(false);
   const [formData, dispatch] = useReducer(formReducer, partner, createInitialFormState);
   const [contacts, setContacts] = useState<PartnerContact[]>((partner.contacts || []).length > 0 ? [...(partner.contacts || [])] : [{ ...DEFAULT_CONTACT }]);
 
@@ -494,6 +495,35 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
               <Badge variant="primary" size="md">{partner.tier}</Badge>
               {formData.isCorePartner && <Badge variant="warning" size="md"><Star className="w-3 h-3 fill-current" />核心</Badge>}
               <Badge variant={partner.status === 'Cooperating' ? 'success' : 'warning'} size="md">{partner.status === 'Cooperating' ? '合作中' : partner.status === 'Inactive' ? '已过期' : '潜在'}</Badge>
+              <div className="relative">
+                <div
+                  className={`${partnerCategoryInfo?.bgColor} text-white text-xs font-semibold px-2.5 py-1 rounded-full cursor-help hover:opacity-90 transition-opacity inline-flex items-center`}
+                  onMouseEnter={() => setShowCategoryTooltip(true)}
+                  onMouseLeave={() => setShowCategoryTooltip(false)}
+                >{partner.category === 'Champions' ? '战略核心型' : partner.category === 'RisingStars' ? '成长活跃型' : partner.category === 'Opportunists' ? '项目驱动型' : partner.category === 'Dormant' ? '沉默型' : partner.category === 'Newcomers' ? '新晋观察型' : '未分类'}</div>
+                <AnimatePresence>
+                  {showCategoryTooltip && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-neutral-900 text-white rounded-xl shadow-xl z-50 pointer-events-none"
+                    >
+                      <div className="space-y-1.5 text-xs">
+                        <p className="font-semibold">{partnerCategoryInfo?.title}</p>
+                        <p className="text-neutral-300 text-[10px] leading-relaxed">{partnerCategoryInfo?.description}</p>
+                        <div className="h-px bg-white/10 my-1.5" />
+                        <div className="text-[10px] text-neutral-400">
+                          <p className="font-medium text-neutral-300 mb-1">特征:</p>
+                          {partnerCategoryInfo?.characteristics.slice(0, 2).map((c, i) => (
+                            <p key={i}>• {c}</p>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <Badge variant={scores.churnColor} size="sm">流失风险{scores.churnLevel}</Badge>
             </div>
             <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500">
@@ -506,14 +536,267 @@ export const PartnerProfile = ({ partner, activities, onBack }: { partner: Partn
           </div>
         </div>
 
-        {/* Health Pulse Row */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-800">
-          <div className="col-span-2 md:col-span-1 flex justify-center"><Gauge score={scores.overall} label="综合评分" /></div>
-          <StatCard icon={Flame} label="活跃度" value={`${scores.activity}分`} trend={8} color="text-orange-500" sub={`高于${TIER_LABELS[partner.tier] || partner.tier}均值${scores.activity - scores.tierBenchmark}分`} />
-          <StatCard icon={Shield} label="能力值" value={`${scores.capability}分`} sub={`${partner.enablement.certifiedEngineers}认证 · ${partner.enablement.specialists}专家`} color="text-blue-500" />
-          <StatCard icon={Target} label="Pipeline健康" value={`${scores.pipelineHealth}%`} sub={`赢单率 ${partner.winRate}%`} color={scores.pipelineHealth >= 60 ? 'text-emerald-500' : 'text-amber-500'} />
-          <StatCard icon={DollarSign} label="MDF使用" value={`${mdfPct}%`} sub={`剩余 ${formatCurrency(partner.mdf.remaining)}`} color={mdfPct > 50 ? 'text-emerald-500' : 'text-amber-500'} />
-          <StatCard icon={TrendingUp} label="增长趋势" value={scores.growth >= 0 ? `+${scores.growth}%` : `${scores.growth}%`} trend={scores.growth} color={scores.growth >= 0 ? 'text-emerald-500' : 'text-red-500'} />
+        {/* 日常运行情况 */}
+        <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">日常运行情况</h3>
+            <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
+              <button className="px-3 py-1 text-xs font-medium bg-white dark:bg-neutral-700 rounded-md text-neutral-900 dark:text-white">当季度</button>
+              <button className="px-3 py-1 text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white">全年</button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-1">
+                <ShoppingCart className="w-4 h-4 text-blue-500" />
+                <span className="text-xs text-neutral-500">商机报备</span>
+              </div>
+              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline.registered)}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <ArrowUpRight className="w-3 h-3 text-emerald-500" />
+                <span className="text-[10px] text-emerald-600">+12% 同比</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-1">
+                <Package className="w-4 h-4 text-purple-500" />
+                <span className="text-xs text-neutral-500">下单金额</span>
+              </div>
+              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.pipeline?.won || 0)}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <ArrowUpRight className="w-3 h-3 text-emerald-500" />
+                <span className="text-[10px] text-emerald-600">+8% 同比</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-1">
+                <Calendar className="w-4 h-4 text-amber-500" />
+                <span className="text-xs text-neutral-500">市场活动</span>
+              </div>
+              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.mdf?.activities?.length || 0}场</p>
+              <div className="flex items-center gap-1 mt-1">
+                <ArrowDownRight className="w-3 h-3 text-red-500" />
+                <span className="text-[10px] text-red-500">-3场 环比</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-1">
+                <Target className="w-4 h-4 text-emerald-500" />
+                <span className="text-xs text-neutral-500">赢单率</span>
+              </div>
+              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.winRate}%</p>
+              <div className="flex items-center gap-1 mt-1">
+                <ArrowUpRight className="w-3 h-3 text-emerald-500" />
+                <span className="text-[10px] text-emerald-600">+5% 同比</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="w-4 h-4 text-cyan-500" />
+                <span className="text-xs text-neutral-500">MDF消耗</span>
+              </div>
+              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{formatCurrency(partner.mdf.used)}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-neutral-400">剩余 {formatCurrency(partner.mdf.remaining)}</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center gap-2 mb-1">
+                <Users className="w-4 h-4 text-pink-500" />
+                <span className="text-xs text-neutral-500">认证工程师</span>
+              </div>
+              <p className="text-lg font-semibold text-neutral-900 dark:text-white">{partner.enablement.certifiedEngineers}人</p>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-neutral-400">全部有效</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 综合分析：综合评分 + 维度分析 + AI洞察 */}
+        <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+          <Card className="bg-gradient-to-br from-indigo-50/50 to-purple-50/50 border-indigo-200 dark:border-indigo-800">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <Radar className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-base">综合分析</CardTitle>
+                  <CardDescription className="text-xs">综合评分、维度均衡分析与AI洞察</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* 左侧：综合评分 + 核心指标 */}
+                <div className="space-y-3">
+                  <div className="bg-white dark:bg-neutral-800 rounded-xl p-4 border border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs text-neutral-500">综合评分</span>
+                      <Badge className={partnerCategoryInfo?.bgColor} text-white text-xs>{partner.category === 'Champions' ? '战略核心型' : partner.category === 'RisingStars' ? '成长活跃型' : partner.category === 'Opportunists' ? '项目驱动型' : partner.category === 'Dormant' ? '沉默型' : '新晋观察型'}</Badge>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <span className="text-4xl font-bold text-neutral-900 dark:text-white">{scores.overall}</span>
+                      <span className="text-sm text-neutral-500 mb-1">分</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-[10px] text-neutral-400">同级均值 {scores.tierBenchmark}分</span>
+                      <span className={`text-[10px] font-medium ${scores.growth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {scores.growth >= 0 ? '+' : ''}{scores.growth}% 较上期
+                      </span>
+                    </div>
+                    <ProgressBar value={scores.overall} size="md" className="mt-2" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-neutral-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Flame className="w-3 h-3 text-orange-500" />
+                        <span className="text-[10px] text-neutral-500">活跃度</span>
+                      </div>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{scores.activity}分</p>
+                    </div>
+                    <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-neutral-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Shield className="w-3 h-3 text-blue-500" />
+                        <span className="text-[10px] text-neutral-500">能力值</span>
+                      </div>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{scores.capability}分</p>
+                    </div>
+                    <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-neutral-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Target className="w-3 h-3 text-emerald-500" />
+                        <span className="text-[10px] text-neutral-500">Pipeline</span>
+                      </div>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{scores.pipelineHealth}%</p>
+                    </div>
+                    <div className="bg-white dark:bg-neutral-800 rounded-lg p-3 border border-neutral-200 dark:border-neutral-700">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <DollarSign className="w-3 h-3 text-cyan-500" />
+                        <span className="text-[10px] text-neutral-500">MDF</span>
+                      </div>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-white">{mdfPct}%</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 中间：维度雷达图 */}
+                <div className="flex items-center justify-center">
+                  <div className="relative w-48 h-48">
+                    <svg viewBox="0 0 100 100" className="w-full h-full">
+                      {[0.3, 0.5, 0.7, 1].map((scale, si) => (
+                        <polygon key={si} points="50,5 85,27.5 85,72.5 50,95 15,72.5 15,27.5"
+                          fill="none" stroke="#e4e4e7" strokeWidth="0.5" opacity={0.3 + si * 0.2}
+                          transform={`scale(${scale})`} style={{ transformOrigin: '50% 50%' }} />
+                      ))}
+                      {[0, 60, 120, 180, 240, 300].map((angle, ai) => {
+                        const rad = (angle * Math.PI) / 180;
+                        return <line key={ai} x1="50" y1="50" x2={50 + 40 * Math.cos(rad)} y2={50 + 40 * Math.sin(rad)} stroke="#e4e4e7" strokeWidth="0.5" />;
+                      })}
+                      {(() => {
+                        const data = [
+                          { value: scores.activity, angle: 0 },
+                          { value: scores.capability, angle: 60 },
+                          { value: scores.pipelineHealth, angle: 120 },
+                          { value: mdfPct, angle: 180 },
+                          { value: scores.loyalty, angle: 240 },
+                          { value: Math.max(0, scores.growth), angle: 300 },
+                        ];
+                        const points = data.map((p) => {
+                          const rad = (p.angle * Math.PI) / 180;
+                          const dist = 5 + (p.value / 100) * 35;
+                          return `${50 + dist * Math.cos(rad)},${50 + dist * Math.sin(rad)}`;
+                        }).join(' ');
+                        return (
+                          <>
+                            <polygon points={points} fill="rgba(99, 102, 241, 0.15)" stroke="#6366f1" strokeWidth="1.5" />
+                            {data.map((p, i) => {
+                              const rad = (p.angle * Math.PI) / 180;
+                              const dist = 5 + (p.value / 100) * 35;
+                              const cx = 50 + dist * Math.cos(rad);
+                              const cy = 50 + dist * Math.sin(rad);
+                              return <circle key={i} cx={cx} cy={cy} r="3" fill="#6366f1" stroke="white" strokeWidth="1.5" />;
+                            })}
+                          </>
+                        );
+                      })()}
+                      {[
+                        { label: '活跃度', angle: 0 },
+                        { label: '能力值', angle: 60 },
+                        { label: 'Pipeline', angle: 120 },
+                        { label: 'MDF', angle: 180 },
+                        { label: '忠诚度', angle: 240 },
+                        { label: '增长力', angle: 300 },
+                      ].map((l) => {
+                        const rad = (l.angle * Math.PI) / 180;
+                        const dist = 48;
+                        const x = 50 + dist * Math.cos(rad);
+                        const y = 50 + dist * Math.sin(rad);
+                        return <text key={l.label} x={x} y={y} textAnchor="middle" fontSize="8" fill="#6b7280">{l.label}</text>;
+                      })}
+                    </svg>
+                  </div>
+                </div>
+
+                {/* 右侧：AI诊断与建议 */}
+                <div className="space-y-3">
+                  <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${partner.category === 'Champions' && scores.churnRisk >= 25 ? 'bg-red-100 text-red-600' : scores.activity >= 80 && scores.pipelineHealth === 0 ? 'bg-amber-100 text-amber-600' : scores.churnRisk >= 50 ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                        {partner.category === 'Champions' && scores.churnRisk >= 25 ? <AlertTriangle className="w-3 h-3" /> : scores.activity >= 80 && scores.pipelineHealth === 0 ? <AlertTriangle className="w-3 h-3" /> : scores.churnRisk >= 50 ? <Bell className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+                      </div>
+                      <span className="text-xs font-semibold text-neutral-900 dark:text-white">
+                        {partner.category === 'Champions' && scores.churnRisk >= 25 ? '风险告警' : scores.activity >= 80 && scores.pipelineHealth === 0 ? '高热情低产出' : scores.churnRisk >= 50 ? '流失风险高' : '健康发展'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-neutral-500 leading-relaxed">
+                      {partner.category === 'Champions' && scores.churnRisk >= 25
+                        ? `战略核心型伙伴流失风险上升至${scores.churnRisk}分！建议渠道总监立即介入。`
+                        : scores.activity >= 80 && scores.pipelineHealth === 0
+                          ? `活跃度${scores.activity}分，但Pipeline健康度为0%，建议48小时内发起JBP会议。`
+                          : scores.churnRisk >= 50
+                            ? `流失风险${scores.churnRisk}分，近90天无新商机，建议立即沟通。`
+                            : `整体健康度良好，活跃度${scores.activity}分，建议保持合作节奏。`}
+                    </p>
+                  </div>
+
+                  <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+                    <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">AI建议</p>
+                    {(() => {
+                      let suggestion = { text: '', action: '', actionType: 'secondary' as const };
+                      if (partner.category === 'Champions' && scores.churnRisk >= 25) {
+                        suggestion = { text: '立即升级至渠道总监处理', action: '升级处理', actionType: 'secondary' as const };
+                      } else if (scores.activity >= 80 && scores.pipelineHealth === 0) {
+                        suggestion = { text: '建议48小时内发起JBP会议', action: '预约会议', actionType: 'secondary' as const };
+                      } else if (scores.churnRisk >= 50) {
+                        suggestion = { text: '发送关怀邮件了解情况', action: '发送邮件', actionType: 'secondary' as const };
+                      } else if (partner.category === 'RisingStars') {
+                        suggestion = { text: '加大赋能力度，帮助成长', action: '申请赋能', actionType: 'secondary' as const };
+                      } else if (scores.activity < 30) {
+                        suggestion = { text: '发送唤醒邮件激活合作', action: '发送唤醒', actionType: 'secondary' as const };
+                      } else {
+                        suggestion = { text: '规划联合营销活动', action: '创建计划', actionType: 'secondary' as const };
+                      }
+                      return (
+                        <div className="flex items-center gap-2">
+                          <p className="flex-1 text-[10px] text-neutral-600 dark:text-neutral-400">{suggestion.text}</p>
+                          <Button variant="secondary" size="sm">{suggestion.action}</Button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="bg-white dark:bg-neutral-800 rounded-xl p-3 border border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-neutral-500">下次建议跟进</span>
+                      <span className="text-xs font-semibold text-neutral-900 dark:text-white">2天后</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Critical Alerts */}

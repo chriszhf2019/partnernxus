@@ -226,7 +226,7 @@ export const SettingsPage = () => {
       </div>
 
       <Tabs tabs={[
-        { id: 'company', label: '公司信息' }, { id: 'users', label: '用户管理' }, { id: 'roles', label: '角色权限' }, { id: 'security', label: '安全设置' }, { id: 'global', label: '全局设置' },
+        { id: 'company', label: '公司信息' }, { id: 'users', label: '用户管理' }, { id: 'roles', label: '角色权限' }, { id: 'security', label: '安全设置' }, { id: 'global', label: '全局设置' }, { id: 'classification', label: '分类引擎' },
       ]} activeTab={activeTab} onChange={setActiveTab} />
 
       {activeTab === 'company' && (
@@ -923,6 +923,254 @@ export const SettingsPage = () => {
                   </div>
                   <Badge variant="success" size="sm">活跃</Badge>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {activeTab === 'classification' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>分类引擎配置</CardTitle>
+              <CardDescription>设置合作伙伴自动分类规则，系统将根据T/I/M/C四维度数据自动计算并打标</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* 时间窗口设置 */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">计算时间窗口</h4>
+                <p className="text-xs text-neutral-500">定义计算活跃度的时间范围，用于评估合作伙伴近期表现</p>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: '30', label: '30天', desc: '近期活跃表现' },
+                    { value: '90', label: '90天', desc: '季度表现' },
+                    { value: '180', label: '180天', desc: '半年度表现' },
+                  ].map((option) => (
+                    <label key={option.value} className="flex flex-col items-center p-4 rounded-xl border-2 cursor-pointer transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                      <input type="radio" name="timeWindow" value={option.value} defaultChecked={option.value === '90'} className="sr-only" />
+                      <span className="text-lg font-semibold text-neutral-900 dark:text-white">{option.label}</span>
+                      <span className="text-xs text-neutral-500 mt-1">{option.desc}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* 维度权重设置 */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">T/I/M/C 维度权重</h4>
+                <p className="text-xs text-neutral-500">调整各维度在活跃度计算中的权重占比，权重总和应等于100%</p>
+                <div className="space-y-4">
+                  {/* 交易权重 */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">交易 (T) - 订单频次、项目报备、成单金额</span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">40%</span>
+                  </div>
+                  <input type="range" min="0" max="100" defaultValue="40" className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+
+                  {/* 互动权重 */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">互动 (I) - 门户登录、培训参与</span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">25%</span>
+                  </div>
+                  <input type="range" min="0" max="100" defaultValue="25" className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+
+                  {/* 市场权重 */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">市场 (M) - 联合活动、商机跟进速度</span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">20%</span>
+                  </div>
+                  <input type="range" min="0" max="100" defaultValue="20" className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+
+                  {/* 沟通权重 */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">沟通 (C) - QBR参与度</span>
+                    </div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">15%</span>
+                  </div>
+                  <input type="range" min="0" max="100" defaultValue="15" className="w-full h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                </div>
+              </div>
+
+              {/* 分类阈值配置 */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">分类阈值设置</h4>
+                <p className="text-xs text-neutral-500">设置各分类类型的触发条件，系统将根据活跃度和业绩自动匹配</p>
+                
+                {/* 战略核心型 */}
+                <div className="p-4 rounded-xl border border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-900/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">战略核心型 (Champions)</span>
+                    <Badge variant="success" size="sm">最高优先级</Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">活跃度阈值</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="100" defaultValue="80" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">≥80分</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">业绩产出阈值</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="5000" step="100" defaultValue="1000" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">≥100万</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-2">条件：活跃度 {'>'} 80 <span className="mx-1">且</span> 产出 {'>'} 100万</p>
+                </div>
+
+                {/* 成长活跃型 */}
+                <div className="p-4 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">成长活跃型 (RisingStars)</span>
+                    <Badge variant="info" size="sm">上升期</Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">活跃度阈值</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="100" defaultValue="60" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">≥60分</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">成长趋势</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="-100" max="100" defaultValue="30" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">+30%</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">产出阈值</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="5000" step="100" defaultValue="300" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">≥30万</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-2">条件：活跃度 {'>'} 60 <span className="mx-1">且</span> 成长趋势 {'>'} +30%</p>
+                </div>
+
+                {/* 项目驱动型 */}
+                <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-900/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">项目驱动型 (Opportunists)</span>
+                    <Badge variant="warning" size="sm">阵发性</Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">活跃度阈值</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="100" defaultValue="40" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">40-60分</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">活跃度波动系数</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="100" defaultValue="70" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">高波动</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-2">条件：活跃度中等但波动明显，呈阵发性活跃</p>
+                </div>
+
+                {/* 新晋观察型 */}
+                <div className="p-4 rounded-xl border border-cyan-200 dark:border-cyan-800 bg-cyan-50/30 dark:bg-cyan-900/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">新晋观察型 (Newcomers)</span>
+                    <Badge variant="default" size="sm">磨合期</Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">合作时长</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="180" defaultValue="90" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">≤90天</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">活跃度阈值</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="100" defaultValue="30" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">任意</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-2">条件：合作时长 ≤ 90天的新签约伙伴</p>
+                </div>
+
+                {/* 沉默/睡眠型 */}
+                <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/30 dark:bg-neutral-800/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 rounded-full bg-neutral-500"></div>
+                    <span className="text-sm font-semibold text-neutral-900 dark:text-white">沉默/睡眠型 (Dormant)</span>
+                    <Badge variant="danger" size="sm">需唤醒</Badge>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">活跃度阈值</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="100" defaultValue="20" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">≤20分</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-neutral-600 dark:text-neutral-400">沉默天数</label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min="0" max="365" defaultValue="60" className="flex-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">≥60天</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-2">条件：活跃度 ≤ 20 <span className="mx-1">且</span> 沉默天数 ≥ 60天</p>
+                </div>
+              </div>
+
+              {/* 自动打标开关 */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">自动打标设置</h4>
+                <div className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-white">开启自动打标</p>
+                      <p className="text-xs text-neutral-500 mt-1">系统每天凌晨0:00自动扫描并更新合作伙伴分类标签</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" defaultChecked className="sr-only peer" />
+                      <div className="w-11 h-6 bg-neutral-200 dark:bg-neutral-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-neutral-500">
+                    <Clock className="w-3 h-3" />
+                    <span>执行时间：每天凌晨 00:00</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 保存按钮 */}
+              <div className="flex justify-end gap-2 pt-4 border-t border-neutral-200 dark:border-neutral-800">
+                <Button variant="secondary">重置为默认</Button>
+                <Button variant="brand">保存配置</Button>
               </div>
             </CardContent>
           </Card>
