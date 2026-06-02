@@ -81,7 +81,7 @@ export const MarketingPlanPage = () => {
     supabase.from('budget_change_log').select('*').eq('config_id', 'current').order('created_at', { ascending: false }).limit(10).then(({ data }: any) => { if (data) setChangeLog(data); });
     supabase.from('marketing_activities').select('*').order('event_date').then(({ data }: any) => { if (data) setActivities(data); });
     supabase.from('partners').select('id, name, tier').order('name').then(({ data }: any) => { if (data) setPartners(data); });
-    // Load global currency setting
+    // Load global currency setting - always use DB value, ignore localStorage cache
     supabase.from('global_settings').select('currency').eq('id', 'default').single().then(({ data, error }: any) => { 
       if (error) {
         console.warn('Failed to load global currency:', error);
@@ -89,18 +89,18 @@ export const MarketingPlanPage = () => {
       if (data?.currency) {
         console.log('Currency from DB:', data.currency);
         setGlobalCurrency(data.currency as 'CNY' | 'USD' | 'JPY');
+        // Update localStorage to match DB
+        localStorage.setItem('global_currency', data.currency);
       } else {
-        // Fallback to localStorage or default
-        const saved = localStorage.getItem('global_currency');
-        console.log('Currency from localStorage:', saved);
-        if (saved) {
-          setGlobalCurrency(saved as 'CNY' | 'USD' | 'JPY');
-        } else {
-          console.log('Using default currency: CNY');
-        }
+        // Fallback to CNY if DB has no value
+        console.log('No currency in DB, using default: CNY');
+        setGlobalCurrency('CNY');
+        localStorage.setItem('global_currency', 'CNY');
       }
     }).catch((e: any) => {
       console.error('Unexpected error loading currency:', e);
+      // On error, use CNY as fallback
+      setGlobalCurrency('CNY');
     });
   }, [currentYear]);
 
