@@ -27,7 +27,8 @@ export const configService = {
     void db.settings().select('data').eq('id', 'global').single().then((res: any) => {
       const result = res as { data: { data: GlobalConfig } | null; error: any } | null;
       if (result?.data?.data) {
-        onData(result.data.data);
+        // Merge Supabase data with defaults so missing fields get sensible values
+        onData({ ...defaultConfig, ...result.data.data });
       } else {
         onData(defaultConfig);
       }

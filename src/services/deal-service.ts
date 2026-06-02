@@ -43,6 +43,8 @@ function normalizeDeal(row: any): Deal {
 
 function toSnakeDeal(deal: Partial<Deal>): Record<string, any> {
   const out: Record<string, any> = {};
+  // Only map fields that exist in the current Supabase deals table (19 columns)
+  // New columns will be available after running scripts/migrate-deals.sql
   const map: Record<string, string> = {
     customerName: 'customer',
     partnerId: 'partner_id',
@@ -52,14 +54,9 @@ function toSnakeDeal(deal: Partial<Deal>): Record<string, any> {
     salesTeam: 'sales_team',
     productType: 'product_type',
     createdDate: 'created_date',
-    lastActivityDate: 'last_activity_date',
-    expectedCloseDate: 'expected_close_date',
-    actualCloseDate: 'actual_close_date',
+    expectedCloseDate: 'end_date',
     isPriority: 'is_priority',
     hasConflict: 'has_conflict',
-    conflictId: 'conflict_id',
-    nextAction: 'next_action',
-    nextActionDate: 'next_action_date',
   };
   for (const [k, v] of Object.entries(deal)) {
     if (v === undefined) continue;
@@ -102,14 +99,9 @@ export const dealService = {
 
   create: async (deal: Omit<Deal, 'id'>): Promise<Deal> => {
     const snake = toSnakeDeal(deal);
-    // Ensure required legacy columns
+    // Ensure required legacy columns exist
     if (!snake.customer) snake.customer = deal.customerName || '';
     snake.created_date = snake.created_date || new Date().toISOString().split('T')[0];
-    snake.lifecycle = snake.lifecycle || [];
-    // Remove any fields that don't exist in the database
-    delete snake.customer_name;
-    delete snake.customer_id;
-    delete snake.customer_industry;
     const { data, error } = await db.deals().insert(snake).select().single();
     if (error) throw new Error(error.message);
     return normalizeDeal(data);
@@ -117,12 +109,7 @@ export const dealService = {
 
   update: async (id: string, dealData: Partial<Deal>): Promise<void> => {
     const snake = toSnakeDeal(dealData);
-    // Ensure customer field is set correctly
     if (dealData.customerName && !snake.customer) snake.customer = dealData.customerName;
-    // Remove any fields that don't exist in the database
-    delete snake.customer_name;
-    delete snake.customer_id;
-    delete snake.customer_industry;
     const { error } = await db.deals().update(snake).eq('id', id);
     if (error) throw new Error(error.message);
   },
