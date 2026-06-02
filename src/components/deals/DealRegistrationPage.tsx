@@ -295,7 +295,7 @@ export const DealRegistrationPage = ({ stats, deals, onNewDeal, onDealUpdate }: 
                         <p className="text-xs text-neutral-500 mt-1">{deal.customerName}</p>
                         <div className="flex items-center justify-between mt-2">
                           <Badge variant="danger" size="sm">{CONFLICT_TYPE_LABELS[conflict?.type || ''] || '冲突'}</Badge>
-                          <Button variant="ghost" size="sm" onClick={() => { setSelectedDeal(deal); setShowConflictModal(true); }}>
+                          <Button variant="ghost" size="sm" onClick={() => { setSelectedDeal(deal); setSelectedConflict(DEAL_CONFLICTS.find(c => c.id === deal.conflictId) || null); setShowConflictModal(true); }}>
                             {t('common.view')}
                           </Button>
                         </div>

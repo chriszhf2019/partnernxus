@@ -24,16 +24,21 @@ export const IncentivesPage = () => {
   const handleCreate = async () => {
     if (!form.title || !form.total_budget) return;
     setCreating(true);
-    await supabase.from('incentive_programs').insert({
-      title: form.title, trigger_type: form.trigger_type, payout_type: form.payout_type,
-      total_budget: Number(form.total_budget), description: form.description,
-      start_date: form.start_date, end_date: form.end_date, status: 'Active',
-      claimed_amount: 0, participants_count: 0,
-    });
-    setShowCreate(false);
-    setForm({ title: '', trigger_type: 'Pipeline Gap', payout_type: 'Cash', total_budget: '', description: '', start_date: '', end_date: '' });
-    setCreating(false);
-    window.location.reload();
+    try {
+      const { error } = await supabase.from('incentive_programs').insert({
+        title: form.title, trigger_type: form.trigger_type, payout_type: form.payout_type,
+        total_budget: Number(form.total_budget), description: form.description,
+        start_date: form.start_date, end_date: form.end_date, status: 'Active',
+        claimed_amount: 0, participants_count: 0,
+      });
+      if (error) throw new Error(error.message);
+      setShowCreate(false);
+      setForm({ title: '', trigger_type: 'Pipeline Gap', payout_type: 'Cash', total_budget: '', description: '', start_date: '', end_date: '' });
+    } catch (err) {
+      console.error('Failed to create incentive program:', err);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const statusVariant = (s: string) => s === 'Active' ? 'success' as const : s === 'Upcoming' ? 'info' as const : 'default' as const;
