@@ -46,6 +46,7 @@ const PieSVG = ({ data, size = 120 }: { data: number[]; size?: number }) => {
 
 export const MarketingPlanPage = () => {
   const navigate = useNavigate();
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [plan, setPlan] = useState<any[]>([]);
   const [config, setConfig] = useState<any>({ annual_budget: 0, q1_budget: 0, q2_budget: 0, q3_budget: 0, q4_budget: 0, status: 'draft', q1_adjust: 0, q2_adjust: 0, q3_adjust: 0, q4_adjust: 0 });
   const [savingConfig, setSavingConfig] = useState(false);
@@ -55,12 +56,16 @@ export const MarketingPlanPage = () => {
   const [showAdjust, setShowAdjust] = useState(false);
 
   useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
+  useEffect(() => {
     supabase.from('marketing_budget_config').select('*').eq('id', 'current').single().then(({ data }: any) => { if (data) setConfig(data); });
-    supabase.from('marketing_plan').select('*').eq('year', 2025).order('quarter').then(({ data }: any) => { if (data?.length) setPlan(data); });
+    supabase.from('marketing_plan').select('*').eq('year', currentYear).order('quarter').then(({ data }: any) => { if (data?.length) setPlan(data); });
     supabase.from('budget_change_log').select('*').eq('config_id', 'current').order('created_at', { ascending: false }).limit(10).then(({ data }: any) => { if (data) setChangeLog(data); });
     supabase.from('marketing_activities').select('*').order('event_date').then(({ data }: any) => { if (data) setActivities(data); });
     supabase.from('partners').select('id, name, tier').order('name').then(({ data }: any) => { if (data) setPartners(data); });
-  }, []);
+  }, [currentYear]);
 
   const actualSpendQ = [0, 0, 0, 0];
   activities.forEach((a: any) => {
@@ -395,8 +400,8 @@ export const MarketingPlanPage = () => {
               </div>
               <div className="flex items-center gap-1">
                 <Button variant="secondary" size="sm" onClick={addRow}><Plus className="w-3.5 h-3.5" />添加</Button>
-                <Button variant="secondary" size="sm" onClick={async () => { for (const p of items) { const r = { year: 2025, quarter: q, category: p.category, activity_type: p.activity_type, partner_id: p.partner_id, partner_name: p.partner_name, region: p.region, city: p.city, expected_date: p.expected_date, total_budget: Number(p.total_budget)||0, approved_amount: Number(p.approved_amount)||0, expected_attendees: Number(p.expected_attendees)||0, expected_output: p.expected_output, responsible_person: p.responsible_person, goal: p.goal, execution_status: p.execution_status, plan_status: 'draft', budget: Number(p.total_budget)||0, target_leads: Number(p.expected_output)||0, target_opps: 0 }; if ((p as any)._new) await supabase.from('marketing_plan').insert(r); else await supabase.from('marketing_plan').update(r).eq('id', p.id); } window.location.reload(); }}>保存</Button>
-                <Button variant="brand" size="sm" onClick={async () => { for (const p of items) { const r = { year: 2025, quarter: q, category: p.category, activity_type: p.activity_type, partner_id: p.partner_id, partner_name: p.partner_name, region: p.region, city: p.city, expected_date: p.expected_date, total_budget: Number(p.total_budget)||0, approved_amount: Number(p.approved_amount)||0, expected_attendees: Number(p.expected_attendees)||0, expected_output: p.expected_output, responsible_person: p.responsible_person, goal: p.goal, execution_status: p.execution_status, plan_status: 'submitted', budget: Number(p.total_budget)||0, target_leads: Number(p.expected_output)||0, target_opps: 0 }; if ((p as any)._new) await supabase.from('marketing_plan').insert(r); else await supabase.from('marketing_plan').update(r).eq('id', p.id); } window.location.reload(); }}>提交</Button>
+                <Button variant="secondary" size="sm" onClick={async () => { for (const p of items) { const r = { year: currentYear, quarter: q, category: p.category, activity_type: p.activity_type, partner_id: p.partner_id, partner_name: p.partner_name, region: p.region, city: p.city, expected_date: p.expected_date, total_budget: Number(p.total_budget)||0, approved_amount: Number(p.approved_amount)||0, expected_attendees: Number(p.expected_attendees)||0, expected_output: p.expected_output, responsible_person: p.responsible_person, goal: p.goal, execution_status: p.execution_status, plan_status: 'draft', budget: Number(p.total_budget)||0, target_leads: Number(p.expected_output)||0, target_opps: 0 }; if ((p as any)._new) await supabase.from('marketing_plan').insert(r); else await supabase.from('marketing_plan').update(r).eq('id', p.id); } window.location.reload(); }}>保存</Button>
+                <Button variant="brand" size="sm" onClick={async () => { for (const p of items) { const r = { year: currentYear, quarter: q, category: p.category, activity_type: p.activity_type, partner_id: p.partner_id, partner_name: p.partner_name, region: p.region, city: p.city, expected_date: p.expected_date, total_budget: Number(p.total_budget)||0, approved_amount: Number(p.approved_amount)||0, expected_attendees: Number(p.expected_attendees)||0, expected_output: p.expected_output, responsible_person: p.responsible_person, goal: p.goal, execution_status: p.execution_status, plan_status: 'submitted', budget: Number(p.total_budget)||0, target_leads: Number(p.expected_output)||0, target_opps: 0 }; if ((p as any)._new) await supabase.from('marketing_plan').insert(r); else await supabase.from('marketing_plan').update(r).eq('id', p.id); } window.location.reload(); }}>提交</Button>
                 {items.length > 0 && items[0].plan_status === 'submitted' && (
                   <Button variant="brand" size="sm" onClick={async () => { for (const p of items) { await supabase.from('marketing_plan').update({ plan_status: 'approved' }).eq('id', p.id); } window.location.reload(); }}>批复通过</Button>
                 )}

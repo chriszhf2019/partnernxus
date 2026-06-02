@@ -139,6 +139,13 @@ export function useMarketingData() {
         if (data?.length) setMdfActivities(data.map((a: any) => ({
           id: a.id, name: a.name, type: a.type, date: a.event_date, status: a.status,
           budget: a.budget, actualSpend: a.actual_spend, leadsGenerated: a.leads_generated, progress: a.progress,
+          hostType: a.host_type, partnerId: a.partner_id, partnerName: a.partner_name,
+          location: a.location, description: a.description,
+          contactName: a.contact_name, contactPhone: a.contact_phone,
+          maxAttendees: a.max_attendees, enableQuestions: a.enable_questions,
+          enableLottery: a.enable_lottery, lotteryReward: a.lottery_reward,
+          signupPoints: a.signup_points, checkinPoints: a.checkin_points,
+          invitationCode: a.invitation_code,
         })));
       });
       supabase.from('incentive_programs').select('*').order('created_at', { ascending: false }).then(({ data }: any) => {
