@@ -29,7 +29,9 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   const updateConfig = useCallback(async (newConfig: Partial<GlobalConfig>) => {
+    const merged = { ...config, ...newConfig };
     await configService.update(config, newConfig);
+    setConfig(merged);
   }, [config]);
 
   return (

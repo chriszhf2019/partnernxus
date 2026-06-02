@@ -7,36 +7,39 @@ import {
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useConfig } from '../../contexts/ConfigContext';
+import { usePermission } from '../../hooks/usePermission';
 
 interface NavItem {
   path: string;
   labelKey: string;
   icon: typeof LayoutDashboard;
+  permission?: string;
 }
 
 const NAV_GROUPS: { items: NavItem[] }[] = [
   {
     items: [
-      { path: '/ecosystem', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+      { path: '/ecosystem', labelKey: 'nav.dashboard', icon: LayoutDashboard, permission: 'dashboard_view' },
     ],
   },
   {
     items: [
-      { path: '/partners', labelKey: 'nav.partners', icon: Handshake },
-      { path: '/deals', labelKey: 'nav.deals', icon: FileText },
+      { path: '/partners', labelKey: 'nav.partners', icon: Handshake, permission: 'partners_view' },
+      { path: '/deals', labelKey: 'nav.deals', icon: FileText, permission: 'deals_view' },
     ],
   },
   {
     items: [
-      { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone },
-      { path: '/incentives', labelKey: 'nav.incentives', icon: Gift },
-      { path: '/enablement', labelKey: 'nav.enablement', icon: GraduationCap },
+      { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone, permission: 'marketing_view' },
+      { path: '/incentives', labelKey: 'nav.incentives', icon: Gift, permission: 'incentives_view' },
+      { path: '/enablement', labelKey: 'nav.enablement', icon: GraduationCap, permission: 'enablement_view' },
     ],
   },
   {
     items: [
-      { path: '/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
-      { path: '/settings', labelKey: 'nav.settings', icon: Settings },
+      { path: '/analytics', labelKey: 'nav.analytics', icon: BarChart3, permission: 'analytics_view' },
+      { path: '/settings', labelKey: 'nav.settings', icon: Settings, permission: 'settings_global' },
     ],
   },
 ];
@@ -44,11 +47,18 @@ const NAV_GROUPS: { items: NavItem[] }[] = [
 export const Sidebar = memo(() => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { config } = useConfig();
+  const { hasPermission } = usePermission();
   const location = useLocation();
   const navigate = useNavigate();
 
   const isActive = (path: string) =>
     location.pathname === path || (path !== '/ecosystem' && location.pathname.startsWith(path));
+
+  const isVisible = (item: NavItem) => {
+    if (!item.permission) return true;
+    return hasPermission(item.permission as any);
+  };
 
   return (
     <aside
@@ -56,7 +66,7 @@ export const Sidebar = memo(() => {
       role="navigation"
       aria-label="Main navigation"
     >
-      {/* Logo */}
+      {/* System Branding */}
       <div className="h-14 flex items-center px-5 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 bg-neutral-900 dark:bg-white rounded-lg flex items-center justify-center">
@@ -68,47 +78,58 @@ export const Sidebar = memo(() => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-auto">
-        {NAV_GROUPS.map((group, gi) => (
-          <div key={gi}>
-            {gi > 0 && <div className="mx-3 mb-2 h-px bg-neutral-200 dark:bg-neutral-800" />}
-            <div className="space-y-0.5">
-              {group.items.map((item) => {
-                const active = isActive(item.path);
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => navigate(item.path)}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
-                      active
-                        ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
-                        : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white',
-                    )}
-                  >
-                    <item.icon className="w-4 h-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{t(item.labelKey)}</span>
-                  </button>
-                );
-              })}
+        {NAV_GROUPS.map((group, gi) => {
+          const visibleItems = group.items.filter(isVisible);
+          if (visibleItems.length === 0) return null;
+          return (
+            <div key={gi}>
+              {gi > 0 && <div className="mx-3 mb-2 h-px bg-neutral-200 dark:bg-neutral-800" />}
+              <div className="space-y-0.5">
+                {visibleItems.map((item) => {
+                  const active = isActive(item.path);
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => navigate(item.path)}
+                      aria-current={active ? 'page' : undefined}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150',
+                        active
+                          ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-neutral-900 dark:hover:text-white',
+                      )}
+                    >
+                      <item.icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{t(item.labelKey)}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* CTA */}
       <div className="px-3 pb-2">
         <button
-          onClick={() => navigate('/deals/new')}
-          className="w-full h-9 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+          onClick={() => window.open(config.partnerCenterUrl || 'https://www.partner-center.com', '_blank')}
+          className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5"
         >
-          <Plus className="w-4 h-4" aria-hidden="true" />
-          {t('deals.add')}
+          {config.ctaButtonLabel || '合作伙伴中心'}
         </button>
       </div>
 
       {/* Footer */}
       <div className="px-3 pb-3 border-t border-neutral-200 dark:border-neutral-800 pt-3">
+        {/* Company Info */}
+        <div className="mb-3 px-2 py-2 bg-neutral-50 dark:bg-neutral-800/50 rounded-lg">
+          <p className="text-[10px] text-neutral-400 uppercase tracking-wider mb-0.5">所属公司</p>
+          <p className="text-[12px] font-medium text-neutral-700 dark:text-neutral-300 truncate">
+            {config.companyName || '未设置'}
+          </p>
+        </div>
+        
         <div className="flex items-center justify-between mb-2.5">
           <button
             onClick={toggleTheme}

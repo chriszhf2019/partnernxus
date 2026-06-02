@@ -12,6 +12,8 @@ const defaultConfig: GlobalConfig = {
   industries: ['金融', '医疗', '政务', '制造', '教育'],
   regions: ['华北', '华东', '华南', '西部'],
   currency: 'CNY',
+  productTypes: ['云原生平台', '大数据平台', 'AI 智算平台', '安全合规', '混合云方案', 'SaaS 应用', '运维服务'],
+  ctaButtonLabel: '合作伙伴中心',
 };
 
 export const configService = {

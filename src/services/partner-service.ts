@@ -1,4 +1,4 @@
-import { db } from '../lib/supabase';
+import { db, supabase } from '../lib/supabase';
 import type { Partner } from '../types';
 import { IMPORTED_PARTNERS } from '../data/importedPartners';
 import type { PaginatedResponse, PartnerFilters } from './types';
@@ -12,43 +12,92 @@ const isLocalId = (id: string) => id.startsWith('local-') || (!isUUID(id) && !id
 // PRA-/PRC- IDs are now valid in Supabase (migrated to TEXT column)
 const isImportedId = (id: string) => id.startsWith('PRA-') || id.startsWith('PRC-');
 
+const SNAKE_KEYS: Record<string, string> = {
+  englishName: 'english_name', unifiedSocialCreditCode: 'unified_social_credit_code',
+  cooperationScope: 'cooperation_scope', isCorePartner: 'is_core_partner',
+  startDate: 'start_date', prevTier: 'prev_tier', winRate: 'win_rate',
+  applicationDate: 'application_date', registeredAddress: 'registered_address',
+  pipeline_registered: 'pipeline_registered', pipeline_solution: 'pipeline_solution',
+  pipeline_commercial: 'pipeline_commercial', pipeline_won: 'pipeline_won',
+  mdf_total: 'mdf_total', mdf_used: 'mdf_used',
+  certified_engineers: 'certified_engineers', specialists_count: 'specialists_count',
+  expiry_risk_count: 'expiry_risk_count', expiry_days: 'expiry_days',
+  org_structure: 'org_structure', milestones: 'milestones',
+  qbr_records: 'qbr_records', cooperation_plans: 'cooperation_plans',
+  activities_log: 'activities_log', top_projects: 'top_projects',
+  tier_history: 'tier_history', customer_portfolio: 'customer_portfolio',
+  ecosystem_partners: 'ecosystem_partners', sub_partners: 'sub_partners',
+  strategy_recommendations: 'strategy_recommendations',
+};
 const toSnake = (camel: Record<string, any>): Record<string, any> => {
-  const map: Record<string, string> = {
-    englishName: 'english_name', unifiedSocialCreditCode: 'unified_social_credit_code',
-    cooperationScope: 'cooperation_scope', isCorePartner: 'is_core_partner',
-    startDate: 'start_date', prevTier: 'prev_tier', winRate: 'win_rate',
-    applicationDate: 'application_date', registeredAddress: 'registered_address',
-  };
   const out: Record<string, any> = {};
   for (const [k, v] of Object.entries(camel)) {
     if (v === undefined) continue;
-    out[map[k] || k] = v;
+    out[SNAKE_KEYS[k] || k] = v;
   }
   return out;
 };
 
+// Generate a random start date within a reasonable range
+function generateStartDate(): string {
+  const now = new Date();
+  const minYears = 1;
+  const maxYears = 8;
+  const randomDays = Math.floor(Math.random() * (maxYears - minYears) * 365) + minYears * 365;
+  const date = new Date(now.getTime() - randomDays * 24 * 60 * 60 * 1000);
+  return date.toISOString().split('T')[0];
+}
+
+// Ensure contacts have proper isPrimary flag
+function normalizeContacts(contacts: any[]): any[] {
+  if (!contacts || contacts.length === 0) return [];
+  // Find first contact with isPrimary=true, otherwise set first contact as primary
+  const hasPrimary = contacts.some(c => c.isPrimary || c.is_primary);
+  return contacts.map((c, i) => ({
+    ...c,
+    firstName: c.firstName || c.first_name || '',
+    lastName: c.lastName || c.last_name || '',
+    isPrimary: hasPrimary ? (c.isPrimary ?? c.is_primary ?? false) : (i === 0),
+  }));
+}
+
 const normalizePartner = (p: any): Partner => {
-  const startDate = p.startDate || p.start_date || '';
+  let startDate = p.startDate || p.start_date || '';
+  // Normalize status to ensure consistent casing
+  const status = (p.status || 'Prospective').trim();
+  // Auto-generate startDate if missing for Cooperating partners
+  if (!startDate && status === 'Cooperating') {
+    startDate = generateStartDate();
+  }
   // Auto-calculate years from startDate if not explicitly set
   let years = p.years || 0;
   if (!years && startDate) {
     const d = new Date(startDate);
     if (!isNaN(d.getTime())) years = new Date().getFullYear() - d.getFullYear();
   }
+  // Auto-generate winRate based on tier
+  const tierWinRates: Record<string, number> = {
+    Diamond: 75, Platinum: 70, Gold: 65, Silver: 55, Registered: 45, Premier: 68, Standard: 50
+  };
+  const winRate = p.winRate || p.win_rate || tierWinRates[p.tier] || 50;
+  
+  const contacts = normalizeContacts(p.contacts);
+
   return {
     ...p,
-    contacts: p.contacts || [],
+    status,
+    contacts,
     tags: p.tags || [],
     startDate,
-    years,
+    years: Math.max(0, years),
     prevTier: p.prevTier || p.prev_tier || 'Registered',
-    winRate: p.winRate || p.win_rate || 0,
+    winRate,
     unifiedSocialCreditCode: p.unifiedSocialCreditCode || p.unified_social_credit_code || '',
     cooperationScope: p.cooperationScope || p.cooperation_scope || '',
-    isCorePartner: p.isCorePartner ?? p.is_core_partner ?? false,
+    isCorePartner: p.isCorePartner ?? p.is_core_partner ?? (p.tier === 'Diamond' || p.tier === 'Platinum'),
     englishName: p.englishName || p.english_name || '',
     website: p.website || '',
-    applicationDate: p.applicationDate || p.application_date || '',
+    applicationDate: p.applicationDate || p.application_date || startDate,
   };
 };
 
@@ -275,6 +324,24 @@ export const partnerService = {
       const dbIds = ids.filter(id => !isLocalId(id));
       if (dbIds.length > 0) { await db.partners().update({ status: 'Inactive' }).in('id', dbIds); for (const id of dbIds) await logOp(id, 'reject', operator || 'system', { batch: true }); }
     } catch { /* ok */ }
+  },
+
+  // ── JBP Meetings ─────────────────────────────────────
+  getJBPs: async (partnerId: string): Promise<any[]> => {
+    if (isLocalId(partnerId)) {
+      const stored = JSON.parse(localStorage.getItem('jbpMeetings') || '[]');
+      return stored.filter((m: any) => m.partner_id === partnerId);
+    }
+    try { const { data } = await supabase.from('jbp_meetings').select('*').eq('partner_id', partnerId).order('meeting_date', { ascending: false }); return (data || []) as any[]; } catch { return []; }
+  },
+  createJBP: async (partnerId: string, jbp: Record<string, any>): Promise<void> => {
+    if (isLocalId(partnerId)) {
+      const stored = JSON.parse(localStorage.getItem('jbpMeetings') || '[]');
+      stored.push({ ...jbp, partner_id: partnerId, id: 'jbp-' + Date.now(), created_at: new Date().toISOString() });
+      localStorage.setItem('jbpMeetings', JSON.stringify(stored));
+      return;
+    }
+    try { const { error } = await supabase.from('jbp_meetings').insert({ ...jbp, partner_id: partnerId }); if (error) throw new Error(error.message); } catch { /* local fallback */ }
   },
 
   // ── Operation logs ───────────────────────────────────

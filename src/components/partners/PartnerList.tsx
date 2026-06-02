@@ -1,10 +1,11 @@
 import { useState, useMemo, useDeferredValue, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Upload, Pencil, Trash2, MapPin, Phone, CheckCircle2, XCircle, X, CheckSquare } from 'lucide-react';
+import { Search, Upload, Pencil, Trash2, MapPin, Phone, CheckCircle2, XCircle, X, CheckSquare, RefreshCw, Users, UserCheck, Clock, Star } from 'lucide-react';
 import { Partner, PartnerStatus, PartnerTier } from '../../types';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useConfig } from '../../contexts/ConfigContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePermission } from '../../hooks/usePermission';
 import { useToast } from '../ui/Toast';
 import { ImportModal } from './ImportModal';
 import { Button } from '../ui/Button';
@@ -13,7 +14,7 @@ import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { EmptyState } from '../ui/EmptyState';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { TIER_STYLES, TYPE_LABELS, STATUS_CONFIG } from '../../lib/partner-labels';
+import { TIER_STYLES, TYPE_LABELS, STATUS_CONFIG, TIER_LABELS } from '../../lib/partner-labels';
 import { partnerService } from '../../services/partner-service';
 import { cn } from '../../lib/utils';
 
@@ -28,7 +29,8 @@ const ITEMS_PER_PAGE = 10;
 export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerListProps) => {
   const { t } = useLanguage();
   const { config } = useConfig();
-  const { user, role } = useAuth();
+  const { user } = useAuth();
+  const { partners: partnerPermissions } = usePermission();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const deferredSearch = useDeferredValue(searchTerm);
@@ -45,8 +47,9 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const isAdmin = role === 'admin';
-  const isInternal = ['admin', 'channel_director', 'channel_manager', 'marketing_director', 'marketing_manager', 'sales_director', 'sales_manager'].includes(role);
+  const canEdit = partnerPermissions.edit();
+  const canImport = partnerPermissions.import();
+  const canManageStaff = partnerPermissions.staff();
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -127,7 +130,7 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
       await partnerService.batchApprove([...selected], {
         tier: 'Gold', status: 'Cooperating', manager: '', tags: [],
       }, user?.email || 'admin');
-      toast('success', `已批量批复 ${selected.size} 个合作伙伴`);
+      toast('success', t('partners.batchApproved', { count: selected.size }));
       setSelected(new Set());
       await refresh();
     } catch (err: any) { toast('error', `批量批复失败: ${err.message}`); }
@@ -135,7 +138,7 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
   const handleBatchReject = async () => {
     try {
       await partnerService.batchReject([...selected], user?.email || 'admin');
-      toast('success', `已批量驳回 ${selected.size} 个合作伙伴`);
+      toast('success', t('partners.batchRejected', { count: selected.size }));
       setSelected(new Set());
       await refresh();
     } catch (err: any) { toast('error', `批量驳回失败: ${err.message}`); }
@@ -158,7 +161,7 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
           </div>
           {onImport && (
             <Button variant="secondary" size="md" onClick={() => setShowImport(true)}>
-              <Upload className="w-4 h-4" /> Import
+              <Upload className="w-4 h-4" /> 导入
             </Button>
           )}
           <Button variant="brand" size="md" onClick={() => navigate('/partners/new')}>
@@ -167,52 +170,90 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { icon: Users, label: t('partners.all'), value: partners.length, color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' },
+          { icon: UserCheck, label: t('partners.active'), value: partners.filter(p => p.status === 'Cooperating').length, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' },
+          { icon: Clock, label: t('partners.pending'), value: pendingCount, color: 'text-amber-600 bg-amber-50 dark:bg-amber-900/20' },
+          { icon: Star, label: t('partners.goldPlus'), value: partners.filter(p => ['Gold','Platinum','Diamond'].includes(p.tier)).length, color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/20' },
+        ].map((s, i) => (
+          <div key={i} className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-4 shadow-card">
+            <div className="flex items-center justify-between">
+              <div><p className="text-xs text-neutral-500">{s.label}</p><p className="text-2xl font-bold text-neutral-900 dark:text-white">{s.value}</p></div>
+              <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center`}><s.icon className="w-5 h-5" /></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 justify-between">
         <div className="flex bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5">
-          <button onClick={() => setTab('all')} className={cn('px-4 py-1.5 rounded-md text-xs font-medium transition-all', tab === 'all' ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500')}>全部</button>
-          <button onClick={() => setTab('pending')} className={cn('px-4 py-1.5 rounded-md text-xs font-medium transition-all', tab === 'pending' ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500')}>待批复 {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px]">{pendingCount}</span>}</button>
+          <button onClick={() => setTab('all')} className={cn('px-4 py-1.5 rounded-md text-xs font-medium transition-all', tab === 'all' ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500')}>{t('partners.allTab')}</button>
+          <button onClick={() => setTab('pending')} className={cn('px-4 py-1.5 rounded-md text-xs font-medium transition-all', tab === 'pending' ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500')}>{t('partners.pending')} {pendingCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px]">{pendingCount}</span>}</button>
         </div>
+        <button onClick={refresh} disabled={refreshing} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50">
+          <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} />刷新
+        </button>
       </div>
 
       {/* Batch Actions */}
-      {selected.size > 0 && isInternal && (
+      {selected.size > 0 && canEdit && (
         <div className="flex items-center gap-3 px-4 py-2.5 bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800 rounded-xl">
-          <span className="text-sm font-medium text-brand-700 dark:text-brand-300">已选 {selected.size} 项</span>
+          <span className="text-sm font-medium text-brand-700 dark:text-brand-300">{t('common.selected')} {selected.size} {t('common.items')}</span>
           {tab === 'pending' && (
             <>
-              <Button variant="brand" size="sm" onClick={handleBatchApprove}><CheckCircle2 className="w-3.5 h-3.5" />批量批复</Button>
-              <Button variant="danger" size="sm" onClick={handleBatchReject}><XCircle className="w-3.5 h-3.5" />批量驳回</Button>
+              <Button variant="brand" size="sm" onClick={handleBatchApprove}><CheckCircle2 className="w-3.5 h-3.5" />{t('partners.batchApprove')}</Button>
+              <Button variant="danger" size="sm" onClick={handleBatchReject}><XCircle className="w-3.5 h-3.5" />{t('partners.batchReject')}</Button>
             </>
           )}
-          <button className="ml-auto text-xs text-neutral-400 hover:text-neutral-600" onClick={() => setSelected(new Set())}>取消选择</button>
+          <button className="ml-auto text-xs text-neutral-400 hover:text-neutral-600" onClick={() => setSelected(new Set())}>{t('common.cancelSelection')}</button>
         </div>
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-4 p-3 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
-        <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Status</span>
-        <div className="flex gap-1">{(['All', 'Cooperating', 'Inactive', 'Prospective'] as const).map((s) => filterBtn(statusFilter === s, () => { setStatusFilter(s); setPage(1); }, s === 'All' ? '全部' : STATUS_CONFIG[s].label))}</div>
+      <div className="flex flex-wrap items-center gap-3 p-3 bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{t('common.status')}</span>
+          <select className="h-8 px-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-1 focus:ring-brand" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value as PartnerStatus | 'All'); setPage(1); }}>
+            <option value="All">{t('common.all')}</option>
+            {(config.partnerStatuses || ['Cooperating','Inactive','Prospective']).map((s: string) => <option key={s} value={s}>{STATUS_CONFIG[s as PartnerStatus]?.label || s}</option>)}
+          </select>
+        </div>
         <div className="w-px h-5 bg-neutral-200 dark:bg-neutral-700" />
-        <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Tier</span>
-        <div className="flex gap-1">{['All', ...config.partnerTiers].map((t) => filterBtn(tierFilter === t, () => { setTierFilter(t); setPage(1); }, t === 'All' ? '全部' : t))}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{t('common.tier')}</span>
+          <select className="h-8 px-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-1 focus:ring-brand" value={tierFilter} onChange={(e) => { setTierFilter(e.target.value); setPage(1); }}>
+            <option value="All">{t('common.all')}</option>
+            {config.partnerTiers.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
         <div className="w-px h-5 bg-neutral-200 dark:bg-neutral-700" />
-        <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Type</span>
-        <div className="flex gap-1">{['All', ...partnerTypes].map((t) => filterBtn(typeFilter === t, () => { setTypeFilter(t); setPage(1); }, t === 'All' ? '全部' : TYPE_LABELS[t] || t))}</div>
-        <span className="ml-auto text-xs text-neutral-400">{filteredPartners.length} partners</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">{t('common.type')}</span>
+          <select className="h-8 px-2 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-1 focus:ring-brand" value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}>
+            <option value="All">{t('common.all')}</option>
+            {[...new Set([...(config.partnerTypes || ['Reseller','ISV','SI','Service','VAD','VAR','OEM']), ...partnerTypes])].map(t => <option key={t} value={t}>{TYPE_LABELS[t] || t}</option>)}
+          </select>
+        </div>
+        {(statusFilter !== 'All' || tierFilter !== 'All' || typeFilter !== 'All') && (
+          <button onClick={() => { setStatusFilter('All'); setTierFilter('All'); setTypeFilter('All'); setPage(1); }} className="text-[10px] text-blue-500 hover:underline ml-1">{t('common.clearFilters')}</button>
+        )}
+        <span className="ml-auto text-xs text-neutral-400">{filteredPartners.length} {t('common.results')}</span>
       </div>
 
       {/* Table */}
       {pagedPartners.length === 0 ? (
-        <EmptyState title="没有找到合作伙伴" description="尝试调整搜索条件或筛选器" />
+        <EmptyState title={t('partners.noResults')} description={t('partners.noResultsDesc')} />
       ) : (
         <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50">
-                  {isInternal && <th className="px-4 py-3.5 w-10"><input type="checkbox" checked={selected.size === pagedPartners.length && pagedPartners.length > 0} onChange={toggleAll} className="rounded" /></th>}
-                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">合作伙伴名称</th>
+                  {canEdit && tab === 'pending' && <th className="px-4 py-3.5 w-10"><input type="checkbox" checked={selected.size === pagedPartners.length && pagedPartners.length > 0} onChange={toggleAll} className="rounded" /></th>}
+                  <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">名称</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">类型</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">等级</th>
                   <th className="px-6 py-3.5 text-left text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">加入日期</th>
@@ -228,11 +269,11 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
                   const statusCfg = STATUS_CONFIG[partner.status];
                   return (
                     <tr key={partner.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors group">
-                      {isInternal && <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={selected.has(partner.id)} onChange={() => toggleSelect(partner.id)} className="rounded" /></td>}
+                      {canEdit && tab === 'pending' && <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={selected.has(partner.id)} onChange={() => toggleSelect(partner.id)} className="rounded" /></td>}
                       <td className="px-6 py-4 cursor-pointer" onClick={() => onSelectPartner(partner.id)}>
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-50 to-blue-100 dark:from-brand-900/30 dark:to-blue-900/30 flex items-center justify-center shrink-0 text-xs font-semibold text-brand-600 dark:text-brand-300">
-                            {partner.name.charAt(0)}
+                            {(partner.name || '?').charAt(0)}
                           </div>
                           <div>
                             <p className="text-sm font-medium text-neutral-900 dark:text-white group-hover:text-brand dark:group-hover:text-brand-light transition-colors">{partner.name}</p>
@@ -256,7 +297,7 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                          {tab === 'pending' && isInternal ? (
+                          {tab === 'pending' && canEdit ? (
                             <>
                               <Button variant="brand" size="sm" onClick={() => { setApprovePartner(partner); setApprovalForm({ tier: 'Gold' as PartnerTier, status: 'Cooperating' as PartnerStatus, tags: '', manager: '' }); }}>
                                 <CheckCircle2 className="w-3.5 h-3.5" />批复
@@ -268,7 +309,7 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
                           ) : (
                             <>
                               <button onClick={() => onSelectPartner(partner.id)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-brand transition-colors" aria-label="Edit"><Pencil className="w-4 h-4" /></button>
-                              {isAdmin && <button onClick={() => setDeleteId(partner.id)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-red-500 transition-colors" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>}
+                              {canEdit && <button onClick={() => setDeleteId(partner.id)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-red-500 transition-colors" aria-label="Delete"><Trash2 className="w-4 h-4" /></button>}
                             </>
                           )}
                         </div>
@@ -307,27 +348,27 @@ export const PartnerList = ({ partners, onSelectPartner, onImport }: PartnerList
       <ImportModal isOpen={showImport} onClose={() => setShowImport(false)}
         onImport={(imported, mode) => { onImport?.(imported, mode); setShowImport(false); }} />
       <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDeletePartner}
-        title="确认删除" description="确定要删除此合作伙伴吗？此操作不可撤销。" confirmLabel="删除" variant="danger" />
+        title={t('partners.deleteConfirm')} description={t('partners.deleteDesc')} confirmLabel={t('common.delete')} variant="danger" />
 
       {/* ── Approval Modal ─────────────────── */}
       {approvePartner && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setApprovePartner(null)}>
           <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl p-6 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">批复合作伙伴</h3>
+              <h3 className="text-lg font-semibold">{t('partners.approvePartner')}</h3>
               <button onClick={() => setApprovePartner(null)} className="p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"><X className="w-5 h-5" /></button>
             </div>
-            <p className="text-sm text-neutral-500 mb-4">批复「{approvePartner.name}」的申请</p>
+            <p className="text-sm text-neutral-500 mb-4">{t('partners.approveDesc')}「{approvePartner.name}」</p>
             <div className="space-y-3">
-              <Select label="合作伙伴等级" options={(config?.partnerTiers || ['Platinum','Gold','Silver','Registered']).map(v=>({value:v,label:v}))} value={approvalForm.tier} onChange={(e) => setApprovalForm({...approvalForm, tier: e.target.value as PartnerTier})} />
-              <Select label="合作伙伴状态" options={(config?.partnerStatuses || ['Cooperating','Inactive','Prospective']).map(v=>({value:v,label:v==='Cooperating'?'合作中':v==='Inactive'?'已过期':'潜在'}))} value={approvalForm.status} onChange={(e) => setApprovalForm({...approvalForm, status: e.target.value as PartnerStatus})} />
-              <Input label="渠道经理" value={approvalForm.manager} onChange={(e) => setApprovalForm({...approvalForm, manager: e.target.value})} placeholder="指派渠道经理" />
-              <Input label="标签（逗号分隔）" value={approvalForm.tags} onChange={(e) => setApprovalForm({...approvalForm, tags: e.target.value})} placeholder="如：信创,医疗,华北" />
+              <Select label={t('partners.tier')} options={(config?.partnerTiers || ['Platinum','Gold','Silver','Registered']).map(v=>({value:v,label:TIER_LABELS[v as PartnerTier] || v}))} value={approvalForm.tier} onChange={(e) => setApprovalForm({...approvalForm, tier: e.target.value as PartnerTier})} />
+              <Select label={t('partners.status')} options={(config?.partnerStatuses || ['Cooperating','Inactive','Prospective']).map(v=>({value:v,label:STATUS_CONFIG[v as PartnerStatus]?.label || v}))} value={approvalForm.status} onChange={(e) => setApprovalForm({...approvalForm, status: e.target.value as PartnerStatus})} />
+              <Input label={t('partners.manager')} value={approvalForm.manager} onChange={(e) => setApprovalForm({...approvalForm, manager: e.target.value})} placeholder={t('partners.managerPlaceholder')} />
+              <Input label={t('partners.tags')} value={approvalForm.tags} onChange={(e) => setApprovalForm({...approvalForm, tags: e.target.value})} placeholder={t('partners.tagsPlaceholder')} />
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <Button variant="secondary" onClick={() => setApprovePartner(null)}>取消</Button>
-              <Button variant="danger" size="sm" onClick={() => { setApprovePartner(null); handleReject(approvePartner); }}><XCircle className="w-4 h-4" />驳回</Button>
-              <Button variant="brand" size="sm" onClick={handleApprove}><CheckCircle2 className="w-4 h-4" />批复通过</Button>
+              <Button variant="secondary" onClick={() => setApprovePartner(null)}>{t('common.cancel')}</Button>
+              <Button variant="danger" size="sm" onClick={() => { setApprovePartner(null); handleReject(approvePartner); }}><XCircle className="w-4 h-4" />{t('partners.reject')}</Button>
+              <Button variant="brand" size="sm" onClick={handleApprove}><CheckCircle2 className="w-4 h-4" />{t('partners.approve')}</Button>
             </div>
           </div>
         </div>

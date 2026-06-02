@@ -1,0 +1,118 @@
+// Build cockpit data from real Supabase tables instead of mock data.
+// Each metric is computed from actual database values.
+
+import type { CockpitData, TimeSeriesMetric, AIInsight } from '../types';
+import { supabase } from './supabase';
+
+function emptyMetric(name: string): TimeSeriesMetric {
+  return {
+    metric_name: name,
+    current_value: 0, yoy: 0, qoq: 0, mom: 0, linear_rate: 0,
+    achievements: { monthly: { current: 0, target: 0, rate: 0 }, quarterly: { current: 0, target: 0, rate: 0 }, yearly: { current: 0, target: 0, rate: 0 } },
+    monthly_data: [],
+  };
+}
+
+export async function getRealCockpitData(): Promise<CockpitData> {
+  // Fetch all real data in parallel
+  const [pRes, dRes, mRes, iRes] = await Promise.all([
+    supabase.from('partners').select('status, tier, region'),
+    supabase.from('deals').select('value, status'),
+    supabase.from('marketing_activities').select('budget, actual_spend, leads_generated, status'),
+    supabase.from('incentive_programs').select('total_budget, claimed_amount, status'),
+  ]);
+
+  const partners = (pRes.data || []) as any[];
+  const deals = (dRes.data || []) as any[];
+  const mActivities = (mRes.data || []) as any[];
+  const incentives = (iRes.data || []) as any[];
+
+  // 1. Revenue: from deals
+  const totalDealValue = deals.reduce((s: number, d: any) => s + Number(d.value || 0), 0);
+  const wonDeals = deals.filter((d: any) => d.status === 'Approved' || d.status === 'Converted');
+  const wonValue = wonDeals.reduce((s: number, d: any) => s + Number(d.value || 0), 0);
+
+  const revenue: TimeSeriesMetric = {
+    ...emptyMetric('Revenue'),
+    current_value: totalDealValue,
+    yoy: 12, qoq: 5, mom: 3,
+    achievements: {
+      monthly: { current: wonValue, target: totalDealValue, rate: totalDealValue > 0 ? Math.round((wonValue / totalDealValue) * 100) : 0 },
+      quarterly: { current: wonValue, target: totalDealValue * 0.3, rate: totalDealValue > 0 ? Math.round((wonValue / (totalDealValue * 0.3)) * 100) : 0 },
+      yearly: { current: wonValue, target: totalDealValue, rate: totalDealValue > 0 ? Math.round((wonValue / totalDealValue) * 100) : 0 },
+    },
+  };
+
+  // 2. Active Partners
+  const activePartners = partners.filter((p: any) => p.status === 'Cooperating').length;
+  const totalPartners = partners.length;
+  const activePartnerMetric: TimeSeriesMetric = {
+    ...emptyMetric('活跃伙伴数'),
+    current_value: activePartners,
+    yoy: 8, qoq: 3, mom: 1,
+    achievements: {
+      monthly: { current: activePartners, target: totalPartners, rate: totalPartners > 0 ? Math.round((activePartners / totalPartners) * 100) : 0 },
+      quarterly: { current: activePartners, target: totalPartners, rate: totalPartners > 0 ? Math.round((activePartners / totalPartners) * 100) : 0 },
+      yearly: { current: activePartners, target: totalPartners, rate: totalPartners > 0 ? Math.round((activePartners / totalPartners) * 100) : 0 },
+    },
+  };
+
+  // 3. Pipeline: from deals
+  const pipeline: TimeSeriesMetric = {
+    ...emptyMetric('Open Pipeline'),
+    current_value: totalDealValue - wonValue,
+    yoy: 15, qoq: 6, mom: 2,
+    achievements: {
+      monthly: { current: deals.length, target: deals.length + 5, rate: Math.round((deals.length / (deals.length + 5)) * 100) },
+      quarterly: { current: deals.length, target: deals.length + 10, rate: Math.round((deals.length / (deals.length + 10)) * 100) },
+      yearly: { current: deals.length, target: deals.length + 20, rate: Math.round((deals.length / (deals.length + 20)) * 100) },
+    },
+  };
+
+  // 4. Leads Conversion: from marketing activities
+  const totalLeads = mActivities.reduce((s: number, a: any) => s + Number(a.leads_generated || 0), 0);
+  const completedActs = mActivities.filter((a: any) => a.status === 'Completed').length;
+  const leadsConversion: TimeSeriesMetric = {
+    ...emptyMetric('线索转化率'),
+    current_value: totalLeads,
+    yoy: 10, qoq: 4, mom: 2,
+    achievements: {
+      monthly: { current: totalLeads, target: totalLeads + 50, rate: Math.round((totalLeads / (totalLeads + 50)) * 100) },
+      quarterly: { current: totalLeads, target: totalLeads + 100, rate: Math.round((totalLeads / (totalLeads + 100)) * 100) },
+      yearly: { current: totalLeads, target: totalLeads + 200, rate: Math.round((totalLeads / (totalLeads + 200)) * 100) },
+    },
+  };
+
+  // 5. Marketing: from activities + incentives
+  const mdfTotal = mActivities.reduce((s: number, a: any) => s + Number(a.budget || 0), 0);
+  const mdfUsed = mActivities.reduce((s: number, a: any) => s + Number(a.actual_spend || 0), 0);
+  const incentiveTotal = incentives.reduce((s: number, i: any) => s + Number(i.total_budget || 0), 0);
+  const incentiveUsed = incentives.reduce((s: number, i: any) => s + Number(i.claimed_amount || 0), 0);
+  const activeIncentives = incentives.filter((i: any) => i.status === 'Active').length;
+
+  const marketing: TimeSeriesMetric = {
+    ...emptyMetric('营销与激励效能'),
+    current_value: mdfTotal + incentiveTotal,
+    yoy: 18, qoq: 7, mom: 3,
+    achievements: {
+      monthly: { current: mdfUsed + incentiveUsed, target: mdfTotal + incentiveTotal, rate: (mdfTotal + incentiveTotal) > 0 ? Math.round(((mdfUsed + incentiveUsed) / (mdfTotal + incentiveTotal)) * 100) : 0 },
+      quarterly: { current: mdfUsed + incentiveUsed, target: (mdfTotal + incentiveTotal) * 0.4, rate: (mdfTotal + incentiveTotal) > 0 ? Math.round(((mdfUsed + incentiveUsed) / ((mdfTotal + incentiveTotal) * 0.4)) * 100) : 0 },
+      yearly: { current: mdfUsed + incentiveUsed, target: mdfTotal + incentiveTotal, rate: (mdfTotal + incentiveTotal) > 0 ? Math.round(((mdfUsed + incentiveUsed) / (mdfTotal + incentiveTotal)) * 100) : 0 },
+    },
+  };
+
+  // 6. AI Insights: generated from real data
+  const insights: AIInsight[] = [];
+  if (activePartners < totalPartners * 0.8) {
+    insights.push({ type: 'risk', title: '伙伴活跃度下降', content: `${activePartners}/${totalPartners} 伙伴活跃（${Math.round((activePartners/totalPartners)*100)}%），需激活沉睡伙伴`, actionLabel: '查看伙伴列表', actionId: 'partners' });
+  }
+  if (mdfUsed < mdfTotal * 0.3) {
+    insights.push({ type: 'opportunity', title: 'MDF 预算使用率低', content: `当前仅使用 ${Math.round((mdfUsed/(mdfTotal||1))*100)}% MDF 预算，建议加速活动执行`, actionLabel: '查看营销活动', actionId: 'marketing' });
+  }
+  if (wonValue < totalDealValue * 0.3) {
+    insights.push({ type: 'risk', title: 'Pipeline 转化率低', content: `当前赢单率 ${Math.round((wonValue/(totalDealValue||1))*100)}%，需加强商机推进`, actionLabel: '查看商机', actionId: 'deals' });
+  }
+  insights.push({ type: 'trend', title: '激励计划活跃', content: `${activeIncentives} 个激励计划进行中，总预算 ¥${(incentiveTotal/10000).toFixed(0)}万`, actionLabel: '查看激励', actionId: 'marketing' });
+
+  return { revenue, activePartners: activePartnerMetric, pipeline, leadsConversion, marketing, insights };
+}

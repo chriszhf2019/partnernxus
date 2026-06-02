@@ -31,6 +31,10 @@ export const CardTitle = ({ children, className }: { children: React.ReactNode; 
   <h3 className={cn('text-sm font-semibold text-neutral-900 dark:text-white', className)}>{children}</h3>
 );
 
+export const CardDescription = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <p className={cn('text-xs text-neutral-500 dark:text-neutral-400 mt-1', className)}>{children}</p>
+);
+
 export const CardContent = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <div className={cn('space-y-4', className)}>{children}</div>
 );

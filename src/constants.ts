@@ -1,5 +1,6 @@
 import {
   Deal,
+  DealConflict,
   Activity,
   DashboardStats,
   MatrixData,
@@ -67,73 +68,668 @@ export const PARTNER_DETAILS: PartnerDetails = {
 export const DEAL_STATS: DealRegistrationStats = {
   yearNew: 156,
   quarterNew: 42,
-  monthNew: 12,
-  weekNew: 3,
-  rejected: 8,
-  closed: 24
+  monthNew: 14,
+  weekNew: 4,
+  rejected: 12,
+  closed: 28,
+  totalPipelineValue: 45600000,
+  avgCycleDays: 48,
+  conversionRate: 35,
+  stageDistribution: {
+    'Registered': 45,
+    'UnderReview': 18,
+    'Approved': 32,
+    'Solution': 28,
+    'Commercial': 21,
+    'ClosedWon': 28,
+    'ClosedLost': 12
+  },
+  sourceDistribution: {
+    'PartnerInitiated': 78,
+    'ChannelAssigned': 35,
+    'MDFCampaign': 18,
+    'MarketingEvent': 12,
+    'IncentiveProgram': 8,
+    'Referral': 5
+  },
+  conflictCount: 7,
+  overdueCount: 15
 };
 
 export const DEALS: Deal[] = [
   {
     id: 'd1',
     title: '浙江省立医院 CMS 升级项目',
-    customer: '浙江省立医院',
+    customerId: 'c1',
+    customerName: '浙江省立医院',
+    customerIndustry: '医疗',
     value: 4500000,
     partnerId: '1',
     partnerName: '华东医卫云科技术有限公司',
     partnerType: 'ISV',
+    stage: 'Approved',
     status: 'Approved',
     region: '华东',
+    province: '浙江',
+    city: '杭州',
     salesName: '张伟',
     salesTeam: '医疗事业部',
     productType: '云原生平台',
     createdDate: '2024-08-15',
-    endDate: '2024-12-31',
+    lastActivityDate: '2024-09-20',
+    expectedCloseDate: '2024-12-31',
     isPriority: true,
+    hasConflict: false,
     lifecycle: [
-      { stage: 'Registered', date: '2024-08-15', description: '合作伙伴提交报备', actor: '陈伟' },
-      { stage: 'Approved', date: '2024-08-17', description: '渠道经理审核通过', actor: 'Alex Rivera' }
-    ]
+      { stage: 'Registered', date: '2024-08-15', description: '合作伙伴提交报备', actor: '陈伟', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-08-16', description: '渠道经理开始审核', actor: '张伟', durationDays: 1 },
+      { stage: 'Approved', date: '2024-08-18', description: '审核通过，进入方案跟进阶段', actor: 'Alex Rivera', durationDays: 2 }
+    ],
+    sourceInfo: {
+      source: 'PartnerInitiated',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-08-10'
+    },
+    description: '浙江省立医院现有 CMS 系统升级，包括架构重构和云原生改造',
+    nextAction: '提交技术方案初稿',
+    nextActionDate: '2024-10-01'
   },
   {
     id: 'd2',
-    title: '苏州市卫健委医疗数据湖',
-    customer: '苏州市卫健委',
-    value: 2800000,
+    title: '苏州市卫健委医疗数据湖建设',
+    customerId: 'c2',
+    customerName: '苏州市卫生健康委员会',
+    customerIndustry: '政府/医疗',
+    value: 8500000,
     partnerId: '1',
     partnerName: '华东医卫云科技术有限公司',
     partnerType: 'ISV',
-    status: 'Pending',
+    stage: 'Solution',
+    status: 'Approved',
     region: '华东',
+    province: '江苏',
+    city: '苏州',
     salesName: '李娜',
     salesTeam: '政府事业部',
     productType: '大数据平台',
-    createdDate: '2024-09-01',
-    endDate: '2025-03-31',
+    createdDate: '2024-07-01',
+    lastActivityDate: '2024-09-18',
+    expectedCloseDate: '2025-03-31',
+    isPriority: true,
+    hasConflict: false,
     lifecycle: [
-      { stage: 'Registered', date: '2024-09-01', description: '合作伙伴提交报备', actor: '陈伟' }
-    ]
+      { stage: 'Registered', date: '2024-07-01', description: '合作伙伴提交报备', actor: '陈伟', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-07-03', description: '渠道经理开始审核', actor: '李娜', durationDays: 2 },
+      { stage: 'Approved', date: '2024-07-10', description: '审核通过', actor: 'Alex Rivera', durationDays: 7 },
+      { stage: 'Solution', date: '2024-07-15', description: '进入方案设计阶段', actor: '李娜', durationDays: 5 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 9,
+      approvalToSolutionDays: 5,
+      solutionToCommercialDays: 0,
+      commercialToCloseDays: 0,
+      totalCycleDays: 14,
+      isOverdue: false,
+      expectedCloseDate: '2025-03-31'
+    },
+    sourceInfo: {
+      source: 'MDFCampaign',
+      relatedCampaignId: 'mdf1',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-06-15'
+    },
+    description: '苏州市卫健委医疗健康数据湖平台建设，包含数据采集、存储、分析和应用',
+    nextAction: '提交数据治理方案',
+    nextActionDate: '2024-10-15'
   },
   {
     id: 'd3',
     title: '上海瑞金医院 AI 辅助诊断系统',
-    customer: '上海瑞金医院',
+    customerId: 'c3',
+    customerName: '上海瑞金医院',
+    customerIndustry: '医疗',
     value: 3200000,
     partnerId: '2',
     partnerName: '上海智医科技',
     partnerType: 'ISV',
-    status: 'Rejected',
+    stage: 'ClosedLost',
+    status: 'Closed Lost',
     region: '华东',
+    province: '上海',
+    city: '上海',
     salesName: '王强',
     salesTeam: '医疗事业部',
     productType: 'AI 智算平台',
-    createdDate: '2024-08-20',
-    endDate: '2024-11-30',
+    createdDate: '2024-06-20',
+    lastActivityDate: '2024-08-25',
+    expectedCloseDate: '2024-09-30',
+    actualCloseDate: '2024-08-25',
     hasConflict: true,
+    conflictId: 'cf1',
     lifecycle: [
-      { stage: 'Registered', date: '2024-08-20', description: '合作伙伴提交报备', actor: '张三' },
-      { stage: 'Rejected', date: '2024-08-22', description: '存在存量商机冲突', actor: 'Alex Rivera' }
-    ]
+      { stage: 'Registered', date: '2024-06-20', description: '合作伙伴提交报备', actor: '王浩', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-06-22', description: '渠道经理发现冲突', actor: '王强', durationDays: 2 },
+      { stage: 'ClosedLost', date: '2024-08-25', description: '因与 d1 存在客户冲突，终止跟进', actor: 'Alex Rivera', durationDays: 64 }
+    ],
+    sourceInfo: {
+      source: 'PartnerInitiated',
+      leadQuality: 'Warm'
+    },
+    description: 'AI 辅助诊断系统建设，因与浙江省立医院项目存在客户归属冲突被终止'
+  },
+  {
+    id: 'd4',
+    title: '深圳市人民医院智慧医院一期',
+    customerId: 'c4',
+    customerName: '深圳市人民医院',
+    customerIndustry: '医疗',
+    value: 6800000,
+    partnerId: '3',
+    partnerName: '华南智慧科技',
+    partnerType: 'SI',
+    stage: 'Commercial',
+    status: 'Approved',
+    region: '华南',
+    province: '广东',
+    city: '深圳',
+    salesName: '刘洋',
+    salesTeam: '医疗事业部',
+    productType: '云原生平台',
+    createdDate: '2024-05-15',
+    lastActivityDate: '2024-09-22',
+    expectedCloseDate: '2024-11-30',
+    isPriority: true,
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-05-15', description: '合作伙伴提交报备', actor: '刘洋', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-05-18', description: '渠道经理审核中', actor: '刘洋', durationDays: 3 },
+      { stage: 'Approved', date: '2024-05-25', description: '审核通过', actor: 'Alex Rivera', durationDays: 7 },
+      { stage: 'Solution', date: '2024-06-01', description: '方案设计阶段', actor: '刘洋', durationDays: 7 },
+      { stage: 'Commercial', date: '2024-09-01', description: '进入商务洽谈', actor: '刘洋', durationDays: 92 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 10,
+      approvalToSolutionDays: 7,
+      solutionToCommercialDays: 92,
+      commercialToCloseDays: 0,
+      totalCycleDays: 109,
+      isOverdue: false,
+      expectedCloseDate: '2024-11-30'
+    },
+    sourceInfo: {
+      source: 'MarketingEvent',
+      relatedEventId: 'evt1',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-04-20'
+    },
+    description: '智慧医院整体建设一期，包含HIS系统升级和院区网络改造',
+    nextAction: '商务谈判最终报价',
+    nextActionDate: '2024-10-10'
+  },
+  {
+    id: 'd5',
+    title: '广州市医保局数据中台项目',
+    customerId: 'c5',
+    customerName: '广州市医疗保障局',
+    customerIndustry: '政府',
+    value: 5200000,
+    partnerId: '4',
+    partnerName: '华南系统集成',
+    partnerType: 'VAD',
+    stage: 'Approved',
+    status: 'Approved',
+    region: '华南',
+    province: '广东',
+    city: '广州',
+    salesName: '赵敏',
+    salesTeam: '政府事业部',
+    productType: '大数据平台',
+    createdDate: '2024-08-01',
+    lastActivityDate: '2024-09-15',
+    expectedCloseDate: '2025-01-31',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-08-01', description: '合作伙伴提交报备', actor: '赵敏', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-08-03', description: '渠道经理审核中', actor: '赵敏', durationDays: 2 },
+      { stage: 'Approved', date: '2024-08-12', description: '审核通过', actor: 'Michael Chen', durationDays: 9 }
+    ],
+    sourceInfo: {
+      source: 'ChannelAssigned',
+      leadQuality: 'Warm',
+      initialContactDate: '2024-07-25'
+    },
+    description: '医保数据中台建设，实现与省级医保平台互联互通'
+  },
+  {
+    id: 'd6',
+    title: '北京协和医院数据中心现代化改造',
+    customerId: 'c6',
+    customerName: '北京协和医院',
+    customerIndustry: '医疗',
+    value: 3800000,
+    partnerId: '5',
+    partnerName: '北方信科',
+    partnerType: 'VAR',
+    stage: 'UnderReview',
+    status: 'Pending',
+    region: '华北',
+    province: '北京',
+    city: '北京',
+    salesName: '孙杰',
+    salesTeam: '医疗事业部',
+    productType: '云原生平台',
+    createdDate: '2024-09-18',
+    lastActivityDate: '2024-09-20',
+    expectedCloseDate: '2025-06-30',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-09-18', description: '合作伙伴提交报备', actor: '孙杰', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-09-20', description: '渠道经理审核中', actor: '孙杰', durationDays: 2 }
+    ],
+    sourceInfo: {
+      source: 'Referral',
+      leadQuality: 'Warm'
+    },
+    description: '数据中心虚拟化和容器化改造'
+  },
+  {
+    id: 'd7',
+    title: '成都市教育局智慧校园平台',
+    customerId: 'c7',
+    customerName: '成都市教育局',
+    customerIndustry: '政府/教育',
+    value: 2900000,
+    partnerId: '6',
+    partnerName: '西部云智科技',
+    partnerType: 'ISV',
+    stage: 'Registered',
+    status: 'Pending',
+    region: '西南',
+    province: '四川',
+    city: '成都',
+    salesName: '周琳',
+    salesTeam: '教育事业部',
+    productType: '云原生平台',
+    createdDate: '2024-09-22',
+    lastActivityDate: '2024-09-22',
+    expectedCloseDate: '2025-09-30',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-09-22', description: '合作伙伴提交报备', actor: '周琳', durationDays: 0 }
+    ],
+    sourceInfo: {
+      source: 'IncentiveProgram',
+      incentiveProgramId: 'inc1',
+      leadQuality: 'Cold',
+      initialContactDate: '2024-09-15'
+    },
+    description: '智慧校园云平台建设，覆盖200所中小学'
+  },
+  {
+    id: 'd8',
+    title: '武汉市第一医院智慧医联体',
+    customerId: 'c8',
+    customerName: '武汉市第一医院',
+    customerIndustry: '医疗',
+    value: 4100000,
+    partnerId: '7',
+    partnerName: '华中智慧医疗',
+    partnerType: 'ISV',
+    stage: 'Solution',
+    status: 'Approved',
+    region: '华中',
+    province: '湖北',
+    city: '武汉',
+    salesName: '吴涛',
+    salesTeam: '医疗事业部',
+    productType: 'AI 智算平台',
+    createdDate: '2024-06-10',
+    lastActivityDate: '2024-09-19',
+    expectedCloseDate: '2024-12-31',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-06-10', description: '合作伙伴提交报备', actor: '吴涛', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-06-12', description: '渠道经理审核中', actor: '吴涛', durationDays: 2 },
+      { stage: 'Approved', date: '2024-06-20', description: '审核通过', actor: '张伟', durationDays: 8 },
+      { stage: 'Solution', date: '2024-07-01', description: '进入方案设计', actor: '吴涛', durationDays: 11 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 10,
+      approvalToSolutionDays: 11,
+      solutionToCommercialDays: 0,
+      commercialToCloseDays: 0,
+      totalCycleDays: 21,
+      isOverdue: false,
+      expectedCloseDate: '2024-12-31'
+    },
+    sourceInfo: {
+      source: 'PartnerInitiated',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-06-01'
+    },
+    description: '医联体信息平台，覆盖武汉市属10家医院'
+  },
+  {
+    id: 'd9',
+    title: '西安市第三医院云计算平台',
+    customerId: 'c9',
+    customerName: '西安市第三医院',
+    customerIndustry: '医疗',
+    value: 2200000,
+    partnerId: '8',
+    partnerName: '西北云科技',
+    partnerType: 'VAR',
+    stage: 'ClosedWon',
+    status: 'Closed Won',
+    region: '西南',
+    province: '陕西',
+    city: '西安',
+    salesName: '郑强',
+    salesTeam: '医疗事业部',
+    productType: '云原生平台',
+    createdDate: '2024-03-15',
+    lastActivityDate: '2024-09-10',
+    expectedCloseDate: '2024-09-30',
+    actualCloseDate: '2024-09-10',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-03-15', description: '合作伙伴提交报备', actor: '郑强', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-03-18', description: '渠道经理审核中', actor: '郑强', durationDays: 3 },
+      { stage: 'Approved', date: '2024-03-25', description: '审核通过', actor: 'Michael Chen', durationDays: 7 },
+      { stage: 'Solution', date: '2024-04-01', description: '进入方案设计', actor: '郑强', durationDays: 7 },
+      { stage: 'Commercial', date: '2024-07-15', description: '进入商务洽谈', actor: '郑强', durationDays: 105 },
+      { stage: 'ClosedWon', date: '2024-09-10', description: '项目赢单', actor: 'Michael Chen', durationDays: 57 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 10,
+      approvalToSolutionDays: 7,
+      solutionToCommercialDays: 105,
+      commercialToCloseDays: 57,
+      totalCycleDays: 179,
+      isOverdue: false,
+      expectedCloseDate: '2024-09-30'
+    },
+    sourceInfo: {
+      source: 'PartnerInitiated',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-03-01'
+    },
+    description: '医院私有云平台建设'
+  },
+  {
+    id: 'd10',
+    title: '南京市雨花台区政府云项目',
+    customerId: 'c10',
+    customerName: '南京市雨花台区人民政府',
+    customerIndustry: '政府',
+    value: 1800000,
+    partnerId: '1',
+    partnerName: '华东医卫云科技术有限公司',
+    partnerType: 'ISV',
+    stage: 'ClosedWon',
+    status: 'Closed Won',
+    region: '华东',
+    province: '江苏',
+    city: '南京',
+    salesName: '张伟',
+    salesTeam: '政府事业部',
+    productType: '云原生平台',
+    createdDate: '2024-04-01',
+    lastActivityDate: '2024-08-20',
+    expectedCloseDate: '2024-08-31',
+    actualCloseDate: '2024-08-20',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-04-01', description: '合作伙伴提交报备', actor: '张伟', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-04-03', description: '渠道经理审核中', actor: '张伟', durationDays: 2 },
+      { stage: 'Approved', date: '2024-04-10', description: '审核通过', actor: 'Alex Rivera', durationDays: 7 },
+      { stage: 'Solution', date: '2024-04-15', description: '进入方案设计', actor: '张伟', durationDays: 5 },
+      { stage: 'Commercial', date: '2024-06-01', description: '进入商务洽谈', actor: '张伟', durationDays: 47 },
+      { stage: 'ClosedWon', date: '2024-08-20', description: '项目赢单', actor: 'Alex Rivera', durationDays: 80 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 9,
+      approvalToSolutionDays: 5,
+      solutionToCommercialDays: 47,
+      commercialToCloseDays: 80,
+      totalCycleDays: 141,
+      isOverdue: false,
+      expectedCloseDate: '2024-08-31'
+    },
+    sourceInfo: {
+      source: 'ChannelAssigned',
+      leadQuality: 'Warm',
+      initialContactDate: '2024-03-20'
+    },
+    description: '区政府办公云平台建设'
+  },
+  {
+    id: 'd11',
+    title: '重庆市公安局智慧警务平台',
+    customerId: 'c11',
+    customerName: '重庆市公安局',
+    customerIndustry: '政府',
+    value: 7500000,
+    partnerId: '9',
+    partnerName: '西南系统集成',
+    partnerType: 'SI',
+    stage: 'Commercial',
+    status: 'Approved',
+    region: '西南',
+    province: '重庆',
+    city: '重庆',
+    salesName: '陈刚',
+    salesTeam: '政府事业部',
+    productType: '大数据平台',
+    createdDate: '2024-05-20',
+    lastActivityDate: '2024-09-21',
+    expectedCloseDate: '2024-12-31',
+    isPriority: true,
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-05-20', description: '合作伙伴提交报备', actor: '陈刚', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-05-22', description: '渠道经理审核中', actor: '陈刚', durationDays: 2 },
+      { stage: 'Approved', date: '2024-06-01', description: '审核通过', actor: 'Michael Chen', durationDays: 10 },
+      { stage: 'Solution', date: '2024-06-15', description: '进入方案设计', actor: '陈刚', durationDays: 14 },
+      { stage: 'Commercial', date: '2024-09-01', description: '进入商务洽谈', actor: '陈刚', durationDays: 78 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 12,
+      approvalToSolutionDays: 14,
+      solutionToCommercialDays: 78,
+      commercialToCloseDays: 0,
+      totalCycleDays: 104,
+      isOverdue: false,
+      expectedCloseDate: '2024-12-31'
+    },
+    sourceInfo: {
+      source: 'MDFCampaign',
+      relatedCampaignId: 'mdf2',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-05-10'
+    },
+    description: '智慧警务大数据分析平台，覆盖全市公安系统'
+  },
+  {
+    id: 'd12',
+    title: '天津市肿瘤医院精准医疗平台',
+    customerId: 'c12',
+    customerName: '天津市肿瘤医院',
+    customerIndustry: '医疗',
+    value: 5600000,
+    partnerId: '5',
+    partnerName: '北方信科',
+    partnerType: 'VAR',
+    stage: 'UnderReview',
+    status: 'Pending',
+    region: '华北',
+    province: '天津',
+    city: '天津',
+    salesName: '孙杰',
+    salesTeam: '医疗事业部',
+    productType: 'AI 智算平台',
+    createdDate: '2024-09-19',
+    lastActivityDate: '2024-09-21',
+    expectedCloseDate: '2025-06-30',
+    hasConflict: true,
+    conflictId: 'cf2',
+    lifecycle: [
+      { stage: 'Registered', date: '2024-09-19', description: '合作伙伴提交报备', actor: '孙杰', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-09-21', description: '渠道经理审核中，发现潜在冲突', actor: '孙杰', durationDays: 2 }
+    ],
+    sourceInfo: {
+      source: 'PartnerInitiated',
+      leadQuality: 'Warm'
+    },
+    description: '精准医疗大数据分析平台'
+  },
+  {
+    id: 'd13',
+    title: '杭州市第一人民医院云HIS升级',
+    customerId: 'c13',
+    customerName: '杭州市第一人民医院',
+    customerIndustry: '医疗',
+    value: 3400000,
+    partnerId: '1',
+    partnerName: '华东医卫云科技术有限公司',
+    partnerType: 'ISV',
+    stage: 'Approved',
+    status: 'Approved',
+    region: '华东',
+    province: '浙江',
+    city: '杭州',
+    salesName: '张伟',
+    salesTeam: '医疗事业部',
+    productType: '云原生平台',
+    createdDate: '2024-08-10',
+    lastActivityDate: '2024-09-18',
+    expectedCloseDate: '2025-02-28',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-08-10', description: '合作伙伴提交报备', actor: '张伟', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-08-12', description: '渠道经理审核中', actor: '张伟', durationDays: 2 },
+      { stage: 'Approved', date: '2024-08-20', description: '审核通过', actor: 'Alex Rivera', durationDays: 8 }
+    ],
+    sourceInfo: {
+      source: 'PartnerInitiated',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-08-05'
+    },
+    description: '医院信息系统云原生架构升级'
+  },
+  {
+    id: 'd14',
+    title: '青岛市医保局智慧医保平台',
+    customerId: 'c14',
+    customerName: '青岛市医疗保障局',
+    customerIndustry: '政府',
+    value: 4200000,
+    partnerId: '10',
+    partnerName: '山东半岛科技',
+    partnerType: 'VAD',
+    stage: 'Solution',
+    status: 'Approved',
+    region: '华东',
+    province: '山东',
+    city: '青岛',
+    salesName: '王芳',
+    salesTeam: '政府事业部',
+    productType: '大数据平台',
+    createdDate: '2024-06-25',
+    lastActivityDate: '2024-09-17',
+    expectedCloseDate: '2025-01-31',
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-06-25', description: '合作伙伴提交报备', actor: '王芳', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-06-27', description: '渠道经理审核中', actor: '王芳', durationDays: 2 },
+      { stage: 'Approved', date: '2024-07-05', description: '审核通过', actor: '李娜', durationDays: 8 },
+      { stage: 'Solution', date: '2024-07-15', description: '进入方案设计', actor: '王芳', durationDays: 10 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 10,
+      approvalToSolutionDays: 10,
+      solutionToCommercialDays: 0,
+      commercialToCloseDays: 0,
+      totalCycleDays: 20,
+      isOverdue: false,
+      expectedCloseDate: '2025-01-31'
+    },
+    sourceInfo: {
+      source: 'MarketingEvent',
+      relatedEventId: 'evt2',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-06-15'
+    },
+    description: '医保经办和结算云平台建设'
+  },
+  {
+    id: 'd15',
+    title: '复旦大学附属华山医院 AI 诊疗辅助',
+    customerId: 'c15',
+    customerName: '复旦大学附属华山医院',
+    customerIndustry: '医疗',
+    value: 4800000,
+    partnerId: '2',
+    partnerName: '上海智医科技',
+    partnerType: 'ISV',
+    stage: 'Commercial',
+    status: 'Approved',
+    region: '华东',
+    province: '上海',
+    city: '上海',
+    salesName: '王强',
+    salesTeam: '医疗事业部',
+    productType: 'AI 智算平台',
+    createdDate: '2024-05-08',
+    lastActivityDate: '2024-09-20',
+    expectedCloseDate: '2024-11-30',
+    isPriority: true,
+    hasConflict: false,
+    lifecycle: [
+      { stage: 'Registered', date: '2024-05-08', description: '合作伙伴提交报备', actor: '王浩', durationDays: 0 },
+      { stage: 'UnderReview', date: '2024-05-10', description: '渠道经理审核中', actor: '王强', durationDays: 2 },
+      { stage: 'Approved', date: '2024-05-18', description: '审核通过', actor: 'Alex Rivera', durationDays: 8 },
+      { stage: 'Solution', date: '2024-06-01', description: '进入方案设计', actor: '王浩', durationDays: 14 },
+      { stage: 'Commercial', date: '2024-08-20', description: '进入商务洽谈', actor: '王强', durationDays: 80 }
+    ],
+    conversionMetrics: {
+      registrationToApprovalDays: 10,
+      approvalToSolutionDays: 14,
+      solutionToCommercialDays: 80,
+      commercialToCloseDays: 0,
+      totalCycleDays: 104,
+      isOverdue: false,
+      expectedCloseDate: '2024-11-30'
+    },
+    sourceInfo: {
+      source: 'IncentiveProgram',
+      incentiveProgramId: 'inc2',
+      leadQuality: 'Hot',
+      initialContactDate: '2024-04-25'
+    },
+    description: 'AI 辅助诊疗系统，包含影像分析和临床决策支持'
+  }
+];
+
+export const DEAL_CONFLICTS: DealConflict[] = [
+  {
+    id: 'cf1',
+    type: 'SameCustomerSimilarProject',
+    dealIds: ['d1', 'd3'],
+    description: '上海瑞金医院与浙江省立医院存在相似 AI 辅助诊断项目冲突',
+    status: 'Resolved',
+    resolution: '上海瑞金医院项目终止，由上海智医科技负责后续跟进浙江省立医院项目',
+    resolvedBy: 'Alex Rivera',
+    resolvedDate: '2024-08-25',
+    createdDate: '2024-08-22'
+  },
+  {
+    id: 'cf2',
+    type: 'SameCustomerSameProduct',
+    dealIds: ['d12', 'd6'],
+    description: '天津市肿瘤医院 AI 智算平台项目可能存在多伙伴报备冲突',
+    status: 'Pending',
+    createdDate: '2024-09-21'
   }
 ];
 
@@ -223,113 +819,107 @@ export const INCENTIVE_PROGRAMS: IncentiveProgram[] = [
   {
     id: 'i1',
     title: 'Q3 医疗行业商机冲刺计划',
-    trigger: 'Pipeline Gap',
+    type: 'Growth',
+    quarter: 'Q3',
+    year: 2024,
+    startDate: '2024-07-01',
+    endDate: '2024-09-30',
     status: 'Active',
-    payoutType: 'Rebate',
-    totalBudget: 2000000,
-    claimedAmount: 1250000,
-    participantsCount: 45,
-    description: '针对医疗行业新增报备商机，成交后额外返点 2%。',
-    startDate: '2026-03-01',
-    endDate: '2026-06-30',
-    currentMonthPerformance: { target: 50000000, actual: 42000000, growth: 15.4 }
+    budget: 500000,
+    used: 320000,
+    remaining: 180000,
+    targetDeals: 15,
+    registeredDeals: 18,
+    conversionRate: 65,
+    topPartners: [
+      { partnerId: '1', partnerName: '华东医卫云科技术有限公司', deals: 5, value: 12500000 },
+      { partnerId: '2', partnerName: '上海智医科技', deals: 3, value: 8200000 },
+    ]
   },
   {
     id: 'i2',
-    title: '新一代 AI 智算平台首发激励',
-    trigger: 'New Product',
-    status: 'Active',
-    payoutType: 'Cash',
-    totalBudget: 1500000,
-    claimedAmount: 450000,
-    participantsCount: 28,
-    description: '首单 AI 智算平台项目，奖励渠道经理 5 万元现金。',
-    startDate: '2026-02-15',
-    endDate: '2026-05-15',
-    currentMonthPerformance: { target: 10, actual: 6, growth: 20.0 }
-  },
-  {
-    id: 'i3',
-    title: '国产化替代竞争性专项激励',
-    trigger: 'Competitive',
-    status: 'Active',
-    payoutType: 'Rebate',
-    totalBudget: 3000000,
-    claimedAmount: 800000,
-    participantsCount: 15,
-    description: '成功替换竞品 A 的项目，返点比例提升至 15%。',
-    startDate: '2026-04-01',
-    endDate: '2026-09-30',
-    currentMonthPerformance: { target: 20, actual: 8, growth: -5.2 }
-  },
-  {
-    id: 'i4',
-    title: 'FY25 渠道开门红激励计划',
-    trigger: 'Sales Acceleration',
-    status: 'Ended',
-    payoutType: 'Cash',
-    totalBudget: 5000000,
-    claimedAmount: 4850000,
-    participantsCount: 120,
-    description: '财年第一季度新签约伙伴专项激励。',
+    title: 'FY25 Q1 政府行业激励计划',
+    type: 'Government',
+    quarter: 'Q1',
+    year: 2025,
     startDate: '2025-01-01',
     endDate: '2025-03-31',
-    currentMonthPerformance: { target: 100, actual: 105, growth: 5.0 }
-  },
-  {
-    id: 'i5',
-    title: '2025 双十一云产品大促激励',
-    trigger: 'Sales Acceleration',
-    status: 'Ended',
-    payoutType: 'Rebate',
-    totalBudget: 1000000,
-    claimedAmount: 980000,
-    participantsCount: 85,
-    description: '双十一期间核心云产品销售返点翻倍。',
-    startDate: '2025-11-01',
-    endDate: '2025-11-15',
-    currentMonthPerformance: { target: 200, actual: 195, growth: -2.5 }
+    status: 'Planning',
+    budget: 800000,
+    used: 0,
+    remaining: 800000,
+    targetDeals: 20,
+    registeredDeals: 0,
+    conversionRate: 0,
+    topPartners: []
   }
 ];
 
 export const INCENTIVE_STATS: IncentiveStats = {
-  totalActivePrograms: 8,
-  totalPayoutYTD: 12450000,
-  avgParticipationRate: 64.5,
-  topTrigger: 'Pipeline Gap'
+  totalBudget: 2800000,
+  totalUsed: 1650000,
+  totalRemaining: 1150000,
+  activePrograms: 3,
+  topPerformers: [
+    { partnerId: '1', partnerName: '华东医卫云科技术有限公司', incentiveEarned: 380000, dealsWon: 8 },
+    { partnerId: '2', partnerName: '上海智医科技', incentiveEarned: 280000, dealsWon: 5 },
+    { partnerId: '3', partnerName: '华南智慧科技', incentiveEarned: 220000, dealsWon: 4 },
+  ]
 };
 
 export const ACTIVITIES: Activity[] = [
   {
     id: 'a1',
-    type: 'signing',
-    title: 'JBP Signing Ceremony',
-    description: 'Joint Business Plan for FY25 officially signed by Regional VP Chen Wei.',
-    date: 'SEP 12, 2024',
-    time: '14:20'
+    type: 'deal_update',
+    title: '苏州市卫健委医疗数据湖 阶段更新',
+    description: '方案设计已完成，进入技术验证阶段',
+    timestamp: '2024-09-20T14:30:00Z',
+    user: '李娜',
+    metadata: { dealId: 'd2', stage: 'Solution', value: 8500000 }
   },
   {
     id: 'a2',
-    type: 'registration',
-    title: 'New Deal Registered',
-    description: 'Project: Hangzhou Digital Twin Hospital. Estimated ¥3.5M.',
-    date: 'SEP 10, 2024',
-    time: '09:15'
+    type: 'partner_approved',
+    title: '新合作伙伴加入审核',
+    description: '华中智慧医疗提交合作申请',
+    timestamp: '2024-09-19T10:15:00Z',
+    user: '系统管理员',
+    metadata: { partnerId: '7', partnerName: '华中智慧医疗' }
   },
   {
     id: 'a3',
-    type: 'visit',
-    title: 'On-site Visit Record',
-    description: 'Quarterly business review at HuaDong HQ. Key focus on ISV integration roadmap.',
-    date: 'SEP 08, 2024',
-    time: '16:45'
+    type: 'deal_created',
+    title: '新商机报备',
+    description: '成都市教育局智慧校园平台 报备成功',
+    timestamp: '2024-09-18T16:45:00Z',
+    user: '周琳',
+    metadata: { dealId: 'd7', value: 2900000 }
   },
   {
     id: 'a4',
-    type: 'milestone',
-    title: 'Enablement Milestone',
-    description: '5 engineers completed the Advanced Healthcare Cloud Architect certification.',
-    date: 'AUG 28, 2024',
-    time: '11:30'
+    type: 'mdf_submitted',
+    title: 'MDF 申请提交',
+    description: '华东医卫云科技术有限公司提交 Q3 联合营销方案',
+    timestamp: '2024-09-17T11:20:00Z',
+    user: '陈伟',
+    metadata: { mdfId: 'mdf1', amount: 450000 }
+  },
+  {
+    id: 'a5',
+    type: 'deal_won',
+    title: '商机赢单',
+    description: '西安市第三医院云计算平台 成功结单',
+    timestamp: '2024-09-10T15:00:00Z',
+    user: '郑强',
+    metadata: { dealId: 'd9', value: 2200000 }
+  },
+  {
+    id: 'a6',
+    type: 'enablement_cert',
+    title: '工程师认证通过',
+    description: '3 位工程师通过云原生架构师认证',
+    timestamp: '2024-09-08T09:30:00Z',
+    user: '培训系统',
+    metadata: { partnerId: '1', engineers: 3, certification: '云原生架构师' }
   }
 ];

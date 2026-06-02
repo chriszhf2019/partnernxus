@@ -14,7 +14,7 @@ export const dealService = {
       let deals = (data || []) as Deal[];
       if (filters.search) {
         const s = filters.search.toLowerCase();
-        deals = deals.filter((d) => d.title.toLowerCase().includes(s) || d.customer.toLowerCase().includes(s));
+        deals = deals.filter((d) => d.title.toLowerCase().includes(s) || d.customerName.toLowerCase().includes(s));
       }
       return { items: deals, total: deals.length, page: 1, pageSize: deals.length };
     } catch {

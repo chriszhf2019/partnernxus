@@ -70,14 +70,14 @@ export const DealCard: React.FC<DealCardProps> = ({ deal }) => {
       <div className="flex items-center justify-between pt-3 border-t border-surface-container">
         {isClosedWon ? (
           <>
-            <span className="text-[10px] font-bold text-secondary-container uppercase">Won • {deal.endDate}</span>
+            <span className="text-[10px] font-bold text-secondary-container uppercase">Won • {deal.expectedCloseDate}</span>
             <Star className="w-5 h-5 text-secondary-container fill-current" />
           </>
         ) : (
           <>
             <div className="flex items-center gap-1.5 text-[10px] font-medium text-on-surface-variant">
               <Calendar className="w-3 h-3" />
-              {deal.endDate}
+              {deal.expectedCloseDate}
             </div>
             <div className="flex -space-x-2">
               {/* Team avatars removed or replaced with salesName */}

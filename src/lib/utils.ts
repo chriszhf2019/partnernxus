@@ -6,18 +6,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currency: 'CNY' | 'USD' | 'JPY' = 'CNY') {
-  const symbols = {
-    CNY: '¥',
-    USD: '$',
-    JPY: '¥',
-  };
-  
-  const formatter = new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-
-  return formatter.format(amount);
+  const n = Math.round(amount);
+  const withCommas = n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  if (currency === 'USD') return `$${withCommas}`;
+  return `¥${withCommas}`;
 }

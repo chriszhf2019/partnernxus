@@ -1,6 +1,6 @@
 import { Suspense, useState, useRef, useEffect } from 'react';
 import type { Partner } from './types';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopNav } from './components/layout/TopNav';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -10,6 +10,7 @@ import { ToastProvider } from './components/ui/Toast';
 import { usePartners, useDeals, useActivities } from './hooks/useData';
 import { partnerService } from './services/partner-service';
 import { buildPartnerDetails } from './lib/partnerDataBuilder';
+import { supabase } from './lib/supabase';
 import { Shield, HelpCircle } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ConfigProvider } from './contexts/ConfigContext';
@@ -31,6 +32,8 @@ const IncentivesPage = retryableLazy(() => import('./components/marketing/Incent
 const EnablementPage = retryableLazy(() => import('./components/marketing/EnablementPage').then(m => ({ default: m.EnablementPage })));
 const AnalyticsPage = retryableLazy(() => import('./components/marketing/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 const ChannelDashboard = retryableLazy(() => import('./components/marketing/ChannelDashboard').then(m => ({ default: m.ChannelDashboard })));
+const MarketingPlanPage = retryableLazy(() => import('./components/marketing/MarketingPlanPage').then(m => ({ default: m.MarketingPlanPage })));
+const PartnerStaffPage = retryableLazy(() => import('./components/partners/PartnerStaffPage').then(m => ({ default: m.PartnerStaffPage })));
 
 function EcosystemRoute() {
   const navigate = useNavigate();
@@ -102,15 +105,24 @@ function PartnerProfileRoute() {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [relatedDeals, setRelatedDeals] = useState<any[]>([]);
+  const [relatedPlans, setRelatedPlans] = useState<any[]>([]);
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
     const fromRef = partnerListRef.current.find((p) => p.id === id);
-    if (fromRef) { setPartner({...fromRef}); setLoading(false); return; }
-    partnerService.getById(id).then((p) => {
-      if (p) setPartner(p);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    if (fromRef) { setPartner({...fromRef}); setLoading(false); }
+    else { partnerService.getById(id).then((p) => { if (p) setPartner(p); setLoading(false); }).catch(() => setLoading(false)); }
+
+    // Fetch related deals and PMDF plans
+    supabase.from('deals').select('*').eq('partner_id', id).order('created_date', { ascending: false }).then(({ data }: any) => { if (data) setRelatedDeals(data); });
+    supabase.from('marketing_plan').select('*').eq('partner_id', id).eq('activity_type', 'PMDF').then(({ data }: any) => { if (data) setRelatedPlans(data); });
+    // Load contacts from partner_contacts table
+    supabase.from('partner_contacts').select('*').eq('partner_id', id).then(({ data: contacts }: any) => {
+      if (contacts?.length > 0) {
+        setPartner((prev: any) => prev ? { ...prev, contacts: contacts.map((c: any) => ({ salutation: c.salutation, firstName: c.first_name, lastName: c.last_name, title: c.title, department: c.department, phone: c.phone, mobile: c.mobile, email: c.email, isPrimary: c.is_primary })) } : prev);
+      }
+    });
   }, [id, refreshKey]);
 
   const handlePartnerUpdate = (updated: Partner) => {
@@ -130,7 +142,24 @@ function PartnerProfileRoute() {
     );
   }
 
-  const partnerDetails: PartnerDetails = buildPartnerDetails(partner);
+  // Build pipeline from real deals
+  const dealPipeline = {
+    registered: relatedDeals.reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+    solution: relatedDeals.filter((d: any) => d.status === 'Approved').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+    commercial: relatedDeals.filter((d: any) => d.status === 'Pending').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+    won: relatedDeals.filter((d: any) => d.status === 'Converted' || d.status === 'Closed Won').reduce((s: number, d: any) => s + Number(d.value || 0), 0),
+  };
+
+  // Merge pipeline data into partner details
+  const baseDetails = buildPartnerDetails(partner);
+  const partnerDetails: PartnerDetails = {
+    ...baseDetails,
+    pipeline: dealPipeline.registered > 0 ? dealPipeline : baseDetails.pipeline,
+    topProjects: relatedDeals.map((d: any) => ({
+      name: d.title, amount: Number(d.value || 0), progress: d.status === 'Approved' ? 75 : d.status === 'Pending' ? 40 : d.status === 'Converted' ? 100 : 20,
+      closeDate: d.end_date || d.created_date || '',
+    })),
+  };
 
   return (
     <ErrorBoundary>
@@ -139,7 +168,6 @@ function PartnerProfileRoute() {
           partner={partnerDetails}
           activities={activities}
           onBack={() => navigate('/partners')}
-          onPartnerUpdate={handlePartnerUpdate}
         />
       </Suspense>
     </ErrorBoundary>
@@ -148,6 +176,8 @@ function PartnerProfileRoute() {
 
 function DealsRoute() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const partnerFilter = searchParams.get('partner') || '';
   const { deals: initialDeals, stats } = useDeals();
   const [deals, setDeals] = useState(initialDeals);
 
@@ -155,12 +185,22 @@ function DealsRoute() {
     setDeals(prev => prev.map(d => d.id === updatedDeal.id ? updatedDeal : d));
   };
 
+  const filtered = partnerFilter
+    ? deals.filter(d => d.partnerId === partnerFilter)
+    : deals;
+
   return (
     <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
+        {partnerFilter && (
+          <div className="mb-4 flex items-center gap-2">
+            <span className="text-sm text-neutral-500">筛选合作伙伴: <strong>{partnerFilter}</strong></span>
+            <button onClick={() => navigate('/deals')} className="text-xs text-blue-500 hover:underline">清除</button>
+          </div>
+        )}
         <DealRegistrationPage
           stats={stats}
-          deals={deals}
+          deals={filtered}
           onNewDeal={() => navigate('/deals/new')}
           onDealUpdate={handleDealUpdate}
         />
@@ -187,9 +227,12 @@ function NewDealRoute() {
 }
 
 function MarketingRoute() {
+  const [searchParams] = useSearchParams();
+  const partnerFilter = searchParams.get('partner') || '';
   return (
     <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
+        {partnerFilter && <div className="mb-4 text-sm text-neutral-500">合作伙伴: <strong>{partnerFilter}</strong></div>}
         <MarketingIncentivePage />
       </Suspense>
     </ErrorBoundary>
@@ -197,9 +240,12 @@ function MarketingRoute() {
 }
 
 function IncentivesRoute() {
+  const [searchParams] = useSearchParams();
+  const partnerFilter = searchParams.get('partner') || '';
   return (
     <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
+        {partnerFilter && <div className="mb-4 text-sm text-neutral-500">筛选合作伙伴: <strong>{partnerFilter}</strong></div>}
         <IncentivesPage />
       </Suspense>
     </ErrorBoundary>
@@ -207,9 +253,12 @@ function IncentivesRoute() {
 }
 
 function EnablementRoute() {
+  const [searchParams] = useSearchParams();
+  const partnerFilter = searchParams.get('partner') || '';
   return (
     <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
+        {partnerFilter && <div className="mb-4 text-sm text-neutral-500">合作伙伴: <strong>{partnerFilter}</strong></div>}
         <EnablementPage />
       </Suspense>
     </ErrorBoundary>
@@ -254,9 +303,11 @@ function AppLayout() {
               <Route path="/partners" element={<PartnersRoute />} />
               <Route path="/partners/new" element={<Suspense fallback={<PageLoader />}><PartnerFormPage /></Suspense>} />
             <Route path="/partners/:id" element={<PartnerProfileRoute />} />
+              <Route path="/partners/:id/staff" element={<Suspense fallback={<PageLoader />}><PartnerStaffPage /></Suspense>} />
               <Route path="/deals" element={<DealsRoute />} />
               <Route path="/deals/new" element={<NewDealRoute />} />
               <Route path="/marketing" element={<MarketingRoute />} />
+              <Route path="/marketing/plan" element={<Suspense fallback={<PageLoader />}><MarketingPlanPage /></Suspense>} />
               <Route path="/incentives" element={<IncentivesRoute />} />
               <Route path="/enablement" element={<EnablementRoute />} />
               <Route path="/analytics" element={<AnalyticsRoute />} />
