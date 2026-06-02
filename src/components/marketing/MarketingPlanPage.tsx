@@ -164,7 +164,7 @@ export const MarketingPlanPage = () => {
           <div>
             <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">年度营销预算规划</h1>
             <p className="text-sm text-neutral-500">
-              {currentYear}年度 ·
+              {new Date().getFullYear()}年度 ·
               <span className={`ml-1 px-2 py-0.5 rounded text-xs font-medium ${STATUS_BG[config.status]} ${STATUS_COLOR[config.status]}`}>{STATUS_LABEL[config.status]}</span>
               {isDraft && ' · 可编辑年度和季度预算'}
               {isPending && ' · 等待市场总监批复'}
@@ -390,7 +390,7 @@ export const MarketingPlanPage = () => {
 
       {/* Budget Distribution Chart */}
       <Card>
-        <CardHeader><CardTitle>{currentYear}年度预算分配与执行情况</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{new Date().getFullYear()}年度预算分配与执行情况</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row items-center gap-8">
             <PieSVG data={qBudgets} size={140} currency={globalCurrency} />
