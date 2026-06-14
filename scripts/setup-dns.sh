@@ -17,7 +17,7 @@ echo ""
 
 # 服务器IP
 SERVER_IP="118.25.141.173"
-DOMAIN="partner.velolabes.top"
+DOMAIN="partner.velolabs.top"
 
 echo ""
 echo "正在配置DNS记录..."
